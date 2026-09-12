@@ -38,6 +38,11 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       ADMIN_NAME: ${ADMIN_NAME:-}
+      DONATION_ENABLED: ${DONATION_ENABLED:-false}
+      DONATION_URL: ${DONATION_URL:-}
+      DONATION_TITLE: ${DONATION_TITLE:-}
+      DONATION_MESSAGE: ${DONATION_MESSAGE:-}
+      DONATION_BUTTON: ${DONATION_BUTTON:-}
     depends_on:
       postgres:
         condition: service_healthy

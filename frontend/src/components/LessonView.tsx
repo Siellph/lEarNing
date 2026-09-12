@@ -1,5 +1,5 @@
 import { speakableEnglish } from "../lib/speech";
-import { SpeakButton, VoiceControls } from "./SpeakButton";
+import { SpeakButton } from "./SpeakButton";
 
 type Example = { en: string; ru: string };
 type Rule = { title: string; body: string; examples?: Example[] };
@@ -27,7 +27,6 @@ function NoteBlock({ title, text }: { title: string; text: string }) {
 export function LessonView({ content }: { content: LessonContent }) {
   return (
     <div className="prose-lesson grid gap-6">
-      <VoiceControls className="sticky top-0 z-10 rounded-2xl border border-line bg-card/95 px-4 py-3 shadow-sm backdrop-blur" />
       <p className="text-lg leading-8 text-ink-soft">{content.intro}</p>
       {content.articulation ? <NoteBlock title="Как это устроено" text={content.articulation} /> : null}
       {content.contrast ? <NoteBlock title="Не путайте" text={content.contrast} /> : null}
