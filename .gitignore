@@ -39,3 +39,6 @@ htmlcov/
 # Docker — локальные файлы PostgreSQL (bind mount ./data/postgres)
 data/
 postgres_data/
+
+# Серверный nginx и прочий деплой — не в репозиторий
+deploy/
