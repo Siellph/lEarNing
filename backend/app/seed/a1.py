@@ -1,0 +1,733 @@
+from app.seed.helpers import err, ex, fill, lesson, mc, module, rule, xf
+
+A1 = [
+    module(
+        "to-be",
+        "Глагол to be: am / is / are",
+        "Формы, утверждение, отрицание и вопросы с глаголом-связкой.",
+        18,
+        "Как работает to be",
+        lesson(
+            "Глагол to be — «быть, являться». На уровне A1 он связывает подлежащее с профессией, местом, возрастом, настроением и описанием. Без него английское предложение часто выглядит незаконченным.",
+            [
+                rule("Формы в настоящем", "I am, you/we/they are, he/she/it is. В речи почти всегда звучат краткие формы: I'm, she's, they're.", [
+                    ex("I am a student. / I'm a student.", "Я студент."),
+                    ex("She is tired. / She's tired.", "Она устала."),
+                    ex("They are at home.", "Они дома."),
+                ]),
+                rule("Отрицание", "Ставим not после формы to be: am not, is not / isn't, are not / aren't.", [
+                    ex("I'm not hungry.", "Я не голоден."),
+                    ex("It isn't cold today.", "Сегодня не холодно."),
+                ]),
+                rule("Вопрос", "To be выходит на первое место: Are you ready? Is he here?", [
+                    ex("Are they from Spain?", "Они из Испании?"),
+                    ex("Where is the station?", "Где вокзал?"),
+                ]),
+            ],
+            watch_out=["Не ставьте do/does с to be: не «Do you are?», а Are you?", "После he/she/it только is, не are."],
+            remember="To be сам несёт время и лицо — отдельный вспомогательный глагол ему не нужен.",
+        ),
+        [
+            mc("Выберите верную форму: She ___ a doctor.", ["am", "is", "are"], "is", "Для he/she/it используется is."),
+            fill("I ___ from Canada. (be)", "am", "С I глагол to be имеет форму am.", ["I'm from Canada"]),
+            xf("Сделайте вопрос: They are late.", "Are they late?", "To be ставится перед подлежащим."),
+            err("Исправьте: He are my brother.", "He is my brother.", "He требует is."),
+            fill("We ___ not ready. (be)", "are", "We сочетается с are.", ["aren't", "are not"]),
+            mc("Где ошибка недопустима?", ["Is she at work?", "She is at work.", "Does she is at work?"], "Does she is at work?", "Do/does не употребляется вместе с to be."),
+        ],
+        [
+            mc("It ___ Monday today.", ["am", "is", "are"], "is", "It takes is."),
+            fill("___ you a teacher?", "Are", "Вопрос начинается с Are you…"),
+            xf("Отрицание: I am hungry.", "I am not hungry.", "Not идёт после am.", ["I'm not hungry"]),
+            err("They is in the park.", "They are in the park.", "They takes are."),
+            fill("He ___ my colleague. (be)", "is", "He + is."),
+            mc("Краткая форма для they are — это…", ["they're", "they've", "they'd"], "they're", "they're = they are."),
+        ],
+    ),
+    module(
+        "articles-a1",
+        "Артикли a / an / the и нулевой артикль",
+        "Когда предмет впервые называют, когда имеют в виду конкретный и когда артикль не нужен.",
+        22,
+        "Три решения: a, the или ничего",
+        lesson(
+            "Артикль — служебное слово перед существительным. Русский язык обходится без него, поэтому выбор a/an, the или «нуля» нужно тренировать отдельно. Опора лекции — классификация Cambridge English и British Council: неопределённый, определённый и нулевой артикль.",
+            [
+                rule("A / an — один из многих, впервые", "A перед согласным звуком: a book, a university (/j/). An перед гласным звуком: an apple, an hour (/aʊ/).", [
+                    ex("I need a pen.", "Мне нужна ручка (любая)."),
+                    ex("She is an engineer.", "Она инженер."),
+                ]),
+                rule("The — известный или единственный", "The ставят, когда собеседник понимает, о каком предмете речь, или предмет уникален в контексте: the sun, the door, the kitchen.", [
+                    ex("Close the window, please.", "Закрой окно (то, которое мы оба видим)."),
+                    ex("The moon is bright tonight.", "Луна сегодня яркая."),
+                ]),
+                rule("Нулевой артикль", "Не ставят артикль перед именами, большинством стран и городов, неисчисляемыми в общем смысле и множественным числом в общем смысле: tea, music, dogs (вообще).", [
+                    ex("I like music.", "Я люблю музыку (как явление)."),
+                    ex("Cats sleep a lot.", "Кошки много спят (вообще)."),
+                ]),
+            ],
+            compare=[
+                {"left": "I bought a car.", "right": "The car is blue.", "note": "Сначала любой автомобиль, затем уже конкретный."},
+            ],
+            watch_out=["Ориентируйтесь на звук, не на букву: a university, an hour.", "Перед уникальными объектами обычно the: the Internet, the sky."],
+            remember="A/an = один из класса. The = этот самый. Ноль = общее понятие.",
+        ),
+        [
+            mc("Выберите артикль: ___ apple a day…", ["A", "An", "The"], "An", "Apple начинается с гласного звука."),
+            fill("She is ___ honest person.", "an", "Honest начинается с гласного звука /ɒ/."),
+            mc("I love ___ chocolate.", ["a", "the", "— (нулевой)"], "— (нулевой)", "Неисчисляемое в общем смысле — без артикля."),
+            xf("Вставьте нужное: Open ___ door. (мы оба видим дверь)", "Open the door.", "Конкретный объект в ситуации."),
+            err("He is a engineer.", "He is an engineer.", "Engineer начинается с гласного звука."),
+            fill("___ sun rises in the east.", "The", "Солнце уникально."),
+        ],
+        [
+            mc("___ hour ago I was here.", ["A", "An", "The"], "An", "Hour начинается с гласного звука."),
+            fill("This is ___ interesting idea.", "an", "Interesting — гласный звук."),
+            mc("___ dogs are friendly. (вообще)", ["The", "A", "— (нулевой)"], "— (нулевой)", "Общее утверждение о классе."),
+            err("I bought an book.", "I bought a book.", "Book начинается с согласного."),
+            fill("Please pass me ___ salt. (на столе)", "the", "Конкретная солонка в ситуации."),
+            xf("Любая собака: I want ___ dog.", "I want a dog.", "Неопределённый экземпляр класса."),
+        ],
+    ),
+    module(
+        "nouns-plurals",
+        "Существительные: число и базовые типы",
+        "Правильное и особое множественное число, люди и вещи.",
+        18,
+        "One book — two books",
+        lesson(
+            "Английское существительное почти всегда имеет форму единственного и множественного числа. Регулярное правило — +s / +es. Ряд частотных слов меняет основу: man—men, child—children. Это ядро A1 по CEFR и Oxford Practice Grammar.",
+            [
+                rule("Регулярное множественное", "+s: book—books. После s, x, ch, sh, o часто +es: boxes, watches, tomatoes. y после согласной → ies: city—cities.", [
+                    ex("one bus — two buses", "один автобус — два автобуса"),
+                    ex("a baby — babies", "малыш — малыши"),
+                ]),
+                rule("Особые формы", "man—men, woman—women, child—children, person—people, tooth—teeth, foot—feet, mouse—mice.", [
+                    ex("There are three children in the garden.", "В саду трое детей."),
+                    ex("People are waiting.", "Люди ждут."),
+                ]),
+                rule("Одинаковая форма", "sheep, fish, deer часто не меняются. Some news выглядит как множественное, но согласуется как единственное.", [
+                    ex("Five sheep are in the field.", "В поле пять овец."),
+                    ex("The news is good.", "Новости хорошие."),
+                ]),
+            ],
+            watch_out=["Не people — peoples, если речь не о народах.", "childs — ошибка, нужно children."],
+            remember="Сначала проверьте особый список, затем правило +s/+es.",
+        ),
+        [
+            fill("one city — two ___", "cities", "y после согласной меняется на ies."),
+            mc("Множественное от child:", ["childs", "children", "childes"], "children", "Особая форма."),
+            err("There are many person here.", "There are many people here.", "Множественное от person — people."),
+            fill("one box — two ___", "boxes", "После x добавляется es."),
+            mc("The news ___ interesting.", ["are", "is", "be"], "is", "News согласуется в единственном числе."),
+            xf("Сделайте множественное: This woman is a teacher.", "These women are teachers.", "woman→women, this→these, is→are."),
+        ],
+        [
+            fill("one tomato — three ___", "tomatoes", "После o часто es."),
+            mc("foot →", ["foots", "feet", "feets"], "feet", "Особая форма."),
+            err("I have two sheeps.", "I have two sheep.", "Sheep не меняется."),
+            fill("a baby — two ___", "babies", "y → ies."),
+            xf("one man → ?", "men", "Особая форма man—men."),
+            mc("Watches — это форма от…", ["watch", "watche", "watching"], "watch", "+es после ch."),
+        ],
+    ),
+    module(
+        "pronouns-possessives",
+        "Личные и притяжательные местоимения",
+        "I/me, my/mine и таблица соответствий.",
+        20,
+        "Кто делает и кому принадлежит",
+        lesson(
+            "Личные местоимения заменяют существительные в роли подлежащего (I, she) или дополнения (me, her). Притяжательные прилагательные (my, her) стоят перед существительным; абсолютные формы (mine, hers) — вместо всей группы.",
+            [
+                rule("Подлежащее и дополнение", "I—me, you—you, he—him, she—her, it—it, we—us, they—them.", [
+                    ex("She likes him.", "Она любит его."),
+                    ex("They called us.", "Они нам позвонили."),
+                ]),
+                rule("Притяжательные прилагательные", "my, your, his, her, its, our, their — всегда перед словом: my bag, their house.", [
+                    ex("This is her laptop.", "Это её ноутбук."),
+                    ex("Our teacher is kind.", "Наш учитель добрый."),
+                ]),
+                rule("Абсолютные формы", "mine, yours, his, hers, ours, theirs. Its в этой роли почти не встречается.", [
+                    ex("This seat is mine.", "Это место моё."),
+                    ex("Is that car yours?", "Эта машина твоя?"),
+                ]),
+            ],
+            watch_out=["its = принадлежность; it's = it is / it has.", "Не пишите me book — только my book."],
+            remember="Перед существительным — my/her. Вместо группы — mine/hers.",
+        ),
+        [
+            mc("This is ___ book.", ["I", "me", "my"], "my", "Перед существительным нужен my."),
+            fill("Give ___ the keys. (we)", "us", "После глагола — объектная форма."),
+            err("This bag is my.", "This bag is mine.", "Без существительного — mine."),
+            xf("Замените: I know Anna. → I know ___.", "I know her.", "Anna → her."),
+            fill("The dog wagged ___ tail.", "its", "Принадлежность животного — its, не it's."),
+            mc("___ are from Italy.", ["Them", "They", "Their"], "They", "Подлежащее — they."),
+        ],
+        [
+            fill("Is this pen ___? (you)", "yours", "Абсолютная форма."),
+            mc("She told ___ a story.", ["I", "me", "my"], "me", "Дополнение — me."),
+            err("Its a nice day.", "It's a nice day.", "Нужно it is."),
+            xf("our house → это дом ___", "ours", "Абсолютная форма our → ours."),
+            fill("He is looking at ___. (she)", "her", "Объектная форма she → her."),
+            mc("___ names are Tom and Sue.", ["They", "Them", "Their"], "Their", "Перед существительным names."),
+        ],
+    ),
+    module(
+        "demonstratives",
+        "This, that, these, those",
+        "Указание на ближние и дальние предметы.",
+        14,
+        "Этот или тот",
+        lesson(
+            "Указательные слова различают расстояние и число. This/these — ближе к говорящему; that/those — дальше или уже упомянутое.",
+            [
+                rule("Единственное число", "this book (эта, здесь), that book (та, там).", [
+                    ex("This coffee is hot.", "Этот кофе горячий."),
+                    ex("That building is the museum.", "То здание — музей."),
+                ]),
+                rule("Множественное число", "these keys, those cars.", [
+                    ex("These shoes are new.", "Эти туфли новые."),
+                    ex("Those people are my neighbours.", "Те люди — мои соседи."),
+                ]),
+            ],
+            watch_out=["this + единственное; these + множественное.", "После that глагол в единственном числе: That is…"],
+            remember="Близко: this/these. Далеко: that/those.",
+        ),
+        [
+            mc("___ apples look fresh. (здесь, в руках)", ["This", "These", "That"], "These", "Множественное и близко."),
+            fill("___ is my friend, Anna. (представляем рядом)", "This", "Единственное число, близко."),
+            err("This books are heavy.", "These books are heavy.", "Books — множественное."),
+            xf("that car → множественное", "those cars", "that→those, car→cars."),
+            fill("What is ___ over there?", "that", "Далёкий объект."),
+            mc("I like ___ song on the radio.", ["these", "this", "those"], "this", "Одна песня."),
+        ],
+        [
+            fill("___ chairs by the window are free. (там)", "Those", "Множественное и далеко."),
+            mc("___ is a great idea.", ["These", "This", "Those"], "This", "Idea — единственное."),
+            err("Those is my bag.", "That is my bag.", "Одна сумка — that is."),
+            xf("these photos → единственное", "this photo", "these→this."),
+            fill("Look at ___ stars!", "those", "Далёкие объекты во множественном числе."),
+            mc("Can you pass me ___ plate? (рядом)", ["that", "this", "those"], "this", "Рядом и одно."),
+        ],
+    ),
+    module(
+        "present-simple",
+        "Present Simple",
+        "Привычки, факты, расписания и форма 3-го лица.",
+        24,
+        "Настоящее простое: каркас повседневности",
+        lesson(
+            "Present Simple описывает регулярные действия, общие истины и расписания. Это центральная тема A1–A2 у Murphy и Cambridge. Смысловой глагол стоит в базовой форме; у he/she/it появляется -s.",
+            [
+                rule("Утверждение", "I/you/we/they work. He/she/it works. После s/x/ch/sh/o часто -es: watches, goes. y после согласной → ies: studies.", [
+                    ex("I start work at nine.", "Я начинаю работу в девять."),
+                    ex("She studies French.", "Она изучает французский."),
+                ]),
+                rule("Отрицание и вопрос", "Нужен do/does. I don't work. Does he work? Смысловой глагол после do/does — без -s.", [
+                    ex("They don't eat meat.", "Они не едят мясо."),
+                    ex("Does it rain a lot here?", "Здесь часто идёт дождь?"),
+                ]),
+                rule("Маркеры", "always, usually, often, sometimes, never, every day, on Mondays, in the morning.", [
+                    ex("He always takes the bus.", "Он всегда ездит на автобусе."),
+                    ex("The shop opens at 8.", "Магазин открывается в 8 (расписание)."),
+                ]),
+            ],
+            compare=[
+                {"left": "She likes tea.", "right": "Does she like tea?", "note": "-s только в утверждении 3-го лица, не в вопросе."},
+            ],
+            watch_out=["He don't — ошибка. Нужно He doesn't.", "В вопросе не дублируйте -s: Does she works?"],
+            remember="Факт и привычка — Present Simple. He/she/it + -s, иначе do/does.",
+        ),
+        [
+            fill("She ___ in Lisbon. (live)", "lives", "3-е лицо единственного числа + -s."),
+            mc("___ you speak German?", ["Do", "Does", "Are"], "Do", "You требует Do."),
+            err("He don't like coffee.", "He doesn't like coffee.", "He + doesn't."),
+            xf("Сделайте вопрос: They play tennis.", "Do they play tennis?", "Do + подлежащее + глагол."),
+            fill("The train ___ at 6.40. (leave)", "leaves", "Расписание — Present Simple, 3-е лицо."),
+            mc("I ___ to the gym on Fridays.", ["go", "goes", "going"], "go", "I — базовая форма."),
+        ],
+        [
+            fill("My brother ___ TV every evening. (watch)", "watches", "watch + es."),
+            mc("___ she work here?", ["Do", "Does", "Is"], "Does", "She + Does."),
+            err("Does he lives nearby?", "Does he live nearby?", "После does глагол без -s."),
+            xf("Отрицание: I eat fish.", "I don't eat fish.", "don't + базовая форма.", ["I do not eat fish"]),
+            fill("We ___ breakfast at 8. (have)", "have", "We — без -s."),
+            mc("Water ___ at 100°C.", ["boil", "boils", "is boil"], "boils", "Научный факт, it/water + -s."),
+        ],
+    ),
+    module(
+        "present-continuous",
+        "Present Continuous",
+        "Действие в момент речи и временные ситуации.",
+        22,
+        "Что происходит прямо сейчас",
+        lesson(
+            "Present Continuous строится как am/is/are + глагол-ing. Он показывает действие, которое разворачивается сейчас или вокруг текущего периода, но не является постоянной привычкой.",
+            [
+                rule("Форма", "be + V-ing. I'm working. She's reading. Правила -ing: make→making, sit→sitting, lie→lying.", [
+                    ex("I'm cooking dinner now.", "Я сейчас готовлю ужин."),
+                    ex("They are waiting for a taxi.", "Они ждут такси."),
+                ]),
+                rule("Отрицание и вопрос", "Not после be. Be выходит вперёд в вопросе.", [
+                    ex("He isn't listening.", "Он не слушает."),
+                    ex("Are you using this chair?", "Ты пользуешься этим стулом?"),
+                ]),
+                rule("Когда выбирать Continuous", "now, right now, at the moment, today, this week — если действие временное.", [
+                    ex("She's staying with us this week.", "На этой неделе она живёт у нас."),
+                ]),
+            ],
+            compare=[
+                {"left": "I work in an office.", "right": "I'm working from home today.", "note": "Постоянная работа vs ситуация сегодня."},
+            ],
+            watch_out=["Глаголы состояния редко стоят в Continuous: know, like, want, have (владение).", "Не I working — нужен am/is/are."],
+            remember="Сейчас и временно — be + -ing. Привычка — Present Simple.",
+        ),
+        [
+            fill("Look! The baby ___ . (sleep)", "is sleeping", "Действие на глазах — Continuous."),
+            mc("I ___ a great book this month.", ["read", "am reading", "reads"], "am reading", "Временная ситуация."),
+            err("She working now.", "She is working now.", "Нужна форма to be."),
+            xf("Вопрос: They are watching a film.", "Are they watching a film?", "Be на первое место."),
+            fill("We ___ not ___ lunch now. (have)", "are not having", "have как «есть» может быть в Continuous.", ["aren't having"]),
+            mc("I ___ the answer. (знание)", ["am knowing", "know", "knowing"], "know", "Know — глагол состояния."),
+        ],
+        [
+            fill("He ___ to his boss at the moment. (talk)", "is talking", "at the moment — маркер Continuous."),
+            mc("___ you listening?", ["Do", "Are", "Is"], "Are", "Continuous-вопрос с Are."),
+            err("They is playing football.", "They are playing football.", "They + are."),
+            xf("Отрицание: I'm wearing a coat.", "I'm not wearing a coat.", "not после be.", ["I am not wearing a coat"]),
+            fill("It ___ outside. (rain)", "is raining", "Погода в момент речи."),
+            mc("She usually ___ tea, but today she ___ coffee.", ["drinks / is drinking", "is drinking / drinks", "drink / drink"], "drinks / is drinking", "Привычка vs сегодня."),
+        ],
+    ),
+    module(
+        "there-is-are",
+        "There is / there are",
+        "Как сообщить, что что-то существует в месте.",
+        16,
+        "В комнате есть…",
+        lesson(
+            "Конструкция there is/are вводит новый объект в пространство. There здесь не «там», а служебное слово. Число согласуется с первым существительным.",
+            [
+                rule("Единственное и множественное", "There is a lamp. There are two chairs.", [
+                    ex("There is a supermarket near here.", "Здесь рядом есть супермаркет."),
+                    ex("There are some messages for you.", "Для тебя есть несколько сообщений."),
+                ]),
+                rule("Отрицание и вопрос", "There isn't / there aren't. Is there…? Are there…?", [
+                    ex("There isn't any milk.", "Молока нет."),
+                    ex("Are there any tickets left?", "Остались билеты?"),
+                ]),
+                rule("Some / any", "Some чаще в утверждении, any — в вопросах и отрицаниях (на A1 этого достаточно).", [
+                    ex("There are some apples.", "Есть несколько яблок."),
+                    ex("There aren't any apples.", "Яблок нет."),
+                ]),
+            ],
+            watch_out=["Не It is a book on the table в значении «есть». Нужно There is a book on the table.", "После there is не ставьте множественное без согласования."],
+            remember="Сначала there is/are, затем объект, затем место.",
+        ),
+        [
+            mc("___ a cat on the sofa.", ["There is", "There are", "It are"], "There is", "Один кот."),
+            fill("___ many people in the hall.", "There are", "Множественное число."),
+            err("There is two windows.", "There are two windows.", "Two windows требуют are."),
+            xf("Вопрос: There is a bank here.", "Is there a bank here?", "Is выходит вперёд."),
+            fill("There ___ any sugar. (отрицание)", "isn't", "Неисчисляемое — isn't.", ["is not"]),
+            mc("___ there any questions?", ["Is", "Are", "Do"], "Are", "Questions — множественное."),
+        ],
+        [
+            fill("___ a message for you.", "There is", "Одно сообщение."),
+            mc("There ___ some bread.", ["is", "are", "be"], "is", "Bread неисчисляемое."),
+            err("Is there many chairs?", "Are there many chairs?", "Chairs — множественное."),
+            xf("Отрицание: There are some problems.", "There aren't any problems.", "are + not + any.", ["There are not any problems"]),
+            fill("There ___ a lot of noise.", "is", "Noise неисчисляемое."),
+            mc("___ there a pharmacy nearby?", ["Are", "Is", "Do"], "Is", "A pharmacy — единственное."),
+        ],
+    ),
+    module(
+        "can-ability",
+        "Can / can't: умение и возможность",
+        "Модальный глагол способности на уровне A1.",
+        16,
+        "Что мы умеем",
+        lesson(
+            "Can — модальный глагол. После него всегда базовая форма без to. Он не меняется по лицам: I can, she can.",
+            [
+                rule("Форма", "can + V. Отрицание can't / cannot. Вопрос: Can you swim?", [
+                    ex("I can speak Spanish.", "Я умею говорить по-испански."),
+                    ex("He can't drive.", "Он не умеет водить."),
+                ]),
+                rule("Возможность ситуации", "Can также просит разрешения или описывает возможность: Can I open the window?", [
+                    ex("You can leave early today.", "Сегодня можешь уйти пораньше."),
+                ]),
+            ],
+            watch_out=["Не can to swim и не cans.", "В прошедшем на A2 появится could — пока держите can для настоящего."],
+            remember="Can не спрягается. После него голый инфинитив.",
+        ),
+        [
+            fill("She ___ play the piano.", "can", "Одинаковая форма для всех лиц."),
+            mc("___ you help me?", ["Do", "Can", "Are"], "Can", "Просьба через Can you…"),
+            err("I can to cook.", "I can cook.", "После can нет to."),
+            xf("Отрицание: They can come.", "They can't come.", "can't + V.", ["They cannot come"]),
+            fill("He ___ not swim.", "can", "can + not.", ["can't"]),
+            mc("She ___ speak Japanese, but she ___ write it well.", ["can / can't", "cans / can't", "can / doesn't can"], "can / can't", "Одна форма can, отрицание can't."),
+        ],
+        [
+            fill("___ I use your phone?", "Can", "Разрешение."),
+            mc("We ___ hear you.", ["can't", "don't can", "aren't can"], "can't", "Отрицание модального."),
+            err("He cans run fast.", "He can run fast.", "Нет формы cans."),
+            xf("Вопрос: She can drive.", "Can she drive?", "Can на первое место."),
+            fill("Birds ___ fly.", "can", "Способность вида."),
+            mc("I ___ see the sea from here.", ["can", "cans", "am can"], "can", "Возможность восприятия."),
+        ],
+    ),
+    module(
+        "imperatives",
+        "Повелительное наклонение",
+        "Просьбы, инструкции и запреты.",
+        12,
+        "Sit down. Don't touch.",
+        lesson(
+            "Императив — голая форма глагола. Для запрета добавляют Don't. Чтобы смягчить просьбу, часто ставят please.",
+            [
+                rule("Утверждение", "Open the door. Turn left. Let's go — приглашение сделать вместе.", [
+                    ex("Take a seat, please.", "Присядьте, пожалуйста."),
+                    ex("Let's start.", "Давайте начнём."),
+                ]),
+                rule("Запрет", "Don't + V. Don't be late.", [
+                    ex("Don't touch the paintings.", "Не трогайте картины."),
+                ]),
+            ],
+            watch_out=["Не используйте to: не To sit down.", "Подлежащее you обычно опускается."],
+            remember="Инструкция = базовая форма. Запрет = Don't + глагол.",
+        ),
+        [
+            mc("___ the window, please.", ["Opens", "Open", "Opening"], "Open", "Императив — базовая форма."),
+            fill("___ be noisy.", "Don't", "Запрет."),
+            err("To wait here.", "Wait here.", "Без to."),
+            xf("Запрет: Cross the street here.", "Don't cross the street here.", "Don't + V."),
+            fill("___ go to the café. (вместе)", "Let's", "Let's + V."),
+            mc("Please ___ me an email.", ["sends", "send", "sending"], "send", "Вежливый императив."),
+        ],
+        [
+            fill("___ careful!", "Be", "Даже to be в императиве — Be."),
+            mc("___ forget your passport.", ["Don't", "Doesn't", "Not"], "Don't", "Запрет для всех."),
+            err("Let's to eat.", "Let's eat.", "После let's нет to."),
+            xf("Смягчите: Close the door.", "Close the door, please.", "Please делает просьбу мягче.", ["Please close the door"]),
+            fill("___ left at the bank.", "Turn", "Типичная инструкция."),
+            mc("___ your phones.", ["Switch off", "Switches off", "Switching off"], "Switch off", "Инструкция группе."),
+        ],
+    ),
+    module(
+        "question-words",
+        "Вопросительные слова",
+        "Who, what, where, when, why, how и whose.",
+        16,
+        "Как спросить то, что нужно",
+        lesson(
+            "Специальный вопрос начинается с вопросительного слова, затем идёт вспомогательный глагол. Это стандартная сетка A1 у British Council.",
+            [
+                rule("Набор слов", "who — кто, what — что/какой, where — где, when — когда, why — почему, how — как, whose — чей, which — который из.", [
+                    ex("Where do you live?", "Где ты живёшь?"),
+                    ex("Whose bag is this?", "Чья это сумка?"),
+                ]),
+                rule("Порядок", "Wh + aux + subject + verb. Исключение: who как подлежащее — Who called you?", [
+                    ex("What does she want?", "Чего она хочет?"),
+                    ex("Who is that man?", "Кто этот мужчина?"),
+                ]),
+            ],
+            watch_out=["How many + исчисляемые, how much + неисчисляемые.", "Не Where you live?"],
+            remember="Сначала смысл вопроса (где/кто), затем вспомогательный глагол.",
+        ),
+        [
+            mc("___ is your birthday?", ["Where", "When", "Who"], "When", "Дата — when."),
+            fill("___ do you get to work? — By metro.", "How", "Способ — how."),
+            err("Where you are from?", "Where are you from?", "Нужна инверсия с to be."),
+            xf("Спросите о причине: He is sad.", "Why is he sad?", "Why + is + he."),
+            fill("___ coat is this?", "Whose", "Чей."),
+            mc("___ apples do you want?", ["How much", "How many", "How long"], "How many", "Apples исчисляемые."),
+        ],
+        [
+            fill("___ is the station? — Next to the bank.", "Where", "Место."),
+            mc("___ called you?", ["Who", "Whom", "Whose"], "Who", "Who как подлежащее."),
+            err("What you want?", "What do you want?", "Нужен do."),
+            xf("Спросите о времени: The class starts.", "When does the class start?", "When + does + subject + V."),
+            fill("___ is she crying?", "Why", "Причина."),
+            mc("___ one do you prefer, tea or coffee?", ["What", "Which", "Who"], "Which", "Выбор из ограниченного набора."),
+        ],
+    ),
+    module(
+        "prepositions-place",
+        "Предлоги места",
+        "In, on, at, under, behind, between, next to.",
+        16,
+        "Где именно находится предмет",
+        lesson(
+            "Предлоги места описывают положение в пространстве. Ядро A1: in (внутри), on (на поверхности), at (точка). Дальше — относительные: under, behind, in front of, between, next to, opposite.",
+            [
+                rule("In / on / at", "in a room, in a city; on a table, on the wall; at the door, at the station, at home, at work.", [
+                    ex("The keys are on the desk.", "Ключи на столе."),
+                    ex("She's at the airport.", "Она в аэропорту (точка назначения)."),
+                ]),
+                rule("Относительные предлоги", "under the chair, behind the sofa, between A and B, next to the bank, opposite the park.", [
+                    ex("The café is next to the cinema.", "Кафе рядом с кинотеатром."),
+                    ex("Wait in front of the hotel.", "Подожди перед отелем."),
+                ]),
+            ],
+            watch_out=["at home, не in home.", "in the photo, но on the page / on the website."],
+            remember="Внутри — in. На поверхности — on. Точка на карте или событие — at.",
+        ),
+        [
+            mc("The cat is ___ the box. (внутри)", ["on", "in", "at"], "in", "Внутри объёма — in."),
+            fill("There's a picture ___ the wall.", "on", "На поверхности стены."),
+            err("I am in home.", "I am at home.", "Фиксированное сочетание at home."),
+            xf("Ключи под стулом.", "The keys are under the chair.", "under + объект."),
+            fill("Meet me ___ the bus stop.", "at", "Остановка как точка."),
+            mc("The bank is ___ the post office and the bakery.", ["next", "between", "opposite"], "between", "Между двумя объектами."),
+        ],
+        [
+            fill("She sits ___ me. (рядом)", "next to", "next to = рядом.", ["beside"]),
+            mc("They live ___ Tokyo.", ["at", "on", "in"], "in", "Город — in."),
+            err("The book is in the table.", "The book is on the table.", "На поверхности — on."),
+            xf("Магазин напротив парка.", "The shop is opposite the park.", "opposite без to."),
+            fill("Wait ___ the door.", "at", "Точка у двери."),
+            mc("The shoes are ___ the bed.", ["under", "between", "at"], "under", "Под кроватью."),
+        ],
+    ),
+    module(
+        "prepositions-time",
+        "Предлоги времени",
+        "In, on, at для часов, дат и периодов.",
+        16,
+        "Когда именно",
+        lesson(
+            "Та же тройка in/on/at работает во времени. Схема British Council: at — точное время и праздничная точка, on — дни и даты, in — более длинные периоды.",
+            [
+                rule("At", "at 7 o'clock, at night, at the weekend (BrE), at Christmas.", [
+                    ex("The film starts at 8.15.", "Фильм начинается в 8:15."),
+                ]),
+                rule("On", "on Monday, on 12 May, on my birthday, on weekday mornings.", [
+                    ex("See you on Friday.", "Увидимся в пятницу."),
+                ]),
+                rule("In", "in July, in 2019, in the morning/afternoon/evening, in two weeks.", [
+                    ex("I was born in 1998.", "Я родился в 1998."),
+                    ex("She works in the morning.", "Она работает утром."),
+                ]),
+            ],
+            watch_out=["at night, но in the morning.", "on the weekend — американский вариант; в британском чаще at the weekend."],
+            remember="Часы и точки — at. Дни — on. Месяцы, годы, части дня — in.",
+        ),
+        [
+            mc("The class begins ___ 9.00.", ["in", "on", "at"], "at", "Точное время."),
+            fill("My birthday is ___ 3 March.", "on", "Дата — on."),
+            err("I get up in Monday.", "I get up on Monday.", "День недели — on."),
+            xf("В июле: we travel ___ July.", "We travel in July.", "Месяц — in."),
+            fill("He sleeps well ___ night.", "at", "at night."),
+            mc("I'll call you ___ the evening.", ["at", "in", "on"], "in", "in the evening."),
+        ],
+        [
+            fill("She was born ___ 2004.", "in", "Год — in."),
+            mc("Let's meet ___ Saturday evening.", ["in", "at", "on"], "on", "День + часть дня часто on."),
+            err("The shop closes on 8 p.m.", "The shop closes at 8 p.m.", "Часы — at."),
+            xf("Через две недели: ___ two weeks", "in two weeks", "Через период — in."),
+            fill("We don't work ___ Sundays.", "on", "Дни — on."),
+            mc("___ Christmas we stay with family. (BrE)", ["In", "On", "At"], "At", "at Christmas."),
+        ],
+    ),
+    module(
+        "have-got",
+        "Have got / have",
+        "Владение, отношения и внешность на A1.",
+        16,
+        "Что у нас есть",
+        lesson(
+            "В британском английском для владения очень частотен have got. Это не Present Perfect по смыслу: got здесь часть устойчивой конструкции. В американском чаще просто have.",
+            [
+                rule("Формы", "I/you/we/they have got. He/she/it has got. Краткие: I've got, she's got.", [
+                    ex("I've got two sisters.", "У меня две сестры."),
+                    ex("He has got brown eyes.", "У него карие глаза."),
+                ]),
+                rule("Отрицание и вопрос", "haven't got / hasn't got. Have you got…? Has she got…?", [
+                    ex("I haven't got a car.", "У меня нет машины."),
+                    ex("Has she got a minute?", "У неё есть минутка?"),
+                ]),
+                rule("Have без got", "В привычках и устойчивых сочетаниях got не нужен: have breakfast, have a shower.", [
+                    ex("We have lunch at one.", "Мы обедаем в час."),
+                ]),
+            ],
+            watch_out=["Не I have got hungry. Нужно I am hungry.", "Вопрос не Do you have got?"],
+            remember="Владение: have got / has got. Приём пищи и душ — have без got.",
+        ),
+        [
+            fill("She ___ got a new phone.", "has", "3-е лицо — has got."),
+            mc("___ you got any cash?", ["Do", "Have", "Has"], "Have", "Have you got…"),
+            err("I haven't a got cat.", "I haven't got a cat.", "haven't got + объект."),
+            xf("Отрицание: They have got time.", "They haven't got time.", "haven't got."),
+            fill("We ___ breakfast at 7.", "have", "Приём пищи — have без got."),
+            mc("He ___ any cousins.", ["hasn't got", "haven't got", "doesn't got"], "hasn't got", "He + hasn't got."),
+        ],
+        [
+            fill("I ___ got a question.", "have", "I have got."),
+            mc("___ she got your number?", ["Have", "Has", "Does"], "Has", "Has she got…"),
+            err("He haves got a bike.", "He has got a bike.", "has, не haves."),
+            xf("Краткая форма: I have got a map.", "I've got a map.", "I've got."),
+            fill("They ___ got much time.", "haven't", "Отрицание для they."),
+            mc("I ___ a shower every morning.", ["have got", "have", "has"], "have", "have a shower."),
+        ],
+    ),
+    module(
+        "past-simple-be",
+        "Past Simple: was / were",
+        "Прошедшее глагола to be.",
+        14,
+        "Вчера я был…",
+        lesson(
+            "В прошедшем to be имеет две формы: was (I/he/she/it) и were (you/we/they). Вопросы и отрицания строятся без did.",
+            [
+                rule("Формы", "I was, you were, he/she/it was, we/they were.", [
+                    ex("I was at home yesterday.", "Вчера я был дома."),
+                    ex("They were tired.", "Они были усталыми."),
+                ]),
+                rule("Отрицание и вопрос", "wasn't / weren't. Were you late? Where was she?", [
+                    ex("It wasn't expensive.", "Это было недорого."),
+                    ex("Were they at the party?", "Они были на вечеринке?"),
+                ]),
+            ],
+            watch_out=["Не Did you were? Только Were you?", "I were — ошибка, нужно I was."],
+            remember="Прошедшее to be — сам себе помощник: was/were, без did.",
+        ),
+        [
+            fill("I ___ ill last week.", "was", "I + was."),
+            mc("We ___ in Paris in 2019.", ["was", "were", "are"], "were", "We + were."),
+            err("Was you at school?", "Were you at school?", "You + were."),
+            xf("Отрицание: She was angry.", "She wasn't angry.", "wasn't.", ["She was not angry"]),
+            fill("___ they ready?", "Were", "Вопрос с were."),
+            mc("The weather ___ terrible.", ["were", "was", "be"], "was", "The weather = it → was."),
+        ],
+        [
+            fill("You ___ right.", "were", "You + were."),
+            mc("I ___ not at work on Monday.", ["were", "was", "did"], "was", "I was not."),
+            err("They was late.", "They were late.", "They + were."),
+            xf("Вопрос: He was the manager.", "Was he the manager?", "Was + he."),
+            fill("It ___ a great trip.", "was", "It + was."),
+            mc("___ I wrong?", ["Were", "Was", "Did"], "Was", "I + Was I…"),
+        ],
+    ),
+    module(
+        "past-simple-verbs",
+        "Past Simple: правильные и неправильные глаголы",
+        "Завершённые действия в прошлом: +ed и вторая форма.",
+        24,
+        "Что произошло вчера",
+        lesson(
+            "Past Simple называет законченное действие в конкретное прошлое время: yesterday, last week, in 2010, ago. Правильные глаголы получают -ed; неправильные берут II форму из списка (go—went, see—saw).",
+            [
+                rule("Правильные глаголы", "work—worked, live—lived, stop—stopped, study—studied.", [
+                    ex("I visited my aunt last Sunday.", "В прошлое воскресенье я навестил тётю."),
+                ]),
+                rule("Неправильные глаголы", "be—was/were, have—had, go—went, do—did, get—got, make—made, take—took, come—came, see—saw, buy—bought.", [
+                    ex("She went to Rome in May.", "В мае она ездила в Рим."),
+                    ex("We bought a ticket.", "Мы купили билет."),
+                ]),
+                rule("Did для вопроса и отрицания", "Did + подлежащее + базовая форма. I didn't go. Did you see it? Форма did уже несёт прошедшее, поэтому went/saw в вопросе не повторяют.", [
+                    ex("Did you call her?", "Ты ей звонил?"),
+                    ex("He didn't like the film.", "Ему не понравился фильм."),
+                ]),
+            ],
+            watch_out=["Did you went? — частая ошибка. Нужно Did you go?", "После yesterday не используйте Present Perfect."],
+            remember="Факт в прошлом + маркер времени = Past Simple. В вопросе и not — did + V1.",
+        ),
+        [
+            fill("They ___ football yesterday. (play)", "played", "Правильный глагол + ed."),
+            mc("She ___ a new laptop last month.", ["buy", "bought", "buys"], "bought", "Неправильный глагол buy—bought."),
+            err("Did you went home?", "Did you go home?", "После did — V1."),
+            xf("Отрицание: I saw the email.", "I didn't see the email.", "didn't + see.", ["I did not see the email"]),
+            fill("He ___ to London two days ago. (go)", "went", "go—went."),
+            mc("We ___ dinner at 7 last night.", ["have", "had", "has"], "had", "have—had."),
+        ],
+        [
+            fill("I ___ my keys. (lose, вчера)", "lost", "lose—lost."),
+            mc("___ she finish the report?", ["Does", "Did", "Was"], "Did", "Прошедшее — Did."),
+            err("He didn't went out.", "He didn't go out.", "didn't + V1."),
+            xf("Вопрос: They arrived late.", "Did they arrive late?", "Did + V1."),
+            fill("We ___ a great time. (have)", "had", "have—had."),
+            mc("She ___ French at school.", ["studied", "studyed", "studies"], "studied", "y → ied."),
+        ],
+    ),
+    module(
+        "going-to",
+        "Going to: планы и предсказания по приметам",
+        "Будущее, которое уже задумано или видно сейчас.",
+        18,
+        "Что собираемся сделать",
+        lesson(
+            "be going to + V выражает намерение и предсказание на основе видимых признаков. Это основной способ говорить о будущем на A1, наряду с will на A2.",
+            [
+                rule("Намерение", "I'm going to call her tonight. План уже существует в голове говорящего.", [
+                    ex("We're going to move house.", "Мы собираемся переезжать."),
+                ]),
+                rule("Предсказание по примете", "Look at those clouds. It's going to rain.", [
+                    ex("She's going to win — she's much faster.", "Она победит: она намного быстрее."),
+                ]),
+                rule("Формы", "am/is/are + going to + V. Отрицание: isn't going to. Вопрос: Are you going to…?", [
+                    ex("Is he going to study medicine?", "Он собирается изучать медицину?"),
+                ]),
+            ],
+            watch_out=["going to go часто сокращают до going: I'm going to the shop.", "Нужен to be: не I going to."],
+            remember="План и очевидное будущее — be going to + глагол.",
+        ),
+        [
+            fill("I ___ going to start a course.", "am", "I am going to."),
+            mc("Look at the sky! It ___ snow.", ["goes to", "is going to", "going"], "is going to", "Примета сейчас."),
+            err("She going to be late.", "She is going to be late.", "Нужен is."),
+            xf("Вопрос: They are going to sell the car.", "Are they going to sell the car?", "Are на первое место."),
+            fill("We are not ___ to stay.", "going", "Отрицание be + going to."),
+            mc("He ___ a doctor.", ["is going to be", "going be", "goes to be"], "is going to be", "be going to + be."),
+        ],
+        [
+            fill("___ you going to cook tonight?", "Are", "Are you going to…"),
+            mc("I ___ this weekend.", ["'m going to relax", "going relax", "goes to relax"], "'m going to relax", "I am = I'm."),
+            err("They is going to help.", "They are going to help.", "They + are."),
+            xf("Отрицание: I'm going to tell him.", "I'm not going to tell him.", "not после be."),
+            fill("It ___ going to be sunny.", "is", "It is going to."),
+            mc("We ___ visit Grandma on Sunday. (план)", ["are going to", "going", "wills"], "are going to", "Заранее принятый план."),
+        ],
+    ),
+    module(
+        "adjectives-a1",
+        "Прилагательные: место и базовая сочетаемость",
+        "Описание людей и вещей без изменения по роду и числу.",
+        14,
+        "A small red bag",
+        lesson(
+            "Английское прилагательное не меняется по роду, числу и падежу: a red car, red cars. Оно стоит перед существительным или после to be / look / feel.",
+            [
+                rule("Перед существительным", "a new phone, an old house. Несколько прилагательных обычно идут в порядке мнение → размер → возраст → цвет → материал.", [
+                    ex("a lovely little old town", "милый маленький старый город"),
+                ]),
+                rule("После глагола-связки", "She is tall. The soup tastes good. Не ставьте -ly, если это именно качество, а не наречие.", [
+                    ex("I feel tired.", "Я чувствую себя усталым."),
+                ]),
+                rule("Very / really", "Усилители стоят перед прилагательным: very cold, really interesting.", [
+                    ex("It's really important.", "Это действительно важно."),
+                ]),
+            ],
+            watch_out=["Не a car red.", "Прилагательное не получает -s: greens books — ошибка."],
+            remember="Прилагательное неизменно. Место: перед словом или после be/look/feel.",
+        ),
+        [
+            mc("They have a ___ house.", ["big", "bigs", "biggishs"], "big", "Нет согласования по числу."),
+            fill("She looks ___. (happy)", "happy", "После look — прилагательное."),
+            err("a car blue", "a blue car", "Прилагательное перед существительным."),
+            xf("Соберите: bag / small / black", "a small black bag", "размер затем цвет."),
+            fill("The film was ___ interesting.", "very", "Усилитель перед прилагательным.", ["really"]),
+            mc("These apples are ___.", ["green", "greens", "greenly"], "green", "Без -s."),
+        ],
+        [
+            fill("He is a ___ driver. (careful)", "careful", "Прилагательное, не наречие."),
+            mc("I feel ___.", ["badly", "bad", "badness"], "bad", "feel + adjective."),
+            err("two news phones", "two new phones", "Прилагательное без -s."),
+            xf("дом / старый / красивый", "a beautiful old house", "мнение → возраст."),
+            fill("The water is ___ cold.", "very", "very + adj."),
+            mc("It's a ___ story.", ["really sad", "sad really", "sads"], "really sad", "Усилитель + прилагательное."),
+        ],
+    ),
+]
