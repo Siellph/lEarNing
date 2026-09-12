@@ -17,7 +17,7 @@ export function DonationBanner() {
   useEffect(() => {
     fetch("/api/public/donation")
       .then((res) => (res.ok ? res.json() : { enabled: false }))
-      .then(setBanner)
+      .then((data) => setBanner(data))
       .catch(() => setBanner({ enabled: false }));
   }, []);
 

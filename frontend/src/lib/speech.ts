@@ -155,6 +155,85 @@ if (typeof window !== "undefined" && window.speechSynthesis) {
   installGesturePrime();
 }
 
+const CONTRACTION_EXPAND: [RegExp, string][] = [
+  [/\bI'm\b/gi, "I am"],
+  [/\bI've\b/gi, "I have"],
+  [/\bI'd\b/gi, "I would"],
+  [/\bI'll\b/gi, "I will"],
+  [/\byou're\b/gi, "you are"],
+  [/\byou've\b/gi, "you have"],
+  [/\byou'd\b/gi, "you would"],
+  [/\byou'll\b/gi, "you will"],
+  [/\bhe's\b/gi, "he is"],
+  [/\bshe's\b/gi, "she is"],
+  [/\bit's\b/gi, "it is"],
+  [/\bwe're\b/gi, "we are"],
+  [/\bwe've\b/gi, "we have"],
+  [/\bwe'd\b/gi, "we would"],
+  [/\bwe'll\b/gi, "we will"],
+  [/\bthey're\b/gi, "they are"],
+  [/\bthey've\b/gi, "they have"],
+  [/\bthey'd\b/gi, "they would"],
+  [/\bthey'll\b/gi, "they will"],
+  [/\bisn't\b/gi, "is not"],
+  [/\baren't\b/gi, "are not"],
+  [/\bwasn't\b/gi, "was not"],
+  [/\bweren't\b/gi, "were not"],
+  [/\bdon't\b/gi, "do not"],
+  [/\bdoesn't\b/gi, "does not"],
+  [/\bdidn't\b/gi, "did not"],
+  [/\bcan't\b/gi, "cannot"],
+  [/\bwon't\b/gi, "will not"],
+  [/\bshouldn't\b/gi, "should not"],
+  [/\bwouldn't\b/gi, "would not"],
+  [/\bcouldn't\b/gi, "could not"],
+  [/\bhaven't\b/gi, "have not"],
+  [/\bhasn't\b/gi, "has not"],
+  [/\bhadn't\b/gi, "had not"],
+  [/\blet's\b/gi, "let us"],
+  [/\bthat's\b/gi, "that is"],
+  [/\bwhat's\b/gi, "what is"],
+  [/\bwhere's\b/gi, "where is"],
+  [/\bwho's\b/gi, "who is"],
+  [/\bthere's\b/gi, "there is"],
+  [/\bhere's\b/gi, "here is"],
+];
+
+function expandContractions(text: string): string {
+  let out = text;
+  for (const [pattern, full] of CONTRACTION_EXPAND) {
+    out = out.replace(pattern, full);
+  }
+  return out;
+}
+
+function spokenFingerprint(text: string): string {
+  return expandContractions(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** "I am a student. / I'm a student." → one phrase (same on the ear). */
+export function collapseSpokenVariants(text: string): string {
+  const chunks = text
+    .split(/\s+\/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (chunks.length < 2) return text;
+
+  const kept: string[] = [];
+  const seen = new Set<string>();
+  for (const chunk of chunks) {
+    const key = spokenFingerprint(chunk);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    kept.push(chunk);
+  }
+  return kept.join(". ");
+}
+
 function cleanSpeakSegment(part: string): string {
   return part
     .trim()
@@ -168,7 +247,7 @@ function cleanSpeakSegment(part: string): string {
 export function speakableEnglish(text: string): string {
   const raw = text.replace(/\s+/g, " ").trim();
   if (!raw) return "";
-  if (!/\/[^/\n]+\//.test(raw)) return raw;
+  if (!/\/[^/\n]+\//.test(raw)) return collapseSpokenVariants(raw);
 
   const parts = raw.split(/\/[^/\n]+\//);
   const phrases: string[] = [];
@@ -190,8 +269,8 @@ export function speakableEnglish(text: string): string {
     }
   }
 
-  if (phrases.length) return phrases.join(". ");
-  return raw.replace(/\/[^/\n]+\//g, " ").replace(/\s+/g, " ").trim();
+  if (phrases.length) return collapseSpokenVariants(phrases.join(". "));
+  return collapseSpokenVariants(raw.replace(/\/[^/\n]+\//g, " ").replace(/\s+/g, " ").trim());
 }
 
 export function speakEnglish(text: string, options?: { rate?: number; accent?: Accent }) {

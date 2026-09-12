@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { extractEnglish, looksEnglish } from "../lib/speech";
-import { SpeakButton } from "./SpeakButton";
+import { SpeakButton, VoiceControls } from "./SpeakButton";
 
 export type QuizItem = {
   id: number;
@@ -27,6 +27,7 @@ export function Quiz({
 }) {
   return (
     <div className="grid gap-4">
+      <VoiceControls className="sticky top-0 z-10 rounded-2xl border border-line bg-card/95 px-4 py-3 shadow-sm backdrop-blur" />
       {items.map((item, index) => (
         <QuizCard key={`${item.id}-${item.kind}-${index}`} item={item} index={index} onCheck={onCheck} submitLabel={submitLabel} />
       ))}

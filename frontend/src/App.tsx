@@ -1,6 +1,7 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { BrandMark } from "./components/BrandMark";
 import { ConsentBanner } from "./components/ConsentBanner";
+import { DonationBanner } from "./components/DonationBanner";
 import { Layout } from "./components/Layout";
 import { useAuth } from "./context/AuthContext";
 import { ExamPage, ExamsPage, TestPage } from "./pages/AssessmentPages";
@@ -62,8 +63,11 @@ function Splash() {
 
 export function App() {
   return (
-    <>
+    <div className="flex h-dvh flex-col">
+      <DonationBanner />
+      <div className="relative min-h-0 flex-1 overflow-hidden">
       <ConsentBanner />
+      <div className="h-full">
       <Routes>
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
@@ -107,6 +111,8 @@ export function App() {
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+      </div>
+      </div>
+    </div>
   );
 }

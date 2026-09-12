@@ -131,9 +131,10 @@ export function RateSwitch() {
   );
 }
 
-export function VoiceControls() {
+export function VoiceControls({ className = "" }: { className?: string }) {
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
+    <div className={`flex flex-wrap items-center gap-3 ${className}`}>
+      <span className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">Озвучка</span>
       <AccentSwitch />
       <RateSwitch />
     </div>
