@@ -1,10 +1,12 @@
 import { ArrowRight, BookOpenCheck, PenLine, Trophy, Volume2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BrandMark } from "../components/BrandMark";
+import { DonationBanner } from "../components/DonationBanner";
 
 export function Landing() {
   return (
-    <div className="surface-grid flex h-full min-h-0 flex-col overflow-y-auto">
+    <div className="surface-grid flex min-h-dvh flex-col">
+      <DonationBanner />
       <header className="mx-auto flex w-full max-w-6xl shrink-0 items-center justify-between px-5 py-5">
         <div>
           <BrandMark size="md" />

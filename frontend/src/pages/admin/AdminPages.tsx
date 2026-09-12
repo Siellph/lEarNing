@@ -16,7 +16,7 @@ export function AdminLayout() {
   ] as const;
 
   return (
-    <div className="surface-grid h-full overflow-y-auto">
+    <div className="surface-grid min-h-screen">
       <header className="border-b border-line/70 px-4 py-4 sm:px-8">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
           <div>

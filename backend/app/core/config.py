@@ -19,11 +19,6 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = ""
     ADMIN_PASSWORD: str = ""
     ADMIN_NAME: str = "Администратор"
-    DONATION_ENABLED: bool = False
-    DONATION_URL: str = ""
-    DONATION_TITLE: str = ""
-    DONATION_MESSAGE: str = ""
-    DONATION_BUTTON: str = ""
 
     @property
     def cors_origins(self) -> list[str]:

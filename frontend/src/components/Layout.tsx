@@ -1,6 +1,7 @@
 import { BookOpenText, GraduationCap, Home, LogOut, Shield, Sparkles, UserRound, Volume2 } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { BrandMark } from "./BrandMark";
+import { DonationBanner } from "./DonationBanner";
 import { useAuth } from "../context/AuthContext";
 
 const links = [
@@ -16,7 +17,8 @@ export function Layout() {
   const { user, logout } = useAuth();
 
   return (
-    <div className="surface-grid flex h-full flex-col">
+    <div className="surface-grid flex h-dvh flex-col">
+      <DonationBanner />
       <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1">
         <aside className="hide-sm flex h-full w-64 shrink-0 flex-col border-r border-line/70 px-5 py-6">
           <BrandMark size="md" />
