@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { extractEnglish, looksEnglish } from "../lib/speech";
-import { SpeakButton } from "../components/SpeakButton";
+import { SpeakButton, VoiceControls } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
 
 type Question = { id: number; kind: string; prompt: string; options?: string[] | null; sort_order: number };
@@ -139,7 +139,10 @@ function AssessmentRunner({ kind, id, back }: { kind: "test" | "exam"; id: numbe
           <h1 className="font-display mt-2 text-4xl">{meta.title}</h1>
           <p className="text-sm text-ink-soft">Проходной балл {meta.passing_score}%</p>
         </div>
-        {!result && <div className="rounded-full bg-card px-4 py-2 font-semibold">{clock}</div>}
+        <div className="flex flex-wrap items-center gap-3">
+          <VoiceControls />
+          {!result && <div className="rounded-full bg-card px-4 py-2 font-semibold">{clock}</div>}
+        </div>
       </div>
       {result ? (
         <div className="grid gap-4">
