@@ -1,0 +1,53 @@
+# lEarNing — учим EN
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lumina}
+      POSTGRES_USER: ${POSTGRES_USER:-lumina}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lumina_dev_password}
+    # Файлы БД лежат на диске хоста: ./data/postgres (на сервере — папка рядом с репозиторием).
+    # Бэкап = скопировать этот каталог (лучше при остановленном postgres).
+    # `docker compose down` данные сохраняет.
+    # `docker compose down -v` не удаляет bind mount — папку нужно стирать вручную.
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lumina} -d ${POSTGRES_DB:-lumina}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-lumina}:${POSTGRES_PASSWORD:-lumina_dev_password}@postgres:5432/${POSTGRES_DB:-lumina}
+      SECRET_KEY: ${SECRET_KEY:-change-this-to-a-long-random-string}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-120}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost,http://localhost:80,http://localhost:3000,http://127.0.0.1,http://127.0.0.1:3000}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:3000}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-lEarNing <noreply@example.com>}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_NAME: ${ADMIN_NAME:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"

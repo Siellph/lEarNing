@@ -1,0 +1,253 @@
+import { ACCENT_KEY, RATE_KEY, canPersistPrefs, onConsentChange } from "./consent";
+
+export type Accent = "en-GB" | "en-US";
+export type SpeechRate = "slow" | "normal" | "fast";
+
+export const SPEECH_RATES: Record<SpeechRate, number> = {
+  slow: 0.65,
+  normal: 0.88,
+  fast: 1.15,
+};
+
+const DEFAULT_ACCENT: Accent = "en-GB";
+const DEFAULT_RATE: SpeechRate = "normal";
+
+let memoryAccent: Accent = DEFAULT_ACCENT;
+let memoryRate: SpeechRate = DEFAULT_RATE;
+
+function readStoredAccent(): Accent {
+  try {
+    return localStorage.getItem(ACCENT_KEY) === "en-US" ? "en-US" : DEFAULT_ACCENT;
+  } catch {
+    return DEFAULT_ACCENT;
+  }
+}
+
+function readStoredRate(): SpeechRate {
+  try {
+    const stored = localStorage.getItem(RATE_KEY);
+    if (stored === "slow" || stored === "fast" || stored === "normal") return stored;
+  } catch {
+    /* ignore */
+  }
+  return DEFAULT_RATE;
+}
+
+hydrateFromStorage();
+onConsentChange(() => {
+  if (canPersistPrefs()) {
+    localStorage.setItem(ACCENT_KEY, memoryAccent);
+    localStorage.setItem(RATE_KEY, memoryRate);
+    return;
+  }
+  memoryAccent = DEFAULT_ACCENT;
+  memoryRate = DEFAULT_RATE;
+});
+
+function hydrateFromStorage() {
+  memoryAccent = readStoredAccent();
+  memoryRate = readStoredRate();
+}
+
+export function getAccent(): Accent {
+  return canPersistPrefs() ? readStoredAccent() : memoryAccent;
+}
+
+export function setAccent(accent: Accent) {
+  memoryAccent = accent;
+  if (canPersistPrefs()) localStorage.setItem(ACCENT_KEY, accent);
+}
+
+export function getRatePreset(): SpeechRate {
+  return canPersistPrefs() ? readStoredRate() : memoryRate;
+}
+
+export function setRatePreset(preset: SpeechRate) {
+  memoryRate = preset;
+  if (canPersistPrefs()) localStorage.setItem(RATE_KEY, preset);
+}
+
+export function getRate(): number {
+  return SPEECH_RATES[getRatePreset()];
+}
+
+function pickVoice(lang: Accent): SpeechSynthesisVoice | undefined {
+  const voices = window.speechSynthesis.getVoices();
+  const exact = voices.find((voice) => voice.lang === lang || voice.lang.replace("_", "-") === lang);
+  if (exact) return exact;
+  const prefix = voices.find((voice) => voice.lang.startsWith(lang.slice(0, 2)));
+  return prefix;
+}
+
+const SEGMENT_CONNECTOR = /^(vs\.?|versus|v\.)$/i;
+
+let voicesReady: Promise<void> | null = null;
+let speakGeneration = 0;
+let primed = false;
+let priming = false;
+
+function whenVoicesReady(): Promise<void> {
+  if (typeof window === "undefined" || !window.speechSynthesis) return Promise.resolve();
+  if (!voicesReady) {
+    voicesReady = new Promise((resolve) => {
+      const finish = () => resolve();
+      if (window.speechSynthesis.getVoices().length) {
+        finish();
+        return;
+      }
+      const onChange = () => {
+        window.speechSynthesis.removeEventListener("voiceschanged", onChange);
+        finish();
+      };
+      window.speechSynthesis.addEventListener("voiceschanged", onChange);
+      window.speechSynthesis.getVoices();
+      window.setTimeout(finish, 400);
+    });
+  }
+  return voicesReady;
+}
+
+function flushSynth() {
+  const synth = window.speechSynthesis;
+  synth.cancel();
+  if (synth.paused) synth.resume();
+}
+
+/** One-time silent warmup. Never chained onto a real speak() — cancel() will drop it. */
+export function primeSpeech() {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  if (primed || priming) return;
+
+  const synth = window.speechSynthesis;
+  if (synth.paused) synth.resume();
+  if (synth.speaking) {
+    primed = true;
+    return;
+  }
+
+  priming = true;
+  const prime = new SpeechSynthesisUtterance("\u00A0");
+  prime.volume = 0;
+  prime.rate = 2;
+  prime.lang = getAccent();
+  const done = () => {
+    primed = true;
+    priming = false;
+  };
+  prime.onend = done;
+  prime.onerror = done;
+  try {
+    synth.speak(prime);
+  } catch {
+    done();
+  }
+}
+
+function installGesturePrime() {
+  if (typeof window === "undefined") return;
+  const onGesture = () => primeSpeech();
+  window.addEventListener("pointerdown", onGesture, { capture: true, once: true, passive: true });
+  window.addEventListener("keydown", onGesture, { capture: true, once: true, passive: true });
+}
+
+if (typeof window !== "undefined" && window.speechSynthesis) {
+  void whenVoicesReady();
+  installGesturePrime();
+}
+
+function cleanSpeakSegment(part: string): string {
+  return part
+    .trim()
+    .replace(/^(vs\.?|versus)\s+/i, "")
+    .replace(/^[\s,.;:!?—–−-]+/, "")
+    .replace(/[\s,.;:!?—–−]+$/, "")
+    .trim();
+}
+
+/** Plain English for TTS: drop /ipa/ blocks, keep words. "record /…/ vs /…/" → "record. record". */
+export function speakableEnglish(text: string): string {
+  const raw = text.replace(/\s+/g, " ").trim();
+  if (!raw) return "";
+  if (!/\/[^/\n]+\//.test(raw)) return raw;
+
+  const parts = raw.split(/\/[^/\n]+\//);
+  const phrases: string[] = [];
+
+  for (let i = 0; i < parts.length; i += 1) {
+    const cleaned = cleanSpeakSegment(parts[i]);
+    if (cleaned && !SEGMENT_CONNECTOR.test(cleaned)) {
+      phrases.push(cleaned);
+      continue;
+    }
+
+    const restHasEnglish = parts.slice(i + 1).some((part) => {
+      const next = cleanSpeakSegment(part);
+      return Boolean(next) && !SEGMENT_CONNECTOR.test(next);
+    });
+    const connector = SEGMENT_CONNECTOR.test(cleanSpeakSegment(parts[i]) || parts[i].trim());
+    if (!restHasEnglish && connector && phrases.length) {
+      phrases.push(phrases[phrases.length - 1]);
+    }
+  }
+
+  if (phrases.length) return phrases.join(". ");
+  return raw.replace(/\/[^/\n]+\//g, " ").replace(/\s+/g, " ").trim();
+}
+
+export function speakEnglish(text: string, options?: { rate?: number; accent?: Accent }) {
+  const spoken = speakableEnglish(text);
+  if (!spoken || typeof window === "undefined" || !window.speechSynthesis) return;
+
+  const generation = ++speakGeneration;
+  const synth = window.speechSynthesis;
+  flushSynth();
+
+  const utterance = new SpeechSynthesisUtterance(spoken);
+  const accent = options?.accent || getAccent();
+  utterance.lang = accent;
+  utterance.rate = options?.rate ?? getRate();
+
+  const start = () => {
+    if (generation !== speakGeneration) return;
+    const voice = pickVoice(accent);
+    if (voice) utterance.voice = voice;
+    flushSynth();
+    synth.speak(utterance);
+    primed = true;
+    priming = false;
+  };
+
+  const kick = () => {
+    if (generation !== speakGeneration) return;
+    // Next macrotask so Chromium cancel() cannot swallow this speak().
+    window.setTimeout(start, 0);
+  };
+
+  if (synth.getVoices().length) {
+    kick();
+    return;
+  }
+  void whenVoicesReady().then(kick);
+}
+
+export function extractEnglish(text: string): string | null {
+  const source = speakableEnglish(text);
+  const quoted = source.match(/[«"“]([^»"”]+)[»"”]/);
+  if (quoted?.[1] && /[A-Za-z]/.test(quoted[1])) return quoted[1];
+  const latin = source
+    .replace(/[А-Яа-яЁё]+/g, " ")
+    .replace(/_+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const words = latin.split(" ").filter((word) => /[A-Za-z]/.test(word));
+  if (words.length >= 2) return latin;
+  if (words.length === 1 && words[0].replace(/[^A-Za-z]/g, "").length > 1) return words[0];
+  return null;
+}
+
+export function looksEnglish(text: string): boolean {
+  const letters = text.replace(/[^A-Za-zА-Яа-яЁё]/g, "");
+  if (!letters) return false;
+  const latin = (text.match(/[A-Za-z]/g) || []).length;
+  return latin / letters.length >= 0.6;
+}

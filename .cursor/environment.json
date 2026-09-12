@@ -1,0 +1,4 @@
+{
+  "name": "learning",
+  "install": "bash ./.cursor/install.sh"
+}
