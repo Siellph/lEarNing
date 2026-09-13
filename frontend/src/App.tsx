@@ -6,6 +6,7 @@ import { useAuth } from "./context/AuthContext";
 import { ExamPage, ExamsPage, TestPage } from "./pages/AssessmentPages";
 import { Dashboard } from "./pages/Dashboard";
 import { GrammarLevels, ModuleList } from "./pages/Grammar";
+import { AboutPage } from "./pages/About";
 import { Landing } from "./pages/Landing";
 import { LessonPage } from "./pages/LessonPage";
 import { Login } from "./pages/Login";
@@ -66,6 +67,7 @@ export function App() {
     <>
       <ConsentBanner />
       <Routes>
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route element={<GuestOnly />}>

@@ -65,6 +65,9 @@ export function Landing() {
       </section>
       <footer className="mx-auto flex w-full max-w-6xl shrink-0 flex-wrap items-center gap-x-5 gap-y-2 px-5 py-8 text-sm text-ink-soft">
         <span>© 2026 lEarNing</span>
+        <Link to="/about" className="hover:text-terra">
+          О проекте
+        </Link>
         <Link to="/terms" className="hover:text-terra">
           Пользовательское соглашение
         </Link>

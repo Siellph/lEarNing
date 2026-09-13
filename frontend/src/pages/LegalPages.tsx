@@ -15,6 +15,9 @@ function LegalShell({ title, children }: { title: string; children: React.ReactN
           <div className="mt-6 grid gap-5 text-[1.05rem] leading-7 text-ink-soft">{children}</div>
         </article>
         <p className="mt-6 flex flex-wrap gap-4 text-sm text-ink-soft">
+          <Link to="/about" className="text-terra">
+            О проекте
+          </Link>
           <Link to="/terms" className="text-terra">
             Пользовательское соглашение
           </Link>
