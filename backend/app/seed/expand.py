@@ -270,6 +270,7 @@ def ensure_word_order_modules(db) -> int:
 
 
 def expand_study_decks(db) -> int:
+    """Insert missing study decks/cards; sync card text from seed by primary_text (no wipe)."""
     added = 0
     existing = {deck.slug: deck for deck in db.query(StudyDeck).all()}
     max_order = max((d.sort_order for d in existing.values()), default=0)
@@ -287,13 +288,23 @@ def expand_study_decks(db) -> int:
             db.add(deck)
             db.flush()
             existing[deck.slug] = deck
-            known: set[str] = set()
+            known: dict = {}
         else:
-            known = {card.primary_text.lower() for card in deck.cards}
+            deck.title = data["title"]
+            deck.description = data["description"]
+            deck.kind = data["kind"]
+            known = {card.primary_text.lower(): card for card in deck.cards}
         order = max((c.sort_order for c in deck.cards), default=0)
         for item in data["cards"]:
             key = item["primary_text"].lower()
             if key in known:
+                card = known[key]
+                card.secondary_text = item.get("secondary_text", "") or ""
+                card.tertiary_text = item.get("tertiary_text", "") or ""
+                card.translation = item["translation"]
+                card.example = item.get("example", "") or ""
+                card.example_translation = item.get("example_translation", "") or ""
+                card.category = item.get("category", "") or ""
                 continue
             order += 1
             db.add(
@@ -309,7 +320,7 @@ def expand_study_decks(db) -> int:
                     sort_order=order,
                 )
             )
-            known.add(key)
+            known[key] = None
             added += 1
     return added
 
