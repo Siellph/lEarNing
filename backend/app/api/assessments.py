@@ -54,7 +54,16 @@ def _public_questions(items):
 
 
 def _sample_questions(questions, *, lo: int, hi: int):
-    pool = list(questions)
+    """Sample a balanced attempt; never return two items with the same prompt."""
+    pool = []
+    seen_prompts: set[str] = set()
+    for q in questions:
+        prompt = (q.prompt or "").strip()
+        if prompt and prompt in seen_prompts:
+            continue
+        if prompt:
+            seen_prompts.add(prompt)
+        pool.append(q)
     if not pool:
         return []
     target = min(len(pool), max(lo, min(hi, len(pool))))

@@ -43,6 +43,7 @@ from app.seed.expand import (
     remove_legacy_demo_accounts,
     repair_match_options,
     rewrite_known_prompts,
+    scrub_duplicate_prompts,
     scrub_off_topic_pad_items,
     sync_lesson_theory,
 )
@@ -131,7 +132,7 @@ def seed_modules(db, levels_by_code: dict[str, GrammarLevel]) -> tuple[int, int,
 
 def _run_expanders(db) -> dict:
     scrubbed = scrub_off_topic_pad_items(db)
-    return {
+    stats = {
         "scrub_practice": scrubbed["practice"],
         "scrub_tests": scrubbed["tests"],
         "word_order": ensure_word_order_modules(db),
@@ -146,6 +147,12 @@ def _run_expanders(db) -> dict:
         "prompt_rewrites": rewrite_known_prompts(db),
         "match_repairs": repair_match_options(db),
     }
+    # After rewrites, collapse same-prompt collisions left in existing DBs.
+    dupes = scrub_duplicate_prompts(db)
+    stats["scrub_dup_practice"] = dupes["practice"]
+    stats["scrub_dup_tests"] = dupes["tests"]
+    stats["scrub_dup_exams"] = dupes["exams"]
+    return stats
 
 
 def main() -> None:
@@ -166,6 +173,9 @@ def main() -> None:
             print(
                 "already seeded; "
                 f"scrub_practice=-{stats['scrub_practice']}, scrub_tests=-{stats['scrub_tests']}, "
+                f"scrub_dup_practice=-{stats['scrub_dup_practice']}, "
+                f"scrub_dup_tests=-{stats['scrub_dup_tests']}, "
+                f"scrub_dup_exams=-{stats['scrub_dup_exams']}, "
                 f"word_order +{stats['word_order']}, theory={stats['theory']}, "
                 f"practice +{stats['practice']}, "
                 f"tests +{stats['tests']}, exams +{stats['exams']}, words +{stats['words']}, "
@@ -239,6 +249,9 @@ def main() -> None:
             f"exam_questions={n_exam_q + stats['exams']} study_cards=+{stats['study']} "
             f"skills=+{stats['skills']} "
             f"scrub_practice=-{stats['scrub_practice']} scrub_tests=-{stats['scrub_tests']} "
+            f"scrub_dup_practice=-{stats['scrub_dup_practice']} "
+            f"scrub_dup_tests=-{stats['scrub_dup_tests']} "
+            f"scrub_dup_exams=-{stats['scrub_dup_exams']} "
             f"theory={stats['theory']} "
             f"prompt_rewrites={stats['prompt_rewrites']} match_repairs={stats['match_repairs']}"
         )

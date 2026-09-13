@@ -7,7 +7,12 @@ Generated systematically from answer/kind/module; curated exam gaps live in exam
 
 TEST_GAP_REWRITES: dict[str, str] = {
     "'Have you seen my pass?' → He asked if I ___ his pass.": (
-        "Вставьте форму Present Perfect: 'Have you seen my pass?' → He asked if I ___ his pass."
+        "Косвенный вопрос: вставьте сдвиг (Present Perfect → Past Perfect): "
+        "'Have you seen my pass?' → He asked if I ___ his pass."
+    ),
+    "Вставьте форму Present Perfect: 'Have you seen my pass?' → He asked if I ___ his pass.": (
+        "Косвенный вопрос: вставьте сдвиг (Present Perfect → Past Perfect): "
+        "'Have you seen my pass?' → He asked if I ___ his pass."
     ),
     "'I bought this yesterday.' → He said he had bought that ___.": (
         "Вставьте пропущенное слово: 'I bought this yesterday.' → He said he had bought that ___."
@@ -25,7 +30,12 @@ TEST_GAP_REWRITES: dict[str, str] = {
         "Вставьте пропущенное слово: 'We're meeting here.' → They said they were meeting ___."
     ),
     "'Who took the parcel?' → She asked who ___ the parcel.": (
-        "Выберите форму Past Simple: 'Who took the parcel?' → She asked who ___ the parcel."
+        "Косвенный вопрос: выберите сдвиг (Past Simple → Past Perfect): "
+        "'Who took the parcel?' → She asked who ___ the parcel."
+    ),
+    "Выберите форму Past Simple: 'Who took the parcel?' → She asked who ___ the parcel.": (
+        "Косвенный вопрос: выберите сдвиг (Past Simple → Past Perfect): "
+        "'Who took the parcel?' → She asked who ___ the parcel."
     ),
     '___ a message for you.': (
         'Вставьте there is/are: ___ a message for you.'

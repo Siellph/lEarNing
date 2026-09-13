@@ -358,7 +358,12 @@ TOPIC_PRACTICE: dict[str, list] = {
     "word-order-a1": [
         order("Соберите: she / tea / drinks / often", "She often drinks tea.", "S + частота + V."),
         fill("They ___ in London. (live)", "live", "S + V + place."),
-        mc("Правильный порядок:", ["Likes she coffee?", "Does she like coffee?", "She does like coffee?"], "Does she like coffee?", "Do/Does + S + V1."),
+        mc(
+            "Выберите правильный вопрос (coffee):",
+            ["Likes she coffee?", "Does she like coffee?", "She does like coffee?"],
+            "Does she like coffee?",
+            "Do/Does + S + V1.",
+        ),
         err("I every day go there.", "I go there every day.", "Частота в конце или перед V."),
         order("Слова: is / the / on / book / table / the", "The book is on the table.", "S + be + prep + place."),
         fill("___ you speak English?", "Do", "Do + you + V1."),
@@ -545,7 +550,7 @@ TOPIC_TEST: dict[str, list] = {
         xf("очень / tall / he / is", "He is very tall.", "very + adj."),
         fill("Вставьте нужную форму (cold): I feel ___. (cold)", "cold", "feel + adj."),
         match("Описание", ["big", "old", "happy"], "big=размер; old=возраст; happy=состояние", "Adj."),
-        mc("Выберите прилагательное: It's a ___ story.", ["sad", "sadly", "sads"], "sad", "Adj."),
+        mc("Выберите прилагательное: It's a ___ film.", ["boring", "boringly", "bored"], "boring", "Adj."),
         fill("Вставьте нужную форму (great): The coffee smells ___. (great)", "great", "smell + adj."),
         order("Соберите: blue / beautiful / a / dress", "a beautiful blue dress", "мнение → цвет."),
         err("The children are happies.", "The children are happy.", "Без -s."),
@@ -553,7 +558,12 @@ TOPIC_TEST: dict[str, list] = {
     "word-order-a1": [
         order("Соберите: usually / breakfast / I / eat / at 8", "I usually eat breakfast at 8.", "S + frequency + V + O + time."),
         fill("Выберите вспомогательный глагол: ___ she work here?", "Does", "Does + he/she + V1."),
-        mc("Выберите верное:", ["Where you live?", "Where do you live?", "Where live you?"], "Where do you live?", "Wh + do + S + V."),
+        mc(
+            "Выберите правильный вопрос (where):",
+            ["Where you live?", "Where do you live?", "Where live you?"],
+            "Where do you live?",
+            "Wh + do + S + V.",
+        ),
         err("Speaks he French?", "Does he speak French?", "Do/Does в вопросе."),
         order("Слова: never / late / is / she", "She is never late.", "be + частота."),
         fill("Вставьте предлог: They live ___ Moscow.", "in", "in + city."),
@@ -566,10 +576,18 @@ TOPIC_TEST: dict[str, list] = {
 
 
 def _merge(*maps: dict[str, list]) -> dict[str, list]:
+    """Merge slug→item lists; keep first occurrence of each prompt per slug."""
     out: dict[str, list] = {}
     for mapping in maps:
         for slug, items in mapping.items():
-            out.setdefault(slug, []).extend(items)
+            bucket = out.setdefault(slug, [])
+            seen = {item["prompt"] for item in bucket}
+            for item in items:
+                prompt = item["prompt"]
+                if prompt in seen:
+                    continue
+                seen.add(prompt)
+                bucket.append(item)
     return out
 
 

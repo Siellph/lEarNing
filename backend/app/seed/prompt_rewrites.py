@@ -187,7 +187,11 @@ PROMPT_REWRITES: dict[str, str] = {
         "Начните вопрос How long: ___ you been learning French?"
     ),
     "By midnight: They ___ . (leave)": (
-        "Вставьте Future Perfect (by midnight): They ___ . (leave)"
+        "Вставьте Past Perfect (by midnight): They ___ . (leave)"
+    ),
+    # Mis-seeded Future Perfect label on a Past Perfect item (answer had left).
+    "Вставьте Future Perfect (by midnight): They ___ . (leave)": (
+        "Вставьте Past Perfect (by midnight): They ___ . (leave)"
     ),
     "Результат: If they had asked → I ___ have agreed.": (
         "Third Conditional: вставьте would: If they had asked → I ___ have agreed."
@@ -406,6 +410,9 @@ _DOUBLE_FIXES = {
     ),
     "Косвенная речь: вставьте сдвиг: Косвенная речь: вставьте сдвиг: 'We have finished' → They said they ___ finished.": (
         "Косвенная речь: вставьте сдвиг: 'We have finished' → They said they ___ finished."
+    ),
+    "Начните вопрос Начните вопрос How long: ___ you been learning French?": (
+        "Начните вопрос How long: ___ you been learning French?"
     ),
 }
 PROMPT_REWRITES.update(_DOUBLE_FIXES)

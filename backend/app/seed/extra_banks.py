@@ -49,16 +49,6 @@ EXTRA_PRACTICE: dict[str, list] = {
         fill("He ___ to Paris last year. (fly)", "flew", "fly — flew — flown."),
         err("They taked the bus.", "They took the bus.", "take — took."),
     ],
-    "word-order-a1": [
-        order("Соберите: she / tea / drinks / often", "She often drinks tea.", "Подлежащее + частота + V."),
-        fill("They ___ in London. (live)", "live", "S + V + place."),
-        mc("Правильный порядок:", ["Likes she coffee?", "Does she like coffee?", "She does like coffee?"], "Does she like coffee?", "Do/Does + S + V1."),
-        err("I every day go there.", "I go there every day.", "Частота в конце или перед V."),
-        order("Слова: is / the / on / book / table / the", "The book is on the table.", "S + be + prep + place."),
-        fill("___ you speak English?", "Do", "Do + you + V1."),
-        xf("Переставьте: rarely / he / smiles", "He rarely smiles.", "Наречие частоты перед смысловым V."),
-        match("Части предложения", ["She", "reads", "books"], "She=S; reads=V; books=O", "SVO."),
-    ],
 }
 
 EXTRA_TEST: dict[str, list] = {
@@ -103,16 +93,6 @@ EXTRA_TEST: dict[str, list] = {
         fill("Вставьте форму Past Simple: She ___ carefully. (drive, past)", "drove", "drive — drove — driven."),
         err("He putted the bag down.", "He put the bag down.", "put — put — put."),
     ],
-    "word-order-a1": [
-        order("Соберите: usually / breakfast / I / eat / at 8", "I usually eat breakfast at 8.", "S + frequency + V + O + time."),
-        fill("Выберите вспомогательный глагол: ___ she work here?", "Does", "Does + he/she + V1."),
-        mc("Выберите верное:", ["Where you live?", "Where do you live?", "Where live you?"], "Where do you live?", "Wh + do + S + V."),
-        err("Speaks he French?", "Does he speak French?", "Do/Does в вопросе."),
-        order("Слова: never / late / is / she", "She is never late.", "be + частота."),
-        fill("Вставьте предлог: They live ___ Moscow.", "in", "in + city."),
-        xf("Переставьте: tomorrow / we / leave", "We leave tomorrow.", "Время обычно в конце."),
-        match("Роли", ["Do", "you", "swim"], "Do=aux; you=S; swim=V", "Вопрос Present Simple."),
-    ],
 }
 
 # Deprecated CEFR-wide pads (were injecting off-topic tips into every thin module).
@@ -121,15 +101,31 @@ GENERIC_PRACTICE_PAD: dict[str, list] = {}
 GENERIC_TEST_PAD: dict[str, list] = {}
 
 
+def _dedupe_by_prompt(items: list) -> list:
+    seen: set[str] = set()
+    out: list = []
+    for item in items:
+        prompt = item["prompt"] if isinstance(item, dict) else item.prompt
+        if prompt in seen:
+            continue
+        seen.add(prompt)
+        out.append(item)
+    return out
+
+
 def practice_bank_for(slug: str) -> list:
     """Module-specific extras + on-topic topic pads (never CEFR-wide)."""
     from app.seed.topic_banks import TOPIC_PRACTICE
 
-    return list(EXTRA_PRACTICE.get(slug, [])) + list(TOPIC_PRACTICE.get(slug, []))
+    return _dedupe_by_prompt(
+        list(EXTRA_PRACTICE.get(slug, [])) + list(TOPIC_PRACTICE.get(slug, []))
+    )
 
 
 def test_bank_for(slug: str) -> list:
+    """Module-specific extras + on-topic topic pads (never CEFR-wide)."""
     from app.seed.topic_banks import TOPIC_TEST
 
-    return list(EXTRA_TEST.get(slug, [])) + list(TOPIC_TEST.get(slug, []))
-
+    return _dedupe_by_prompt(
+        list(EXTRA_TEST.get(slug, [])) + list(TOPIC_TEST.get(slug, []))
+    )

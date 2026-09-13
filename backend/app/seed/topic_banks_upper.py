@@ -30,7 +30,7 @@ TOPIC_PRACTICE_UPPER: dict[str, list] = {
     "present-perfect-intro": [
         fill("Вставьте have/has (Present Perfect): I ___ already finished.", "have", "have + V3."),
         mc("She ___ just left.", ["have", "has", "is"], "has", "She + has."),
-        err("I have saw that film.", "I have seen that film.", "have + V3."),
+        err("He have finished the report.", "He has finished the report.", "He + has + V3."),
         xf("Отрицание: They have arrived.", "They haven't arrived.", "haven't + V3.", ["They have not arrived."]),
         fill("___ you ever been to Rome?", "Have", "Have + S + V3."),
         mc("He ___ lost his keys.", ["have", "has", "is"], "has", "has + V3."),

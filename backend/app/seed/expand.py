@@ -411,16 +411,39 @@ def fix_known_article_answers(db) -> int:
 
 
 def rewrite_known_prompts(db) -> int:
-    """Update terse transform prompts in live DB (old exact prompt → clearer wording)."""
+    """Update terse transform prompts in live DB (old exact prompt → clearer wording).
+
+    If the target prompt already exists on the same parent bank, drop the old row
+    instead of creating a same-prompt duplicate (common after expand + rewrite).
+    """
     from app.seed.prompt_rewrites import ANSWER_REWRITES, EXPLANATION_REWRITES, PROMPT_REWRITES
 
+    parent_key = {
+        Exercise: "module_id",
+        TestQuestion: "test_id",
+        ExamQuestion: "exam_id",
+    }
     fixed = 0
     for old_prompt, new_prompt in PROMPT_REWRITES.items():
         if old_prompt == new_prompt:
             continue
-        for model in (Exercise, TestQuestion, ExamQuestion):
+        for model, fk in parent_key.items():
             rows = db.query(model).filter(model.prompt == old_prompt).all()
             for row in rows:
+                parent_id = getattr(row, fk)
+                clash = (
+                    db.query(model)
+                    .filter(
+                        getattr(model, fk) == parent_id,
+                        model.prompt == new_prompt,
+                        model.id != row.id,
+                    )
+                    .first()
+                )
+                if clash is not None:
+                    db.delete(row)
+                    fixed += 1
+                    continue
                 row.prompt = new_prompt
                 if old_prompt in EXPLANATION_REWRITES:
                     row.explanation = EXPLANATION_REWRITES[old_prompt]
@@ -428,6 +451,32 @@ def rewrite_known_prompts(db) -> int:
                     row.answer = ANSWER_REWRITES[old_prompt]
                 fixed += 1
     return fixed
+
+
+def scrub_duplicate_prompts(db) -> dict[str, int]:
+    """Delete extra rows that share the same prompt within one practice/test/exam bank.
+
+    Keeps the lowest-id row. Idempotent; does not wipe banks.
+    """
+    removed = {"practice": 0, "tests": 0, "exams": 0}
+
+    def _scrub(model, fk: str, bucket: str) -> None:
+        rows = db.query(model).order_by(model.id.asc()).all()
+        seen: dict[tuple, int] = {}
+        for row in rows:
+            key = (getattr(row, fk), row.prompt or "")
+            if key[1] == "":
+                continue
+            if key in seen:
+                db.delete(row)
+                removed[bucket] += 1
+            else:
+                seen[key] = row.id
+
+    _scrub(Exercise, "module_id", "practice")
+    _scrub(TestQuestion, "test_id", "tests")
+    _scrub(ExamQuestion, "exam_id", "exams")
+    return removed
 
 
 def sync_lesson_theory(db) -> int:

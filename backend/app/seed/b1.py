@@ -539,8 +539,19 @@ B1 = [
             mc("I asked her ___ she wanted tea or coffee.", ["if", "whether", "what"], "whether", "Выбор or — типичный whether."),
         ],
         [
-            fill("Вставьте форму Present Perfect: 'Have you seen my pass?' → He asked if I ___ his pass.", "had seen", "Present Perfect → Past Perfect."),
-            mc("Выберите форму Past Simple: 'Who took the parcel?' → She asked who ___ the parcel.", ["did take", "had taken", "has taken"], "had taken", "Past Simple часто → Past Perfect в репортаже."),
+            fill(
+                "Косвенный вопрос: вставьте сдвиг (Present Perfect → Past Perfect): "
+                "'Have you seen my pass?' → He asked if I ___ his pass.",
+                "had seen",
+                "Present Perfect → Past Perfect.",
+            ),
+            mc(
+                "Косвенный вопрос: выберите сдвиг (Past Simple → Past Perfect): "
+                "'Who took the parcel?' → She asked who ___ the parcel.",
+                ["did take", "had taken", "has taken"],
+                "had taken",
+                "Past Simple часто → Past Perfect в репортаже.",
+            ),
             err("He asked what did I mean.", "He asked what I meant.", "Без did, порядок S + V."),
             xf("Передайте косвенным вопросом от She asked: 'Why are you laughing?'", "She asked why I was laughing.", "Present Continuous → Past Continuous.", ["She asked why I was laughing."]),
             fill("Вставьте предлог: The tourist asked how ___ get to the station. (инфинитив)", "to", "How to + V1."),
