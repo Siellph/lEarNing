@@ -6,13 +6,80 @@ from sqlalchemy.orm import Session
 from app.models.progress import ModuleProgress
 from app.models.user import User
 
+# Bidirectional via expand→full form: don't ↔ do not, I'm ↔ I am, can't ↔ cannot, …
+_CONTRACTION_EXPAND: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(rf"\b{re.escape(short)}\b", re.I), full)
+    for short, full in [
+        ("i'm", "i am"),
+        ("i've", "i have"),
+        ("i'd", "i would"),
+        ("i'll", "i will"),
+        ("you're", "you are"),
+        ("you've", "you have"),
+        ("you'd", "you would"),
+        ("you'll", "you will"),
+        ("he's", "he is"),
+        ("she's", "she is"),
+        ("it's", "it is"),
+        ("we're", "we are"),
+        ("we've", "we have"),
+        ("we'd", "we would"),
+        ("we'll", "we will"),
+        ("they're", "they are"),
+        ("they've", "they have"),
+        ("they'd", "they would"),
+        ("they'll", "they will"),
+        ("isn't", "is not"),
+        ("aren't", "are not"),
+        ("wasn't", "was not"),
+        ("weren't", "were not"),
+        ("don't", "do not"),
+        ("doesn't", "does not"),
+        ("didn't", "did not"),
+        ("can't", "cannot"),
+        ("won't", "will not"),
+        ("shouldn't", "should not"),
+        ("wouldn't", "would not"),
+        ("couldn't", "could not"),
+        ("mustn't", "must not"),
+        ("needn't", "need not"),
+        ("haven't", "have not"),
+        ("hasn't", "has not"),
+        ("hadn't", "had not"),
+        ("let's", "let us"),
+        ("that's", "that is"),
+        ("what's", "what is"),
+        ("where's", "where is"),
+        ("who's", "who is"),
+        ("there's", "there is"),
+        ("here's", "here is"),
+    ]
+]
+# Longer n't-forms first is unnecessary (each pattern is whole-word); apply "can not" → cannot.
+_CAN_NOT = re.compile(r"\bcan not\b", re.I)
+
 
 def normalize(value: str) -> str:
+    """Lowercase, unify apostrophes, collapse spaces, strip trailing .!? — no contraction expand."""
     text = value.strip().lower()
     text = text.replace("\u2019", "'").replace("`", "'")
     text = re.sub(r"\s+", " ", text)
     text = re.sub(r"[.!?]+$", "", text)
     return text
+
+
+def expand_contractions(text: str) -> str:
+    """Map contracted forms to full forms so don't and do not compare equal."""
+    out = text
+    for pattern, full in _CONTRACTION_EXPAND:
+        out = pattern.sub(full, out)
+    out = _CAN_NOT.sub("cannot", out)
+    return re.sub(r"\s+", " ", out).strip()
+
+
+def for_compare(value: str) -> str:
+    """Canonical key for answer matching (normalize + expand contractions)."""
+    return expand_contractions(normalize(value))
 
 
 def _infer_blank(prompt: str, completed: str) -> str | None:
@@ -49,24 +116,24 @@ def is_correct(
     prompt: str | None = None,
 ) -> bool:
     candidates = [answer, *(accepted or [])]
-    given_n = normalize(given)
-    norm_cands = [normalize(item) for item in candidates]
+    given_n = for_compare(given)
+    norm_cands = [for_compare(item) for item in candidates]
     if any(given_n == item for item in norm_cands):
         return True
 
     if prompt and "___" in prompt:
         for cand in candidates:
-            cand_n = normalize(cand)
-            filled_cand = normalize(prompt.replace("___", cand, 1))
-            filled_given = normalize(prompt.replace("___", given, 1))
+            cand_n = for_compare(cand)
+            filled_cand = for_compare(prompt.replace("___", cand, 1))
+            filled_given = for_compare(prompt.replace("___", given, 1))
             if filled_given == filled_cand:
                 return True
             blank = _infer_blank(prompt, cand)
-            if blank and given_n == normalize(blank):
+            if blank and given_n == for_compare(blank):
                 return True
             if " " not in cand_n and " " in given_n:
                 inferred = _infer_blank(prompt, given)
-                if inferred is not None and normalize(inferred) == cand_n:
+                if inferred is not None and for_compare(inferred) == cand_n:
                     return True
             if blank is None and "___" not in cand:
                 inferred_from_given = _infer_blank(prompt, given)
@@ -74,7 +141,7 @@ def is_correct(
                 if (
                     inferred_from_given
                     and inferred_from_cand
-                    and normalize(inferred_from_given) == normalize(inferred_from_cand)
+                    and for_compare(inferred_from_given) == for_compare(inferred_from_cand)
                 ):
                     return True
         return False

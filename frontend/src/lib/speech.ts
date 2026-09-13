@@ -243,9 +243,54 @@ function cleanSpeakSegment(part: string): string {
     .trim();
 }
 
+/** Grammar / CEFR / Russian seed tags in parentheses — speak sentence only. */
+const KNOWN_META_PAREN =
+  /^(be|to be|being|been|am|is|are|was|were|do|does|did|have|has|had|will|can|must|go|get|got|make|made|take|took|come|came|say|said|inf|infinitive|gerund|passive|active|v-?ing|v[123]|ed|ing|am\/is\/are|was\/were|do\/does|have\/has|go\/goes|is\/are|a1|a2|b1|b2|c1|c2|present simple|past simple|future simple|present continuous|past continuous|present perfect|past perfect|present perfect continuous|future continuous|future perfect)$/i;
+
+function isMetaParenthetical(inner: string): boolean {
+  const t = inner.trim();
+  if (!t || t.length > 40) return false;
+  if (/[А-Яа-яЁё]/.test(t)) return true;
+  if (KNOWN_META_PAREN.test(t)) return true;
+  // Short slash alternatives: am/is/are, do/does/did
+  if (/^[a-z][a-z']*(?:\/[a-z][a-z']*){1,4}$/i.test(t) && t.length <= 28) return true;
+  // Trailing Title-Case tense / topic labels
+  if (
+    /^(Present|Past|Future|Present Perfect|Past Perfect|Future Perfect)\b[\w\s-]{0,28}$/i.test(t) &&
+    !/[.!?]$/.test(t)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** Strip meta tags like "(be)", "(Present Simple)", "(русский хинт)" from spoken text only. */
+export function stripMetaParentheticals(text: string): string {
+  let out = text.replace(/\s+/g, " ").trim();
+  if (!out) return "";
+
+  // Trailing tags (may stack): "I am a student. (be)" → "I am a student."
+  for (;;) {
+    const match = out.match(/^(.*)\s*\(([^)]+)\)\s*$/);
+    if (!match || !isMetaParenthetical(match[2])) break;
+    out = match[1].trim();
+  }
+
+  // Inline known short meta tags only (keep rare legitimate parentheses)
+  out = out.replace(/\(([^)]+)\)/g, (full, inner: string) => {
+    const t = inner.trim();
+    if (KNOWN_META_PAREN.test(t) || /[А-Яа-яЁё]/.test(t) || (/^[a-z][a-z']*(?:\/[a-z][a-z']*){1,4}$/i.test(t) && t.length <= 28)) {
+      return " ";
+    }
+    return full;
+  });
+
+  return out.replace(/\s+/g, " ").trim();
+}
+
 /** Plain English for TTS: drop /ipa/ blocks, keep words. "record /…/ vs /…/" → "record. record". */
 export function speakableEnglish(text: string): string {
-  const raw = text.replace(/\s+/g, " ").trim();
+  const raw = stripMetaParentheticals(text.replace(/\s+/g, " ").trim());
   if (!raw) return "";
   if (!/\/[^/\n]+\//.test(raw)) return collapseSpokenVariants(raw);
 
