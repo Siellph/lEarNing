@@ -46,6 +46,28 @@ def err(prompt: str, answer: str, explanation: str, accepted: list[str] | None =
     }
 
 
+def order(prompt: str, answer: str, explanation: str, accepted: list[str] | None = None) -> dict:
+    return {
+        "kind": "order",
+        "prompt": prompt,
+        "answer": answer,
+        "accepted": accepted or [],
+        "explanation": explanation,
+    }
+
+
+def match(prompt: str, options: list[str], answer: str, explanation: str) -> dict:
+    """Match pairs: options are left sides; answer is 'A=1;B=2' style or the correct pairing string."""
+    return {
+        "kind": "match",
+        "prompt": prompt,
+        "options": options,
+        "answer": answer,
+        "accepted": [],
+        "explanation": explanation,
+    }
+
+
 def ex(en: str, ru: str) -> dict:
     return {"en": en, "ru": ru}
 

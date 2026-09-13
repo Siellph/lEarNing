@@ -78,3 +78,4 @@ class UserUpdateIn(BaseModel):
     password: str | None = Field(default=None, min_length=6, max_length=128)
     is_active: bool | None = None
     role: str | None = None
+    email_verified: bool | None = None

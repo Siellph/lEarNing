@@ -117,6 +117,18 @@ body {
   color: #9a8f80;
 }
 
+.gap-blank {
+  display: inline-block;
+  min-width: 3.25rem;
+  margin: 0 0.15rem;
+  padding: 0 0.45rem 0.1rem;
+  border-bottom: 2px dashed var(--color-terra);
+  border-radius: 0.55rem 0.55rem 0.2rem 0.2rem;
+  background: linear-gradient(180deg, rgba(196, 92, 62, 0.08), rgba(196, 92, 62, 0.02));
+  vertical-align: baseline;
+  line-height: 1.15;
+}
+
 .choice {
   position: relative;
 }

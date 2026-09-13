@@ -23,15 +23,22 @@ from app.schemas.auth import UserUpdateIn
 from app.schemas.content import (
     DonationIn,
     ExerciseIn,
+    ExerciseUpdateIn,
     LessonIn,
     ModuleIn,
     ModuleUpdateIn,
     QuestionIn,
+    QuestionUpdateIn,
+    RegistrationSettingsIn,
+    StudyCardIn,
+    StudyCardUpdateIn,
     VocabTopicIn,
     VocabTopicUpdateIn,
     VocabWordIn,
     VocabWordUpdateIn,
 )
+from app.models.study import StudyCard, StudyDeck
+
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -61,6 +68,7 @@ def list_users(_: User = Depends(get_admin_user), db: Session = Depends(get_db))
             "name": user.name,
             "role": user.role,
             "is_active": user.is_active,
+            "email_verified": user.email_verified,
             "xp": user.xp,
             "streak": user.streak,
             "created_at": user.created_at,
@@ -87,10 +95,38 @@ def update_user(
         user.is_active = payload.is_active
     if payload.role in {"admin", "student"}:
         user.role = payload.role
+    if payload.email_verified is not None:
+        user.email_verified = payload.email_verified
     db.add(user)
     db.commit()
     db.refresh(user)
-    return {"id": user.id, "email": user.email, "name": user.name, "role": user.role, "is_active": user.is_active}
+    return {
+        "id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "role": user.role,
+        "is_active": user.is_active,
+        "email_verified": user.email_verified,
+        "xp": user.xp,
+    }
+
+
+@router.post("/users/{user_id}/activate")
+def activate_user(user_id: int, _: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    user.email_verified = True
+    user.is_active = True
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return {
+        "id": user.id,
+        "email": user.email,
+        "email_verified": user.email_verified,
+        "is_active": user.is_active,
+    }
 
 
 @router.get("/levels")
@@ -209,6 +245,9 @@ def module_content(module_id: int, _: User = Depends(get_admin_user), db: Sessio
                 "kind": item.kind,
                 "prompt": item.prompt,
                 "answer": item.answer,
+                "options": item.options,
+                "accepted": item.accepted,
+                "explanation": item.explanation,
                 "sort_order": item.sort_order,
             }
             for item in sorted(module.exercises, key=lambda item: item.sort_order)
@@ -223,6 +262,9 @@ def module_content(module_id: int, _: User = Depends(get_admin_user), db: Sessio
                         "kind": question.kind,
                         "prompt": question.prompt,
                         "answer": question.answer,
+                        "options": question.options,
+                        "accepted": question.accepted,
+                        "explanation": question.explanation,
                     }
                     for question in sorted(module.test.questions, key=lambda item: item.sort_order)
                 ],
@@ -251,6 +293,32 @@ def delete_exercise(exercise_id: int, _: User = Depends(get_admin_user), db: Ses
     db.delete(exercise)
     db.commit()
     return {"ok": True}
+
+
+@router.patch("/exercises/{exercise_id}")
+def update_exercise(
+    exercise_id: int,
+    payload: ExerciseUpdateIn,
+    _: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    exercise = db.get(Exercise, exercise_id)
+    if not exercise:
+        raise HTTPException(status_code=404, detail="Упражнение не найдено")
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(exercise, key, value)
+    db.add(exercise)
+    db.commit()
+    db.refresh(exercise)
+    return {
+        "id": exercise.id,
+        "kind": exercise.kind,
+        "prompt": exercise.prompt,
+        "answer": exercise.answer,
+        "options": exercise.options,
+        "accepted": exercise.accepted,
+        "explanation": exercise.explanation,
+    }
 
 
 CEFR_CODES = {"A1", "A2", "B1", "B2", "C1", "C2"}
@@ -473,6 +541,32 @@ def delete_test_question(question_id: int, _: User = Depends(get_admin_user), db
     return {"ok": True}
 
 
+@router.patch("/test-questions/{question_id}")
+def update_test_question(
+    question_id: int,
+    payload: QuestionUpdateIn,
+    _: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    question = db.get(TestQuestion, question_id)
+    if not question:
+        raise HTTPException(status_code=404, detail="Вопрос не найден")
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(question, key, value)
+    db.add(question)
+    db.commit()
+    db.refresh(question)
+    return {
+        "id": question.id,
+        "kind": question.kind,
+        "prompt": question.prompt,
+        "answer": question.answer,
+        "options": question.options,
+        "accepted": question.accepted,
+        "explanation": question.explanation,
+    }
+
+
 @router.get("/exams/{exam_id}")
 def admin_exam_detail(exam_id: int, _: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     exam = db.get(Exam, exam_id)
@@ -483,7 +577,15 @@ def admin_exam_detail(exam_id: int, _: User = Depends(get_admin_user), db: Sessi
         "title": exam.title,
         "level_code": exam.level.code,
         "questions": [
-            {"id": q.id, "kind": q.kind, "prompt": q.prompt, "answer": q.answer}
+            {
+                "id": q.id,
+                "kind": q.kind,
+                "prompt": q.prompt,
+                "answer": q.answer,
+                "options": q.options,
+                "accepted": q.accepted,
+                "explanation": q.explanation,
+            }
             for q in sorted(exam.questions, key=lambda item: item.sort_order)
         ],
     }
@@ -511,6 +613,32 @@ def delete_exam_question(question_id: int, _: User = Depends(get_admin_user), db
     return {"ok": True}
 
 
+@router.patch("/exam-questions/{question_id}")
+def update_exam_question(
+    question_id: int,
+    payload: QuestionUpdateIn,
+    _: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    question = db.get(ExamQuestion, question_id)
+    if not question:
+        raise HTTPException(status_code=404, detail="Вопрос не найден")
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(question, key, value)
+    db.add(question)
+    db.commit()
+    db.refresh(question)
+    return {
+        "id": question.id,
+        "kind": question.kind,
+        "prompt": question.prompt,
+        "answer": question.answer,
+        "options": question.options,
+        "accepted": question.accepted,
+        "explanation": question.explanation,
+    }
+
+
 def _donation_payload(row: SiteSetting) -> dict:
     return {
         "donation_enabled": row.donation_enabled,
@@ -518,6 +646,7 @@ def _donation_payload(row: SiteSetting) -> dict:
         "donation_message": row.donation_message,
         "donation_url": row.donation_url,
         "donation_button": row.donation_button,
+        "email_verification_required": getattr(row, "email_verification_required", True),
     }
 
 
@@ -559,3 +688,116 @@ def admin_tests(_: User = Depends(get_admin_user), db: Session = Depends(get_db)
         }
         for test in tests
     ]
+
+
+@router.get("/registration")
+def get_registration_settings(_: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    row = db.get(SiteSetting, 1)
+    if not row:
+        row = SiteSetting(id=1)
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+    return {"email_verification_required": bool(getattr(row, "email_verification_required", True))}
+
+
+@router.patch("/registration")
+def update_registration_settings(
+    payload: RegistrationSettingsIn,
+    _: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    row = db.get(SiteSetting, 1)
+    if not row:
+        row = SiteSetting(id=1)
+        db.add(row)
+    row.email_verification_required = payload.email_verification_required
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return {"email_verification_required": row.email_verification_required}
+
+
+def _study_card_out(card: StudyCard) -> dict:
+    return {
+        "id": card.id,
+        "deck_id": card.deck_id,
+        "primary_text": card.primary_text,
+        "secondary_text": card.secondary_text,
+        "tertiary_text": card.tertiary_text,
+        "translation": card.translation,
+        "example": card.example,
+        "example_translation": card.example_translation,
+        "category": card.category,
+        "sort_order": card.sort_order,
+    }
+
+
+@router.get("/study/decks")
+def admin_study_decks(_: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    decks = db.query(StudyDeck).order_by(StudyDeck.sort_order, StudyDeck.id).all()
+    return [
+        {
+            "id": deck.id,
+            "slug": deck.slug,
+            "title": deck.title,
+            "description": deck.description,
+            "kind": deck.kind,
+            "card_count": len(deck.cards),
+        }
+        for deck in decks
+    ]
+
+
+@router.get("/study/decks/{deck_id}")
+def admin_study_deck(deck_id: int, _: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    deck = db.get(StudyDeck, deck_id)
+    if not deck:
+        raise HTTPException(status_code=404, detail="Колода не найдена")
+    return {
+        "id": deck.id,
+        "slug": deck.slug,
+        "title": deck.title,
+        "description": deck.description,
+        "kind": deck.kind,
+        "cards": [_study_card_out(c) for c in sorted(deck.cards, key=lambda x: x.sort_order)],
+    }
+
+
+@router.post("/study/cards")
+def create_study_card(payload: StudyCardIn, _: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    if not db.get(StudyDeck, payload.deck_id):
+        raise HTTPException(status_code=404, detail="Колода не найдена")
+    card = StudyCard(**payload.model_dump())
+    db.add(card)
+    db.commit()
+    db.refresh(card)
+    return _study_card_out(card)
+
+
+@router.patch("/study/cards/{card_id}")
+def update_study_card(
+    card_id: int,
+    payload: StudyCardUpdateIn,
+    _: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    card = db.get(StudyCard, card_id)
+    if not card:
+        raise HTTPException(status_code=404, detail="Карточка не найдена")
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(card, key, value.strip() if isinstance(value, str) else value)
+    db.add(card)
+    db.commit()
+    db.refresh(card)
+    return _study_card_out(card)
+
+
+@router.delete("/study/cards/{card_id}")
+def delete_study_card(card_id: int, _: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    card = db.get(StudyCard, card_id)
+    if not card:
+        raise HTTPException(status_code=404, detail="Карточка не найдена")
+    db.delete(card)
+    db.commit()
+    return {"ok": True}

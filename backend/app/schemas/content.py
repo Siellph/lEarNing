@@ -116,3 +116,59 @@ class DonationIn(BaseModel):
     donation_message: str = Field(default="", max_length=1000)
     donation_url: str = Field(default="", max_length=500)
     donation_button: str = Field(default="Оставить чаевые", max_length=80)
+
+
+class ExerciseUpdateIn(BaseModel):
+    kind: str | None = None
+    prompt: str | None = None
+    options: list[str] | None = None
+    answer: str | None = None
+    accepted: list[str] | None = None
+    explanation: str | None = None
+    sort_order: int | None = None
+    xp: int | None = None
+
+
+class QuestionUpdateIn(BaseModel):
+    kind: str | None = None
+    prompt: str | None = None
+    options: list[str] | None = None
+    answer: str | None = None
+    accepted: list[str] | None = None
+    explanation: str | None = None
+    sort_order: int | None = None
+
+
+class RegistrationSettingsIn(BaseModel):
+    email_verification_required: bool = True
+
+
+class StudyCheckIn(BaseModel):
+    answer: str = ""
+    kind: str = ""
+    target: str | None = None
+    accepted: list[str] | None = None
+    remembered: bool | None = None
+
+
+class StudyCardIn(BaseModel):
+    deck_id: int
+    primary_text: str
+    secondary_text: str = ""
+    tertiary_text: str = ""
+    translation: str
+    example: str = ""
+    example_translation: str = ""
+    category: str = ""
+    sort_order: int = 1
+
+
+class StudyCardUpdateIn(BaseModel):
+    primary_text: str | None = None
+    secondary_text: str | None = None
+    tertiary_text: str | None = None
+    translation: str | None = None
+    example: str | None = None
+    example_translation: str | None = None
+    category: str | None = None
+    sort_order: int | None = None

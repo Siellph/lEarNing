@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { extractEnglish, looksEnglish } from "../lib/speech";
+import { PromptWithBlanks } from "./PromptWithBlanks";
 import { SpeakButton } from "./SpeakButton";
 
 export type QuizItem = {
@@ -69,6 +70,8 @@ function QuizCard({
     fill_blank: "Пропуск",
     transform: "Преобразование",
     error_correction: "Исправление",
+    order: "Порядок слов",
+    match: "Соотнесение",
   };
 
   return (
@@ -82,7 +85,9 @@ function QuizCard({
         )}
       </div>
       <div className="mb-4 flex items-start justify-between gap-3">
-        <p className="text-lg leading-relaxed">{item.prompt}</p>
+        <p className="text-lg leading-relaxed">
+          <PromptWithBlanks text={item.prompt} />
+        </p>
         {extractEnglish(item.prompt) && <SpeakButton text={extractEnglish(item.prompt) || item.prompt} />}
       </div>
       {options ? (
@@ -113,7 +118,7 @@ function QuizCard({
             setValue(e.target.value);
             setResult(null);
           }}
-          placeholder="Введите ответ"
+          placeholder={item.kind === "order" ? "Соберите фразу" : "Введите ответ"}
           onKeyDown={(e) => e.key === "Enter" && submit()}
         />
       )}

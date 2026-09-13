@@ -76,7 +76,12 @@ A1 = [
             mc("Выберите артикль: ___ apple a day…", ["A", "An", "The"], "An", "Apple начинается с гласного звука."),
             fill("She is ___ honest person.", "an", "Honest начинается с гласного звука /ɒ/."),
             mc("I love ___ chocolate.", ["a", "the", "— (нулевой)"], "— (нулевой)", "Неисчисляемое в общем смысле — без артикля."),
-            xf("Вставьте нужное: Open ___ door. (мы оба видим дверь)", "Open the door.", "Конкретный объект в ситуации."),
+            fill(
+                "Open ___ door. (мы оба видим дверь)",
+                "the",
+                "Конкретный объект в ситуации — the. Можно ввести the или Open the door.",
+                ["Open the door.", "Open the door", "open the door"],
+            ),
             err("He is a engineer.", "He is an engineer.", "Engineer начинается с гласного звука."),
             fill("___ sun rises in the east.", "The", "Солнце уникально."),
         ],
@@ -86,7 +91,12 @@ A1 = [
             mc("___ dogs are friendly. (вообще)", ["The", "A", "— (нулевой)"], "— (нулевой)", "Общее утверждение о классе."),
             err("I bought an book.", "I bought a book.", "Book начинается с согласного."),
             fill("Please pass me ___ salt. (на столе)", "the", "Конкретная солонка в ситуации."),
-            xf("Любая собака: I want ___ dog.", "I want a dog.", "Неопределённый экземпляр класса."),
+            fill(
+                "I want ___ dog. (любая собака)",
+                "a",
+                "Неопределённый экземпляр класса. Можно a или I want a dog.",
+                ["I want a dog.", "I want a dog"],
+            ),
         ],
     ),
     module(

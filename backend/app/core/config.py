@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = ""
     ADMIN_PASSWORD: str = ""
     ADMIN_NAME: str = "Администратор"
+    # Fallback when site_settings row is missing; admin UI overrides via DB.
+    EMAIL_VERIFICATION_REQUIRED: bool = True
 
     @property
     def cors_origins(self) -> list[str]:

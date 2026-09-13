@@ -27,6 +27,10 @@ export function Register() {
         navigate(result.user.role === "admin" ? "/admin" : "/app");
         return;
       }
+      if (result.message && result.message.includes("без подтверждения")) {
+        navigate("/login", { state: { email: result.email || email, notice: result.message } });
+        return;
+      }
       navigate("/check-email", { state: { email: result.email || email } });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка регистрации");

@@ -12,7 +12,7 @@ export function AdminLayout() {
     ["/admin/modules", "Модули", false],
     ["/admin/vocab", "Словарь", false],
     ["/admin/exams", "Экзамены", false],
-    ["/admin/donation", "Чаевые", false],
+    ["/admin/donation", "Настройки", false],
   ] as const;
 
   return (
@@ -84,7 +84,16 @@ export function AdminDashboard() {
 
 export function AdminUsers() {
   const [users, setUsers] = useState<
-    { id: number; email: string; name: string; role: string; is_active: boolean; xp: number; streak: number }[]
+    {
+      id: number;
+      email: string;
+      name: string;
+      role: string;
+      is_active: boolean;
+      email_verified: boolean;
+      xp: number;
+      streak: number;
+    }[]
   >([]);
   useEffect(() => {
     api("/admin/users").then(setUsers);
@@ -95,39 +104,58 @@ export function AdminUsers() {
     api("/admin/users").then(setUsers);
   };
 
+  const activate = async (id: number) => {
+    await api(`/admin/users/${id}/activate`, { method: "POST" });
+    api("/admin/users").then(setUsers);
+  };
+
   return (
-    <div className="card overflow-x-auto">
-      <table className="w-full min-w-[720px] text-left text-sm">
-        <thead className="text-ink-soft">
-          <tr>
-            <th className="px-4 py-3">Имя</th>
-            <th>Email</th>
-            <th>Роль</th>
-            <th>XP</th>
-            <th>Статус</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id} className="border-t border-line">
-              <td className="px-4 py-3 font-medium">{u.name}</td>
-              <td>{u.email}</td>
-              <td>
-                <select className="field !py-1" value={u.role} onChange={(e) => patch(u.id, { role: e.target.value })}>
-                  <option value="student">ученик</option>
-                  <option value="admin">админ</option>
-                </select>
-              </td>
-              <td>{u.xp}</td>
-              <td>
-                <button className="btn btn-ghost text-xs" onClick={() => patch(u.id, { is_active: !u.is_active })}>
-                  {u.is_active ? "Активен" : "Отключён"}
+    <div className="grid gap-4">
+      <div>
+        <h1 className="font-display text-3xl">Пользователи</h1>
+        <p className="mt-1 text-sm text-ink-soft">
+          «Активировать» подтверждает email без письма — удобно, если SMTP на VPS недоступен.
+        </p>
+      </div>
+      <div className="grid gap-3">
+        {users.map((u) => (
+          <article key={u.id} className="card grid gap-3 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-semibold">{u.name}</p>
+                <span className="rounded-full bg-paper-2 px-2 py-0.5 text-xs text-ink-soft">{u.role}</span>
+                {!u.is_active && <span className="rounded-full bg-rose/15 px-2 py-0.5 text-xs text-rose">отключён</span>}
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs ${
+                    u.email_verified ? "bg-sage-soft text-sage" : "bg-[#fff1eb] text-terra"
+                  }`}
+                >
+                  {u.email_verified ? "email подтверждён" : "email не подтверждён"}
+                </span>
+              </div>
+              <p className="mt-1 truncate text-sm text-ink-soft">{u.email}</p>
+              <p className="mt-2 text-sm">
+                <span className="font-semibold text-terra">{u.xp} XP</span>
+                <span className="text-ink-soft"> · серия {u.streak}</span>
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <select className="field !w-auto !py-1.5 text-sm" value={u.role} onChange={(e) => patch(u.id, { role: e.target.value })}>
+                <option value="student">ученик</option>
+                <option value="admin">админ</option>
+              </select>
+              <button className="btn btn-ghost text-xs" onClick={() => patch(u.id, { is_active: !u.is_active })}>
+                {u.is_active ? "Отключить" : "Включить"}
+              </button>
+              {!u.email_verified && (
+                <button className="btn btn-sage text-xs" onClick={() => activate(u.id)}>
+                  Активировать
                 </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
   );
 }
@@ -201,17 +229,29 @@ export function AdminModules() {
   );
 }
 
+type ContentItem = {
+  id: number;
+  kind: string;
+  prompt: string;
+  answer: string;
+  options?: string[] | null;
+  accepted?: string[] | null;
+  explanation?: string;
+};
+
 export function AdminModuleContent() {
   const { moduleId } = useParams();
   const id = Number(moduleId);
   const [data, setData] = useState<{
     module: { id: number; title: string; slug: string };
     lessons: { id: number; title: string }[];
-    exercises: { id: number; kind: string; prompt: string; answer: string }[];
-    test: { id: number; title: string; questions: { id: number; kind: string; prompt: string; answer: string }[] } | null;
+    exercises: ContentItem[];
+    test: { id: number; title: string; questions: ContentItem[] } | null;
   } | null>(null);
   const [ex, setEx] = useState({ kind: "fill_blank", prompt: "", answer: "", explanation: "Проверьте форму.", options: "" });
   const [tq, setTq] = useState({ kind: "fill_blank", prompt: "", answer: "", explanation: "Проверьте форму.", options: "" });
+  const [editEx, setEditEx] = useState<ContentItem | null>(null);
+  const [editTq, setEditTq] = useState<ContentItem | null>(null);
 
   const load = () => api(`/admin/modules/${id}/content`).then(setData);
   useEffect(() => {
@@ -219,6 +259,17 @@ export function AdminModuleContent() {
   }, [id]);
 
   if (!data) return <p>Загружаем…</p>;
+
+  const kindSelect = (value: string, onChange: (v: string) => void) => (
+    <select className="field" value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="multiple_choice">Выбор</option>
+      <option value="fill_blank">Пропуск</option>
+      <option value="transform">Преобразование</option>
+      <option value="error_correction">Исправление</option>
+      <option value="order">Порядок слов</option>
+      <option value="match">Соотнесение</option>
+    </select>
+  );
 
   return (
     <div className="grid gap-6">
@@ -263,12 +314,7 @@ export function AdminModuleContent() {
         }}
       >
         <h2 className="font-semibold">Добавить упражнение</h2>
-        <select className="field" value={ex.kind} onChange={(e) => setEx({ ...ex, kind: e.target.value })}>
-          <option value="multiple_choice">Выбор</option>
-          <option value="fill_blank">Пропуск</option>
-          <option value="transform">Преобразование</option>
-          <option value="error_correction">Исправление</option>
-        </select>
+        {kindSelect(ex.kind, (kind) => setEx({ ...ex, kind }))}
         <input className="field" placeholder="Задание" value={ex.prompt} onChange={(e) => setEx({ ...ex, prompt: e.target.value })} required />
         <input className="field" placeholder="Варианты через | (для выбора)" value={ex.options} onChange={(e) => setEx({ ...ex, options: e.target.value })} />
         <input className="field" placeholder="Ответ" value={ex.answer} onChange={(e) => setEx({ ...ex, answer: e.target.value })} required />
@@ -276,28 +322,84 @@ export function AdminModuleContent() {
       </form>
       <div className="grid gap-2">
         {data.exercises.map((item) => (
-          <div key={item.id} className="card flex justify-between gap-3 p-4 text-sm">
-            <span>
-              <b>{item.kind}</b>: {item.prompt} → {item.answer}
-            </span>
-            <button
-              className="text-rose"
-              onClick={async () => {
-                await api(`/admin/exercises/${item.id}`, { method: "DELETE" });
-                load();
-              }}
-            >
-              удалить
-            </button>
+          <div key={item.id} className="card grid gap-2 p-4 text-sm">
+            {editEx?.id === item.id ? (
+              <form
+                className="grid gap-2"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await api(`/admin/exercises/${item.id}`, {
+                    method: "PATCH",
+                    body: JSON.stringify({
+                      kind: editEx.kind,
+                      prompt: editEx.prompt,
+                      answer: editEx.answer,
+                      explanation: editEx.explanation,
+                      options: editEx.options,
+                      accepted: editEx.accepted,
+                    }),
+                  });
+                  setEditEx(null);
+                  load();
+                }}
+              >
+                {kindSelect(editEx.kind, (kind) => setEditEx({ ...editEx, kind }))}
+                <input className="field" value={editEx.prompt} onChange={(e) => setEditEx({ ...editEx, prompt: e.target.value })} />
+                <input
+                  className="field"
+                  placeholder="Варианты через |"
+                  value={(editEx.options || []).join(" | ")}
+                  onChange={(e) =>
+                    setEditEx({
+                      ...editEx,
+                      options: e.target.value
+                        ? e.target.value.split("|").map((s) => s.trim()).filter(Boolean)
+                        : null,
+                    })
+                  }
+                />
+                <input className="field" value={editEx.answer} onChange={(e) => setEditEx({ ...editEx, answer: e.target.value })} />
+                <input
+                  className="field"
+                  placeholder="Пояснение"
+                  value={editEx.explanation || ""}
+                  onChange={(e) => setEditEx({ ...editEx, explanation: e.target.value })}
+                />
+                <div className="flex gap-2">
+                  <button className="btn btn-primary text-xs">Сохранить</button>
+                  <button type="button" className="btn btn-ghost text-xs" onClick={() => setEditEx(null)}>
+                    Отмена
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <span>
+                  <b>{item.kind}</b>: {item.prompt} → {item.answer}
+                </span>
+                <div className="flex gap-2">
+                  <button className="text-terra" onClick={() => setEditEx(item)}>
+                    изменить
+                  </button>
+                  <button
+                    className="text-rose"
+                    onClick={async () => {
+                      await api(`/admin/exercises/${item.id}`, { method: "DELETE" });
+                      load();
+                    }}
+                  >
+                    удалить
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
       {data.test && (
         <section className="grid gap-3">
           <h2 className="font-display text-2xl">Вопросы теста модуля</h2>
-          <p className="text-sm text-ink-soft">
-            Тест хранится в базе. Здесь можно добавить новый вопрос — он сразу появится у учеников.
-          </p>
+          <p className="text-sm text-ink-soft">Банк теста отделён от практики; в попытке ученик получает выборку 8–12 вопросов.</p>
           <form
             className="card grid gap-3 p-5"
             onSubmit={async (e) => {
@@ -313,31 +415,65 @@ export function AdminModuleContent() {
               load();
             }}
           >
-            <select className="field" value={tq.kind} onChange={(e) => setTq({ ...tq, kind: e.target.value })}>
-              <option value="multiple_choice">Выбор</option>
-              <option value="fill_blank">Пропуск</option>
-              <option value="transform">Преобразование</option>
-              <option value="error_correction">Исправление</option>
-            </select>
+            {kindSelect(tq.kind, (kind) => setTq({ ...tq, kind }))}
             <input className="field" placeholder="Вопрос теста" value={tq.prompt} onChange={(e) => setTq({ ...tq, prompt: e.target.value })} required />
             <input className="field" placeholder="Варианты через |" value={tq.options} onChange={(e) => setTq({ ...tq, options: e.target.value })} />
             <input className="field" placeholder="Ответ" value={tq.answer} onChange={(e) => setTq({ ...tq, answer: e.target.value })} required />
             <button className="btn btn-sage justify-self-start">Добавить в тест</button>
           </form>
           {data.test.questions.map((item) => (
-            <div key={item.id} className="card flex justify-between gap-3 p-4 text-sm">
-              <span>
-                <b>{item.kind}</b>: {item.prompt} → {item.answer}
-              </span>
-              <button
-                className="text-rose"
-                onClick={async () => {
-                  await api(`/admin/test-questions/${item.id}`, { method: "DELETE" });
-                  load();
-                }}
-              >
-                удалить
-              </button>
+            <div key={item.id} className="card grid gap-2 p-4 text-sm">
+              {editTq?.id === item.id ? (
+                <form
+                  className="grid gap-2"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    await api(`/admin/test-questions/${item.id}`, {
+                      method: "PATCH",
+                      body: JSON.stringify({
+                        kind: editTq.kind,
+                        prompt: editTq.prompt,
+                        answer: editTq.answer,
+                        explanation: editTq.explanation,
+                        options: editTq.options,
+                        accepted: editTq.accepted,
+                      }),
+                    });
+                    setEditTq(null);
+                    load();
+                  }}
+                >
+                  {kindSelect(editTq.kind, (kind) => setEditTq({ ...editTq, kind }))}
+                  <input className="field" value={editTq.prompt} onChange={(e) => setEditTq({ ...editTq, prompt: e.target.value })} />
+                  <input className="field" value={editTq.answer} onChange={(e) => setEditTq({ ...editTq, answer: e.target.value })} />
+                  <div className="flex gap-2">
+                    <button className="btn btn-primary text-xs">Сохранить</button>
+                    <button type="button" className="btn btn-ghost text-xs" onClick={() => setEditTq(null)}>
+                      Отмена
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <span>
+                    <b>{item.kind}</b>: {item.prompt} → {item.answer}
+                  </span>
+                  <div className="flex gap-2">
+                    <button className="text-terra" onClick={() => setEditTq(item)}>
+                      изменить
+                    </button>
+                    <button
+                      className="text-rose"
+                      onClick={async () => {
+                        await api(`/admin/test-questions/${item.id}`, { method: "DELETE" });
+                        load();
+                      }}
+                    >
+                      удалить
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </section>
@@ -850,9 +986,10 @@ export function AdminExamDetail() {
     id: number;
     title: string;
     level_code: string;
-    questions: { id: number; kind: string; prompt: string; answer: string }[];
+    questions: ContentItem[];
   } | null>(null);
   const [form, setForm] = useState({ kind: "fill_blank", prompt: "", answer: "", explanation: "Разберите правило.", options: "" });
+  const [editQ, setEditQ] = useState<ContentItem | null>(null);
   const load = () => api(`/admin/exams/${examId}`).then(setData);
   useEffect(() => {
     load();
@@ -889,6 +1026,7 @@ export function AdminExamDetail() {
           <option value="fill_blank">Пропуск</option>
           <option value="transform">Преобразование</option>
           <option value="error_correction">Исправление</option>
+          <option value="order">Порядок слов</option>
         </select>
         <input className="field" placeholder="Вопрос" value={form.prompt} onChange={(e) => setForm({ ...form, prompt: e.target.value })} required />
         <input className="field" placeholder="Варианты через |" value={form.options} onChange={(e) => setForm({ ...form, options: e.target.value })} />
@@ -896,19 +1034,56 @@ export function AdminExamDetail() {
         <button className="btn btn-primary justify-self-start">Сохранить в БД</button>
       </form>
       {data.questions.map((item) => (
-        <div key={item.id} className="card flex justify-between gap-3 p-4 text-sm">
-          <span>
-            <b>{item.kind}</b>: {item.prompt} → {item.answer}
-          </span>
-          <button
-            className="text-rose"
-            onClick={async () => {
-              await api(`/admin/exam-questions/${item.id}`, { method: "DELETE" });
-              load();
-            }}
-          >
-            удалить
-          </button>
+        <div key={item.id} className="card grid gap-2 p-4 text-sm">
+          {editQ?.id === item.id ? (
+            <form
+              className="grid gap-2"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                await api(`/admin/exam-questions/${item.id}`, {
+                  method: "PATCH",
+                  body: JSON.stringify({
+                    kind: editQ.kind,
+                    prompt: editQ.prompt,
+                    answer: editQ.answer,
+                    explanation: editQ.explanation,
+                    options: editQ.options,
+                  }),
+                });
+                setEditQ(null);
+                load();
+              }}
+            >
+              <input className="field" value={editQ.prompt} onChange={(e) => setEditQ({ ...editQ, prompt: e.target.value })} />
+              <input className="field" value={editQ.answer} onChange={(e) => setEditQ({ ...editQ, answer: e.target.value })} />
+              <div className="flex gap-2">
+                <button className="btn btn-primary text-xs">Сохранить</button>
+                <button type="button" className="btn btn-ghost text-xs" onClick={() => setEditQ(null)}>
+                  Отмена
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <span>
+                <b>{item.kind}</b>: {item.prompt} → {item.answer}
+              </span>
+              <div className="flex gap-2">
+                <button className="text-terra" onClick={() => setEditQ(item)}>
+                  изменить
+                </button>
+                <button
+                  className="text-rose"
+                  onClick={async () => {
+                    await api(`/admin/exam-questions/${item.id}`, { method: "DELETE" });
+                    load();
+                  }}
+                >
+                  удалить
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ))}
     </div>
@@ -923,16 +1098,57 @@ export function AdminDonation() {
     donation_url: "",
     donation_button: "Оставить чаевые",
   });
+  const [reg, setReg] = useState({ email_verification_required: true });
   const [saved, setSaved] = useState("");
+  const [regSaved, setRegSaved] = useState("");
 
   useEffect(() => {
-    api<typeof form>("/admin/donation").then(setForm);
+    api<typeof form>("/admin/donation").then((data) => {
+      setForm({
+        donation_enabled: data.donation_enabled,
+        donation_title: data.donation_title,
+        donation_message: data.donation_message,
+        donation_url: data.donation_url,
+        donation_button: data.donation_button,
+      });
+    });
+    api<typeof reg>("/admin/registration").then(setReg);
   }, []);
 
   return (
     <div className="grid gap-6">
       <div>
-        <h1 className="font-display text-3xl">Плашка с чаевыми</h1>
+        <h1 className="font-display text-3xl">Настройки сайта</h1>
+        <p className="mt-2 max-w-3xl text-ink-soft">Регистрация, подтверждение почты и плашка с чаевыми.</p>
+      </div>
+
+      <form
+        className="card grid gap-4 p-6"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          await api("/admin/registration", { method: "PATCH", body: JSON.stringify(reg) });
+          setRegSaved("Сохранено.");
+        }}
+      >
+        <h2 className="font-display text-2xl">Регистрация</h2>
+        <p className="text-sm text-ink-soft">
+          Если SMTP на VPS блокируется, отключите подтверждение email — новые ученики сразу смогут войти. Уже
+          зарегистрированных без письма можно активировать вручную в разделе «Пользователи».
+        </p>
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={reg.email_verification_required}
+            onChange={(e) => setReg({ email_verification_required: e.target.checked })}
+          />
+          Требовать подтверждение email при регистрации
+        </label>
+        <button className="btn btn-primary justify-self-start">Сохранить регистрацию</button>
+        {regSaved && <p className="text-sm text-sage">{regSaved}</p>}
+      </form>
+
+      <div>
+        <h2 className="font-display text-2xl">Плашка с чаевыми</h2>
         <p className="mt-2 max-w-3xl text-ink-soft">
           Включите плашку и вставьте ссылку на страницу донатов. Она появится у всех посетителей на главной и в кабинете.
           Скрыть её можно крестиком — до конца сессии браузера.

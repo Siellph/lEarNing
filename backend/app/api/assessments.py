@@ -1,3 +1,5 @@
+import random
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
@@ -11,6 +13,11 @@ from app.services.scoring import get_or_create_progress, is_correct, percent, re
 
 router = APIRouter(tags=["assessments"])
 
+TEST_SAMPLE_MIN = 8
+TEST_SAMPLE_MAX = 12
+EXAM_SAMPLE_MIN = 12
+EXAM_SAMPLE_MAX = 20
+
 
 def _public_questions(items):
     return [
@@ -21,8 +28,45 @@ def _public_questions(items):
             "options": item.options,
             "sort_order": item.sort_order,
         }
-        for item in sorted(items, key=lambda q: q.sort_order)
+        for item in items
     ]
+
+
+def _sample_questions(questions, *, lo: int, hi: int):
+    pool = list(questions)
+    if not pool:
+        return []
+    target = min(len(pool), max(lo, min(hi, len(pool))))
+    if len(pool) <= target:
+        random.shuffle(pool)
+        return pool
+    # Mix kinds when possible
+    by_kind: dict[str, list] = {}
+    for q in pool:
+        by_kind.setdefault(q.kind, []).append(q)
+    picked = []
+    kinds = list(by_kind.keys())
+    random.shuffle(kinds)
+    # Round-robin one from each kind first
+    while len(picked) < target and any(by_kind.values()):
+        progress = False
+        for kind in kinds:
+            bucket = by_kind.get(kind) or []
+            if not bucket:
+                continue
+            random.shuffle(bucket)
+            picked.append(bucket.pop())
+            progress = True
+            if len(picked) >= target:
+                break
+        if not progress:
+            break
+    if len(picked) < target:
+        rest = [q for q in pool if q not in picked]
+        random.shuffle(rest)
+        picked.extend(rest[: target - len(picked)])
+    random.shuffle(picked)
+    return picked
 
 
 @router.get("/tests/{test_id}")
@@ -41,13 +85,16 @@ def get_test(test_id: int, db: Session = Depends(get_db), user: User = Depends(g
         .order_by(TestAttempt.created_at.desc())
         .first()
     )
+    sample = _sample_questions(test.questions, lo=TEST_SAMPLE_MIN, hi=TEST_SAMPLE_MAX)
     return {
         "id": test.id,
         "title": test.title,
         "time_limit_sec": test.time_limit_sec,
         "passing_score": test.passing_score,
         "module": {"slug": test.module.slug, "title": test.module.title},
-        "questions": _public_questions(test.questions),
+        "bank_size": len(test.questions),
+        "sample_size": len(sample),
+        "questions": _public_questions(sample),
         "last_attempt": {"score": last.score, "passed": last.passed} if last else None,
     }
 
@@ -67,11 +114,19 @@ def submit_test(
     )
     if not test:
         raise HTTPException(status_code=404, detail="Тест не найден")
+    by_id = {str(q.id): q for q in test.questions}
+    selected_ids = [qid for qid in payload.answers.keys() if qid in by_id]
+    if not selected_ids:
+        raise HTTPException(status_code=400, detail="Нет ответов по вопросам этого теста")
+    # Cap scoring set to a reasonable attempt size (sampled subset)
+    if len(selected_ids) > TEST_SAMPLE_MAX + 4:
+        selected_ids = selected_ids[: TEST_SAMPLE_MAX + 4]
     details = []
     correct_n = 0
-    for question in test.questions:
-        given = payload.answers.get(str(question.id), "")
-        ok = is_correct(given, question.answer, question.accepted)
+    for qid in selected_ids:
+        question = by_id[qid]
+        given = payload.answers.get(qid, "")
+        ok = is_correct(given, question.answer, question.accepted, prompt=question.prompt)
         if ok:
             correct_n += 1
         details.append(
@@ -84,7 +139,7 @@ def submit_test(
                 "explanation": question.explanation,
             }
         )
-    score = percent(correct_n, len(test.questions))
+    score = percent(correct_n, len(selected_ids))
     passed = score >= test.passing_score
     attempt = TestAttempt(
         user_id=user.id,
@@ -145,6 +200,7 @@ def get_exam(exam_id: int, db: Session = Depends(get_db), user: User = Depends(g
     )
     if not exam:
         raise HTTPException(status_code=404, detail="Экзамен не найден")
+    sample = _sample_questions(exam.questions, lo=EXAM_SAMPLE_MIN, hi=EXAM_SAMPLE_MAX)
     return {
         "id": exam.id,
         "title": exam.title,
@@ -152,7 +208,9 @@ def get_exam(exam_id: int, db: Session = Depends(get_db), user: User = Depends(g
         "time_limit_sec": exam.time_limit_sec,
         "passing_score": exam.passing_score,
         "level": {"code": exam.level.code, "title": exam.level.title},
-        "questions": _public_questions(exam.questions),
+        "bank_size": len(exam.questions),
+        "sample_size": len(sample),
+        "questions": _public_questions(sample),
     }
 
 
@@ -171,11 +229,18 @@ def submit_exam(
     )
     if not exam:
         raise HTTPException(status_code=404, detail="Экзамен не найден")
+    by_id = {str(q.id): q for q in exam.questions}
+    selected_ids = [qid for qid in payload.answers.keys() if qid in by_id]
+    if not selected_ids:
+        raise HTTPException(status_code=400, detail="Нет ответов по вопросам этого экзамена")
+    if len(selected_ids) > EXAM_SAMPLE_MAX + 6:
+        selected_ids = selected_ids[: EXAM_SAMPLE_MAX + 6]
     details = []
     correct_n = 0
-    for question in exam.questions:
-        given = payload.answers.get(str(question.id), "")
-        ok = is_correct(given, question.answer, question.accepted)
+    for qid in selected_ids:
+        question = by_id[qid]
+        given = payload.answers.get(qid, "")
+        ok = is_correct(given, question.answer, question.accepted, prompt=question.prompt)
         if ok:
             correct_n += 1
         details.append(
@@ -188,7 +253,7 @@ def submit_exam(
                 "explanation": question.explanation,
             }
         )
-    score = percent(correct_n, len(exam.questions))
+    score = percent(correct_n, len(selected_ids))
     passed = score >= exam.passing_score
     db.add(
         ExamAttempt(

@@ -23,7 +23,7 @@ def check_exercise(
     if not exercise:
         raise HTTPException(status_code=404, detail="Упражнение не найдено")
 
-    correct = is_correct(payload.answer, exercise.answer, exercise.accepted)
+    correct = is_correct(payload.answer, exercise.answer, exercise.accepted, prompt=exercise.prompt)
     already = (
         db.query(ExerciseAttempt)
         .filter(

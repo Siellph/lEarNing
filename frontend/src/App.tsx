@@ -17,6 +17,7 @@ import { Register } from "./pages/Register";
 import { CheckEmail, VerifyEmail } from "./pages/VerifyEmail";
 import { PhoneticsPage, PhoneticsTopicPage } from "./pages/PhoneticsPages";
 import { VocabPage, VocabTopicPage } from "./pages/VocabPages";
+import { StudyDeckPage, StudyHub } from "./pages/StudyPages";
 import {
   AdminDashboard,
   AdminDonation,
@@ -89,6 +90,12 @@ export function App() {
             <Route path="sounds/:slug" element={<PhoneticsTopicPage />} />
             <Route path="vocab" element={<VocabPage />} />
             <Route path="vocab/:slug" element={<VocabTopicPage />} />
+            <Route path="verbs" element={<StudyHub kind="verbs" />} />
+            <Route path="verbs/:slug" element={<StudyDeckPage kind="verbs" />} />
+            <Route path="idioms" element={<StudyHub kind="idioms" />} />
+            <Route path="idioms/:slug" element={<StudyDeckPage kind="idioms" />} />
+            <Route path="exceptions" element={<StudyHub kind="exceptions" />} />
+            <Route path="exceptions/:slug" element={<StudyDeckPage kind="exceptions" />} />
             <Route path="profile" element={<Profile />} />
           </Route>
         </Route>

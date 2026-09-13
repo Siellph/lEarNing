@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { extractEnglish, looksEnglish } from "../lib/speech";
+import { PromptWithBlanks } from "../components/PromptWithBlanks";
 import { SpeakButton, VoiceControls } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
 
@@ -79,6 +80,8 @@ function AssessmentRunner({ kind, id, back }: { kind: "test" | "exam"; id: numbe
     time_limit_sec: number;
     passing_score: number;
     questions: Question[];
+    bank_size?: number;
+    sample_size?: number;
     module?: { title: string };
     level?: { code: string };
   } | null>(null);
@@ -137,7 +140,12 @@ function AssessmentRunner({ kind, id, back }: { kind: "test" | "exam"; id: numbe
             ← Назад
           </Link>
           <h1 className="font-display mt-2 text-4xl">{meta.title}</h1>
-          <p className="text-sm text-ink-soft">Проходной балл {meta.passing_score}%</p>
+          <p className="text-sm text-ink-soft">
+            Проходной балл {meta.passing_score}%
+            {meta.bank_size && meta.sample_size
+              ? ` · в попытке ${meta.sample_size} из банка ${meta.bank_size}`
+              : ""}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <VoiceControls />
@@ -153,7 +161,9 @@ function AssessmentRunner({ kind, id, back }: { kind: "test" | "exam"; id: numbe
           {result.details.map((item, i) => (
             <article key={item.id} className="card p-5">
               <p className="text-sm text-ink-soft">{i + 1}.</p>
-              <p className="mt-1 font-medium">{item.prompt}</p>
+              <p className="mt-1 font-medium">
+                <PromptWithBlanks text={item.prompt} />
+              </p>
               <p className={`mt-2 text-sm ${item.correct ? "text-sage" : "text-rose"}`}>
                 Ваш ответ: {item.given || "—"} {item.correct ? "" : `· верно: ${item.expected}`}
               </p>
@@ -167,7 +177,9 @@ function AssessmentRunner({ kind, id, back }: { kind: "test" | "exam"; id: numbe
             <article key={q.id} className="card p-5">
               <p className="mb-3 text-sm text-ink-soft">{i + 1}.</p>
               <div className="mb-3 flex items-start justify-between gap-3">
-                <p className="text-lg">{q.prompt}</p>
+                <p className="text-lg">
+                  <PromptWithBlanks text={q.prompt} />
+                </p>
                 {extractEnglish(q.prompt) && <SpeakButton text={extractEnglish(q.prompt) || q.prompt} />}
               </div>
               {q.options ? (

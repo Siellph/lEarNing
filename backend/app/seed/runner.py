@@ -1,4 +1,4 @@
-"""Seed lEarNing: CEFR levels, grammar modules, vocabulary, exams.
+"""Seed lEarNing: CEFR levels, grammar modules, vocabulary, exams, study decks.
 
 Creates an admin only when ADMIN_EMAIL and ADMIN_PASSWORD are both set.
 Run: python -m app.seed.runner
@@ -28,10 +28,15 @@ from app.seed.levels import LEVELS
 from app.seed.expand import (
     ensure_admin_from_env,
     ensure_email_verified_column,
+    ensure_site_setting_columns,
     ensure_site_settings,
+    ensure_word_order_modules,
     expand_exams,
     expand_module_tests,
+    expand_practice_banks,
+    expand_study_decks,
     expand_vocabulary,
+    fix_known_article_answers,
     remove_legacy_demo_accounts,
 )
 from app.seed.vocab import TOPICS
@@ -117,22 +122,36 @@ def seed_modules(db, levels_by_code: dict[str, GrammarLevel]) -> tuple[int, int,
     return n_modules, n_lessons, n_exercises, n_questions
 
 
+def _run_expanders(db) -> dict:
+    return {
+        "word_order": ensure_word_order_modules(db),
+        "practice": expand_practice_banks(db),
+        "tests": expand_module_tests(db),
+        "exams": expand_exams(db),
+        "words": expand_vocabulary(db),
+        "study": expand_study_decks(db),
+        "article_fixes": fix_known_article_answers(db),
+    }
+
+
 def main() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_email_verified_column(engine)
+    ensure_site_setting_columns(engine)
     db = SessionLocal()
     try:
         already = db.query(GrammarLevel).first() is not None
         if already:
-            extra_tests = expand_module_tests(db)
-            extra_exams = expand_exams(db)
-            extra_words = expand_vocabulary(db)
+            stats = _run_expanders(db)
             ensure_site_settings(db)
             removed_demo = remove_legacy_demo_accounts(db)
             created_admin = ensure_admin_from_env(db)
             db.commit()
             print(
-                f"already seeded; expanded tests +{extra_tests}, exams +{extra_exams}, words +{extra_words}; "
+                "already seeded; "
+                f"word_order +{stats['word_order']}, practice +{stats['practice']}, "
+                f"tests +{stats['tests']}, exams +{stats['exams']}, words +{stats['words']}, "
+                f"study +{stats['study']}, article_fixes={stats['article_fixes']}; "
                 f"demo_removed={removed_demo}; admin={'created' if created_admin else 'unchanged'}"
             )
             return
@@ -187,19 +206,17 @@ def main() -> None:
                 )
                 n_exam_q += 1
 
-        extra_tests = expand_module_tests(db)
-        extra_exams = expand_exams(db)
-        extra_words = expand_vocabulary(db)
+        stats = _run_expanders(db)
         ensure_site_settings(db)
         removed_demo += remove_legacy_demo_accounts(db)
         db.commit()
         print(
             "seeded: "
             f"admin={'created' if created_admin else 'skipped'} demo_removed={removed_demo} "
-            f"levels={len(LEVELS)} modules={n_modules} lessons={n_lessons} "
-            f"exercises={n_exercises} test_questions={n_test_q + extra_tests} "
-            f"topics={n_topics} words={n_words + extra_words} exams={n_exams} "
-            f"exam_questions={n_exam_q + extra_exams}"
+            f"levels={len(LEVELS)} modules={n_modules + stats['word_order']} lessons={n_lessons} "
+            f"exercises={n_exercises + stats['practice']} test_questions={n_test_q + stats['tests']} "
+            f"topics={n_topics} words={n_words + stats['words']} exams={n_exams} "
+            f"exam_questions={n_exam_q + stats['exams']} study_cards=+{stats['study']}"
         )
     finally:
         db.close()
