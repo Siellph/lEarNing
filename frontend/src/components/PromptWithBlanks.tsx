@@ -1,4 +1,5 @@
 import type { KeyboardEvent, ReactNode } from "react";
+import { splitSpeakablePrompt } from "../lib/speech";
 import { withHoverTranslate } from "./HoverTranslate";
 
 const BLANK_RE = /___+/g;
@@ -22,7 +23,7 @@ type PromptWithBlanksProps = {
   onChange?: (values: string[]) => void;
   onSubmit?: () => void;
   disabled?: boolean;
-  /** Hover RU gloss on English words (default on). */
+  /** Hover RU gloss on speakable English only (default on). */
   translate?: boolean;
 };
 
@@ -37,14 +38,27 @@ export function PromptWithBlanks({
   translate = true,
 }: PromptWithBlanksProps) {
   const editable = Array.isArray(values) && typeof onChange === "function";
+  // Gloss only the same English span TTS speaks (not RU instructions / (be) hints).
+  const { prefix, english, suffix } = translate
+    ? splitSpeakablePrompt(text)
+    : { prefix: "", english: text, suffix: "" };
+
   const renderText = (chunk: string, key: string): ReactNode =>
     translate ? <span key={key}>{withHoverTranslate(chunk)}</span> : <span key={key}>{chunk}</span>;
 
-  if (!text.includes("___")) {
-    return <span className={className}>{translate ? withHoverTranslate(text) : text}</span>;
+  const wrap = (nodes: ReactNode) => (
+    <span className={className}>
+      {prefix ? <span>{prefix}</span> : null}
+      {nodes}
+      {suffix ? <span>{suffix}</span> : null}
+    </span>
+  );
+
+  if (!english.includes("___")) {
+    return wrap(translate ? withHoverTranslate(english) : english);
   }
 
-  const parts = text.split(BLANK_RE);
+  const parts = english.split(BLANK_RE);
   const nodes: ReactNode[] = [];
 
   parts.forEach((part, index) => {
@@ -90,5 +104,5 @@ export function PromptWithBlanks({
     );
   });
 
-  return <span className={className}>{nodes}</span>;
+  return wrap(nodes);
 }

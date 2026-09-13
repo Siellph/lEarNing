@@ -288,32 +288,103 @@ export function stripMetaParentheticals(text: string): string {
   return out.replace(/\s+/g, " ").trim();
 }
 
-/** Drop leading Russian / UI instructions before the English example sentence. */
-export function stripLeadingInstruction(text: string): string {
-  let out = text.replace(/\s+/g, " ").trim();
-  if (!out) return "";
+const RU_TASK_VERB =
+  /\b(вставьте|выберите|напишите|исправьте|перепишите|добавьте|укажите|соберите|переведите|сопоставьте|отметьте|заполните)\b/i;
+const EN_TASK_VERB =
+  /^(choose|select|fill|insert|complete|put|write|use|rewrite|correct|translate|make|form|type)\b/i;
+const GRAMMAR_LABEL_LEAD =
+  /^(?:Present|Past|Future|First|Second|Third|Zero)\b[\w\s/-]{0,40}$/i;
 
-  for (let i = 0; i < 4; i += 1) {
-    const idx = out.indexOf(":");
-    if (idx <= 0 || idx > 140) break;
-    const left = out.slice(0, idx).trim();
-    const right = out.slice(idx + 1).trim();
-    if (!right) break;
-    const leftIsInstruction =
-      /[А-Яа-яЁё]/.test(left) ||
-      /\b(вставьте|выберите|напишите|исправьте|перепишите|добавьте|укажите|соберите|переведите)\b/i.test(left) ||
-      /^(choose|select|fill|insert|complete|put|write|use|rewrite|correct|translate|make|form|type)\b/i.test(left);
-    if (!leftIsInstruction) break;
-    out = right;
+function segmentIsInstruction(segment: string): boolean {
+  const t = segment.trim();
+  if (!t) return false;
+  // Long Latin-only chunks are not task prefixes; long RU lead-ins still count.
+  if (t.length > 140 && !/[А-Яа-яЁё]/.test(t)) return false;
+  if (/[А-Яа-яЁё]/.test(t)) return true;
+  if (RU_TASK_VERB.test(t)) return true;
+  if (EN_TASK_VERB.test(t)) return true;
+  if (GRAMMAR_LABEL_LEAD.test(t)) return true;
+  return false;
+}
+
+function rightLooksLikeExercise(right: string): boolean {
+  const t = right.trimStart();
+  if (!t) return false;
+  if (/^(?:_{2,}|[A-Za-z«"“'‘])/.test(t)) return true;
+  return /[A-Za-z]/.test(t) && !/^[А-Яа-яЁё]/.test(t);
+}
+
+/**
+ * Index where the learner-facing English exercise begins.
+ * Skips Russian / task prefixes like `Вставьте форму to be: …`.
+ */
+export function findExerciseStart(text: string): number {
+  if (!text) return 0;
+
+  let best = 0;
+  let from = 0;
+  let prevColon = -1;
+
+  while (from < text.length) {
+    const idx = text.indexOf(":", from);
+    if (idx < 0) break;
+    const segment = text.slice(prevColon + 1, idx);
+    const after = text.slice(idx + 1);
+    const right = after.replace(/^\s*/, "");
+    if (segmentIsInstruction(segment) && rightLooksLikeExercise(right)) {
+      best = idx + 1 + (after.length - right.length);
+    }
+    prevColon = idx;
+    from = idx + 1;
   }
+
+  if (best > 0) return best;
 
   // Leading Cyrillic-only clause before a capitalised English sentence
-  const splitEn = out.match(/^([^A-Za-z«"“]*[А-Яа-яЁё][^A-Za-z«"“]*)([A-Za-z«"“].*)$/);
-  if (splitEn?.[2] && /[A-Za-z]/.test(splitEn[2])) {
-    out = splitEn[2].trim();
+  const splitEn = text.match(/^([^A-Za-z«"“]*[А-Яа-яЁё][^A-Za-z«"“]*)([A-Za-z«"“].*)$/);
+  if (splitEn?.[1] && splitEn[2] && /[A-Za-z]/.test(splitEn[2])) {
+    return splitEn[1].length;
   }
 
-  return out.replace(/\s+/g, " ").trim();
+  return 0;
+}
+
+/** Drop leading Russian / UI instructions before the English example sentence. */
+export function stripLeadingInstruction(text: string): string {
+  const out = text.replace(/\s+/g, " ").trim();
+  if (!out) return "";
+  return out.slice(findExerciseStart(out)).trim();
+}
+
+/**
+ * Display split aligned with TTS (`speakableEnglish` / `extractEnglish`):
+ * RU/task prefix and meta hints stay plain; only `english` is spoken.
+ */
+export function splitSpeakablePrompt(text: string): {
+  prefix: string;
+  english: string;
+  suffix: string;
+} {
+  if (!text) return { prefix: "", english: "", suffix: "" };
+  const start = findExerciseStart(text);
+  const prefix = text.slice(0, start);
+  let english = text.slice(start);
+  let suffix = "";
+
+  // Same trailing peel as stripMetaParentheticals, without collapsing display spaces.
+  for (;;) {
+    const match = english.match(/^(.*)(\s*\(([^)]+)\))\s*$/);
+    if (!match || !isMetaParenthetical(match[3])) break;
+    suffix = match[2] + suffix;
+    english = match[1];
+  }
+
+  return { prefix, english, suffix };
+}
+
+/** True when `(…)` is a grammar/lemma hint — not learner English to gloss or speak. */
+export function isMetaParenHint(inner: string): boolean {
+  return isMetaParenthetical(inner);
 }
 
 /** Gaps → short pause for TTS; do not speak underscore runs. */

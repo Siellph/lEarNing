@@ -340,13 +340,17 @@ def expand_skills(db) -> int:
             known_prompts: set[str] = set()
         else:
             known_prompts = {q.prompt for q in item.questions}
-            # Refresh mutable content if empty (safe upgrades without wipe)
-            if not item.body and data.get("body"):
-                item.body = data["body"]
-            if not item.lines and data.get("lines"):
-                item.lines = data["lines"]
-            if not item.keywords and data.get("keywords"):
-                item.keywords = data["keywords"]
+            # Sync graded content from seed (idempotent by slug; no wipe)
+            item.title = data["title"]
+            item.description = data.get("description", "")
+            item.level_code = data.get("level_code", item.level_code or "A1")
+            item.kind = data.get("kind", item.kind)
+            if "body" in data:
+                item.body = data.get("body") or ""
+            if "lines" in data:
+                item.lines = data.get("lines") or []
+            if "keywords" in data:
+                item.keywords = data.get("keywords") or []
         order = max((q.sort_order for q in item.questions), default=0)
         for qi, qdata in enumerate(data.get("questions") or [], start=1):
             prompt = qdata["prompt"]

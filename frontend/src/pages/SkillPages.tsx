@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { ProgressBar } from "../components/ProgressBar";
@@ -7,6 +7,8 @@ import { useAuth } from "../context/AuthContext";
 import { speakEnglish } from "../lib/speech";
 
 type SkillKind = "reading" | "listening" | "dialogue";
+
+const CEFR_LEVELS = ["A1", "A2", "B1", "B2", "B2+", "C1", "C2"] as const;
 
 type SkillSummary = {
   id: number;
@@ -48,19 +50,19 @@ const META: Record<
     path: "reading",
     eyebrow: "Тексты",
     title: "Чтение по уровням",
-    subtitle: "Короткие оригинальные тексты A1–B2, ключевые слова и вопросы на понимание.",
+    subtitle: "Оригинальные тексты A1–C2: от коротких абзацев до статей, ключевые слова и вопросы на понимание.",
   },
   listening: {
     path: "listening",
     eyebrow: "Слух",
     title: "Слушание и диктант",
-    subtitle: "Короткие фразы с озвучкой: понимание на слух и набор услышанного.",
+    subtitle: "Пассажи с озвучкой A1–C2: понимание на слух и набор услышанного.",
   },
   dialogue: {
     path: "dialogues",
     eyebrow: "Речь",
-    title: "Мини-диалоги",
-    subtitle: "Короткие сцены: скрипт, озвучка реплик, пропуски и понимание.",
+    title: "Диалоги",
+    subtitle: "Развёрнутые сцены A1–C2: скрипт, озвучка реплик, пропуски и понимание.",
   },
 };
 
@@ -72,12 +74,27 @@ const KIND_API: Record<SkillKind, string> = {
 
 export function SkillHub({ kind }: { kind: SkillKind }) {
   const [items, setItems] = useState<SkillSummary[]>([]);
+  const [levelFilter, setLevelFilter] = useState<string>("all");
   const meta = META[kind];
   useEffect(() => {
+    setLevelFilter("all");
     api<SkillSummary[]>(`/skills/${KIND_API[kind]}`).then(setItems);
   }, [kind]);
 
-  const learned = items.filter((i) => i.learned).length;
+  const levelOptions = useMemo(() => {
+    const present = new Set(items.map((i) => i.level_code));
+    const ordered = CEFR_LEVELS.filter((code) => present.has(code));
+    const extras = [...present].filter((code) => !CEFR_LEVELS.includes(code as (typeof CEFR_LEVELS)[number]));
+    extras.sort();
+    return [...ordered, ...extras];
+  }, [items]);
+
+  const filtered = useMemo(() => {
+    if (levelFilter === "all") return items;
+    return items.filter((i) => i.level_code === levelFilter);
+  }, [items, levelFilter]);
+
+  const learned = filtered.filter((i) => i.learned).length;
 
   return (
     <div className="grid gap-6">
@@ -88,14 +105,51 @@ export function SkillHub({ kind }: { kind: SkillKind }) {
         {items.length > 0 && (
           <div className="mt-4 max-w-md">
             <ProgressBar
-              value={(learned / items.length) * 100}
-              label={`${learned}/${items.length} освоено`}
+              value={filtered.length ? (learned / filtered.length) * 100 : 0}
+              label={`${learned}/${filtered.length} освоено${levelFilter !== "all" ? ` · ${levelFilter}` : ""}`}
             />
           </div>
         )}
       </div>
+
+      {levelOptions.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Фильтр по уровню CEFR">
+          <button
+            type="button"
+            className={`rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+              levelFilter === "all"
+                ? "bg-terra text-white"
+                : "bg-paper-2 text-ink-soft hover:bg-paper"
+            }`}
+            onClick={() => setLevelFilter("all")}
+          >
+            Все
+          </button>
+          {levelOptions.map((code) => {
+            const count = items.filter((i) => i.level_code === code).length;
+            const active = levelFilter === code;
+            return (
+              <button
+                key={code}
+                type="button"
+                className={`rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+                  active ? "bg-terra text-white" : "bg-paper-2 text-ink-soft hover:bg-paper"
+                }`}
+                onClick={() => setLevelFilter(code)}
+                aria-pressed={active}
+              >
+                {code}
+                <span className={`ml-1.5 text-xs ${active ? "text-white/80" : "text-ink-soft/80"}`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2">
-        {items.map((item) => (
+        {filtered.map((item) => (
           <Link
             key={item.slug}
             to={`/app/${meta.path}/${item.slug}`}
@@ -115,6 +169,9 @@ export function SkillHub({ kind }: { kind: SkillKind }) {
           </Link>
         ))}
         {!items.length && <p className="text-ink-soft">Пока пусто — запустите seed/expand.</p>}
+        {!!items.length && !filtered.length && (
+          <p className="text-ink-soft">Нет материалов для уровня {levelFilter}.</p>
+        )}
       </div>
     </div>
   );

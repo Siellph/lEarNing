@@ -37,7 +37,7 @@ def _gap(prompt: str, answer: str, accepted: list[str] | None = None, explanatio
     return _q("fill_gap", prompt, answer, accepted=accepted or [answer], explanation=explanation)
 
 
-# --- Graded reading (~22) ---------------------------------------------------
+# --- Graded reading ---------------------------------------------------------
 
 READING_ITEMS: list[dict] = [
     {
@@ -560,7 +560,7 @@ READING_ITEMS: list[dict] = [
 ]
 
 
-# --- Listening / dictation (~22) --------------------------------------------
+# --- Listening / dictation --------------------------------------------------
 
 LISTENING_ITEMS: list[dict] = [
     {
@@ -1136,7 +1136,7 @@ LISTENING_ITEMS: list[dict] = [
 ]
 
 
-# --- Mini-dialogues (~22) ---------------------------------------------------
+# --- Dialogues --------------------------------------------------------------
 
 DIALOGUE_ITEMS: list[dict] = [
     {
@@ -1750,5 +1750,9 @@ DIALOGUE_ITEMS: list[dict] = [
     },
 ]
 
+
+from app.seed.skills_longform import apply_longform
+
+apply_longform(READING_ITEMS, LISTENING_ITEMS, DIALOGUE_ITEMS)
 
 SKILL_ITEMS: list[dict] = READING_ITEMS + LISTENING_ITEMS + DIALOGUE_ITEMS
