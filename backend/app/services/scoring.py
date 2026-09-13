@@ -262,10 +262,16 @@ def get_or_create_progress(db: Session, user_id: int, module_id: int) -> ModuleP
     return progress
 
 
-def refresh_module_status(progress: ModuleProgress) -> None:
+def effective_module_status(progress: ModuleProgress | None) -> str:
+    """Module progress from practice/test only — theory/lesson reading does not count."""
+    if not progress:
+        return "not_started"
     if progress.test_score is not None and progress.test_score >= 70:
-        progress.status = "completed"
-    elif progress.lesson_done or progress.practice_score > 0:
-        progress.status = "in_progress"
-    else:
-        progress.status = "not_started"
+        return "completed"
+    if progress.practice_score > 0:
+        return "in_progress"
+    return "not_started"
+
+
+def refresh_module_status(progress: ModuleProgress) -> None:
+    progress.status = effective_module_status(progress)

@@ -8,6 +8,7 @@ from app.models.grammar import Exam, GrammarLevel, GrammarModule
 from app.models.progress import ExamAttempt, ExerciseAttempt, ModuleProgress, TestAttempt
 from app.models.user import User
 from app.models.vocabulary import VocabProgress, VocabWord
+from app.services.scoring import effective_module_status
 
 router = APIRouter(prefix="/progress", tags=["progress"])
 
@@ -27,7 +28,7 @@ def my_progress(db: Session = Depends(get_db), user: User = Depends(get_current_
             .order_by(GrammarModule.sort_order)
             .all()
         )
-        completed = sum(1 for m in modules if progress_map.get(m.id) and progress_map[m.id].status == "completed")
+        completed = sum(1 for m in modules if effective_module_status(progress_map.get(m.id)) == "completed")
         completed_total += completed
         module_total += len(modules)
         by_level.append(

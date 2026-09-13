@@ -6,6 +6,7 @@ from app.core.deps import get_current_user
 from app.models.grammar import Exercise, GrammarLevel, GrammarModule, Lesson
 from app.models.progress import ExerciseAttempt, ModuleProgress
 from app.models.user import User
+from app.services.scoring import effective_module_status
 
 router = APIRouter(prefix="/grammar", tags=["grammar"])
 
@@ -25,6 +26,16 @@ def _progress_map(db: Session, user_id: int) -> dict[int, ModuleProgress]:
     return {row.module_id: row for row in rows}
 
 
+def _public_progress(progress: ModuleProgress | None) -> dict:
+    return {
+        "status": effective_module_status(progress),
+        # Theory is reading-only; never surface lesson completion to the client.
+        "lesson_done": False,
+        "practice_score": progress.practice_score if progress else 0,
+        "test_score": progress.test_score if progress else None,
+    }
+
+
 @router.get("/levels")
 def list_levels(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     levels = db.query(GrammarLevel).order_by(GrammarLevel.sort_order).all()
@@ -37,7 +48,7 @@ def list_levels(db: Session = Depends(get_db), user: User = Depends(get_current_
             .order_by(GrammarModule.sort_order)
             .all()
         )
-        completed = sum(1 for m in modules if progress.get(m.id) and progress[m.id].status == "completed")
+        completed = sum(1 for m in modules if effective_module_status(progress.get(m.id)) == "completed")
         result.append(
             {
                 "id": level.id,
@@ -84,12 +95,7 @@ def list_modules(code: str, db: Session = Depends(get_db), user: User = Depends(
                 "sources": module.sources,
                 "exercise_count": len(module.exercises),
                 "has_test": module.test is not None,
-                "progress": {
-                    "status": progress[module.id].status if module.id in progress else "not_started",
-                    "lesson_done": progress[module.id].lesson_done if module.id in progress else False,
-                    "practice_score": progress[module.id].practice_score if module.id in progress else 0,
-                    "test_score": progress[module.id].test_score if module.id in progress else None,
-                },
+                "progress": _public_progress(progress.get(module.id)),
             }
             for module in modules
         ],
@@ -133,12 +139,7 @@ def get_module(slug: str, db: Session = Depends(get_db), user: User = Depends(ge
             if module.test
             else None
         ),
-        "progress": {
-            "status": progress.status if progress else "not_started",
-            "lesson_done": progress.lesson_done if progress else False,
-            "practice_score": progress.practice_score if progress else 0,
-            "test_score": progress.test_score if progress else None,
-        },
+        "progress": _public_progress(progress),
     }
 
 
@@ -147,7 +148,7 @@ def get_lesson(
     slug: str,
     lesson_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    _user: User = Depends(get_current_user),
 ):
     lesson = (
         db.query(Lesson)
@@ -157,13 +158,7 @@ def get_lesson(
     )
     if not lesson or lesson.module.slug != slug:
         raise HTTPException(status_code=404, detail="Урок не найден")
-    from app.services.scoring import get_or_create_progress
-
-    progress = get_or_create_progress(db, user.id, lesson.module_id)
-    progress.lesson_done = True
-    if progress.status == "not_started":
-        progress.status = "in_progress"
-    db.commit()
+    # Theory is reading material only — do not mark lesson/module progress here.
     return {
         "id": lesson.id,
         "title": lesson.title,

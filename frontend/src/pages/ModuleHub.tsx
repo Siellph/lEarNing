@@ -43,7 +43,6 @@ export function ModuleHub() {
           title="Теория"
           text={lesson?.title || "Урок"}
           to={lesson ? `/app/module/${module.slug}/lesson/${lesson.id}` : "#"}
-          done={module.progress.lesson_done}
         />
         <Step
           n="02"
@@ -66,7 +65,21 @@ export function ModuleHub() {
   );
 }
 
-function Step({ n, title, text, to, done, meta }: { n: string; title: string; text: string; to: string; done: boolean; meta?: string }) {
+function Step({
+  n,
+  title,
+  text,
+  to,
+  done = false,
+  meta,
+}: {
+  n: string;
+  title: string;
+  text: string;
+  to: string;
+  done?: boolean;
+  meta?: string;
+}) {
   return (
     <Link to={to} className="card card-lift p-5">
       <div className="flex items-center justify-between">
