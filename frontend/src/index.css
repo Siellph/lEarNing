@@ -584,6 +584,21 @@ input.gap-blank-input:disabled {
   background: #fff1eb;
 }
 
+.quiz-choice:disabled {
+  cursor: default;
+  opacity: 0.9;
+}
+
+.quiz-choice:disabled:hover {
+  border-color: var(--color-line);
+  transform: none;
+}
+
+.quiz-choice.is-selected:disabled,
+.quiz-choice.is-selected:disabled:hover {
+  border-color: var(--color-terra);
+}
+
 .quiz-status-bad {
   display: inline-flex;
   align-items: center;

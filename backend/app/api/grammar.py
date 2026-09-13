@@ -177,18 +177,40 @@ def get_practice(slug: str, db: Session = Depends(get_db), user: User = Depends(
     module = db.query(GrammarModule).filter(GrammarModule.slug == slug).first()
     if not module:
         raise HTTPException(status_code=404, detail="Модуль не найден")
-    solved = {
-        row.exercise_id
-        for row in db.query(ExerciseAttempt)
-        .filter(ExerciseAttempt.user_id == user.id, ExerciseAttempt.is_correct.is_(True))
-        .all()
-    }
     exercises = (
         db.query(Exercise).filter(Exercise.module_id == module.id).order_by(Exercise.sort_order).all()
     )
-    return {
-        "module": {"id": module.id, "slug": module.slug, "title": module.title},
-        "exercises": [
+    exercise_ids = [item.id for item in exercises]
+    last_by_exercise: dict[int, ExerciseAttempt] = {}
+    solved: set[int] = set()
+    if exercise_ids:
+        attempts = (
+            db.query(ExerciseAttempt)
+            .filter(
+                ExerciseAttempt.user_id == user.id,
+                ExerciseAttempt.exercise_id.in_(exercise_ids),
+            )
+            .order_by(ExerciseAttempt.id.desc())
+            .all()
+        )
+        for attempt in attempts:
+            if attempt.exercise_id not in last_by_exercise:
+                last_by_exercise[attempt.exercise_id] = attempt
+            if attempt.is_correct:
+                solved.add(attempt.exercise_id)
+
+    payload_exercises = []
+    for item in exercises:
+        last = last_by_exercise.get(item.id)
+        last_result = None
+        if last:
+            last_result = {
+                "correct": last.is_correct,
+                "explanation": item.explanation or "",
+                "expected": None if last.is_correct else item.answer,
+                "answer": last.answer,
+            }
+        payload_exercises.append(
             {
                 "id": item.id,
                 "kind": item.kind,
@@ -197,7 +219,11 @@ def get_practice(slug: str, db: Session = Depends(get_db), user: User = Depends(
                 "sort_order": item.sort_order,
                 "xp": item.xp,
                 "solved": item.id in solved,
+                "last_result": last_result,
             }
-            for item in exercises
-        ],
+        )
+
+    return {
+        "module": {"id": module.id, "slug": module.slug, "title": module.title},
+        "exercises": payload_exercises,
     }

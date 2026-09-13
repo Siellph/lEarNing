@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, CircleAlert } from "lucide-react";
 import { fullSentenceInstruction, kindLabel } from "../lib/kindLabels";
 import { extractEnglish, looksEnglish, speakableEnglish } from "../lib/speech";
 import { type QuizOptions } from "../lib/match";
@@ -7,12 +7,20 @@ import { MatchQuestion, matchAnswerComplete } from "./MatchQuestion";
 import { PromptWithBlanks, countBlanks, joinGapAnswers } from "./PromptWithBlanks";
 import { SpeakButton } from "./SpeakButton";
 
+export type QuizLastResult = {
+  correct: boolean;
+  explanation: string;
+  expected?: string | null;
+  answer?: string | null;
+};
+
 export type QuizItem = {
   id: number;
   kind: string;
   prompt: string;
   options?: QuizOptions;
   solved?: boolean;
+  last_result?: QuizLastResult | null;
 };
 
 type Result = {
@@ -20,6 +28,30 @@ type Result = {
   explanation: string;
   expected?: string | null;
 };
+
+function splitGapValue(value: string, blankCount: number): string[] {
+  if (blankCount <= 0) return [];
+  if (blankCount <= 1) return [value || ""];
+  const parts = value.split(" / ");
+  if (parts.length === blankCount) return parts;
+  return Array.from({ length: blankCount }, (_, i) => parts[i] || "");
+}
+
+function initialResult(item: QuizItem): Result | null {
+  if (item.last_result) {
+    return {
+      correct: item.last_result.correct,
+      explanation: item.last_result.explanation || "",
+      expected: item.last_result.expected ?? null,
+    };
+  }
+  if (item.solved) return { correct: true, explanation: "" };
+  return null;
+}
+
+function initialAnswer(item: QuizItem): string {
+  return item.last_result?.answer?.trim() || "";
+}
 
 export function Quiz({
   items,
@@ -51,9 +83,12 @@ function QuizCard({
   submitLabel: string;
 }) {
   const blankCount = countBlanks(item.prompt);
-  const [value, setValue] = useState("");
-  const [blanks, setBlanks] = useState<string[]>(() => Array.from({ length: blankCount }, () => ""));
-  const [result, setResult] = useState<Result | null>(null);
+  const restoredAnswer = initialAnswer(item);
+  const [value, setValue] = useState(restoredAnswer);
+  const [blanks, setBlanks] = useState<string[]>(() =>
+    blankCount > 0 ? splitGapValue(restoredAnswer, blankCount) : [],
+  );
+  const [result, setResult] = useState<Result | null>(() => initialResult(item));
   const [busy, setBusy] = useState(false);
   const isMatch = item.kind === "match";
   const choiceOptions = useMemo(() => {
@@ -67,10 +102,15 @@ function QuizCard({
   const speakText = speakableEnglish(item.prompt);
   const showSpeak = Boolean(extractEnglish(item.prompt) || speakText);
   const rewriteHint = fullSentenceInstruction(item.kind, blankCount > 0);
-  const done = Boolean(item.solved || result?.correct);
+  const locked = !!result?.correct;
+  const cardTone = result ? (result.correct ? "quiz-card-ok" : "quiz-card-bad") : "";
+
+  const clearResult = () => {
+    if (!locked) setResult(null);
+  };
 
   const submit = async () => {
-    if (!canSubmit) return;
+    if (!canSubmit || locked) return;
     setBusy(true);
     try {
       const res = await onCheck(item.id, answerText.trim());
@@ -81,17 +121,19 @@ function QuizCard({
   };
 
   return (
-    <article
-      className={`quiz-card motion-enter ${result ? (result.correct ? "quiz-card-ok" : "quiz-card-bad") : ""}`}
-      style={{ "--motion-i": Math.min(index, 8) } as CSSProperties}
-    >
+    <article className={`quiz-card motion-enter ${cardTone}`} style={{ "--motion-i": Math.min(index, 8) } as CSSProperties}>
       <header className="quiz-card-head">
         <span className="quiz-kind">
           {index + 1}. {kindLabel(item.kind)}
         </span>
-        {done && (
+        {result?.correct && (
           <span className="quiz-status-ok">
-            <CheckCircle2 size={14} /> Верно
+            <CheckCircle2 size={14} aria-hidden /> Верно
+          </span>
+        )}
+        {result && !result.correct && (
+          <span className="quiz-status-bad">
+            <CircleAlert size={14} aria-hidden /> Неверно
           </span>
         )}
       </header>
@@ -106,12 +148,12 @@ function QuizCard({
                 useInlineGaps
                   ? (next) => {
                       setBlanks(next);
-                      setResult(null);
+                      clearResult();
                     }
                   : undefined
               }
               onSubmit={useInlineGaps ? submit : undefined}
-              disabled={!!result?.correct}
+              disabled={locked}
             />
           </p>
           {showSpeak && <SpeakButton text={item.prompt} speak={speakText} />}
@@ -125,9 +167,9 @@ function QuizCard({
             value={value}
             onChange={(next) => {
               setValue(next);
-              setResult(null);
+              clearResult();
             }}
-            disabled={!!result?.correct}
+            disabled={locked}
             checked={!!result}
             correct={!!result?.correct}
             expected={result?.expected}
@@ -138,9 +180,10 @@ function QuizCard({
               <div key={opt} className="flex items-center gap-2">
                 <button
                   type="button"
+                  disabled={locked}
                   onClick={() => {
                     setValue(opt);
-                    setResult(null);
+                    clearResult();
                   }}
                   className={`quiz-choice ${value === opt ? "is-selected" : ""}`}
                 >
@@ -154,9 +197,10 @@ function QuizCard({
           <input
             className="field"
             value={value}
+            disabled={locked}
             onChange={(e) => {
               setValue(e.target.value);
-              setResult(null);
+              clearResult();
             }}
             placeholder={
               item.kind === "order"
@@ -170,8 +214,8 @@ function QuizCard({
         )}
 
         <div className="flex flex-wrap items-center gap-3 pt-1">
-          <button className="btn btn-primary" disabled={busy || !canSubmit || !!result?.correct} onClick={submit}>
-            {busy ? "Проверяем…" : result?.correct ? "Готово" : submitLabel}
+          <button className="btn btn-primary" disabled={busy || !canSubmit || locked} onClick={submit}>
+            {busy ? "Проверяем…" : locked ? "Готово" : submitLabel}
           </button>
         </div>
 
