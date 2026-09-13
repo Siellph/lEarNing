@@ -1,9 +1,12 @@
 import {
   AlertTriangle,
+  BookOpen,
   BookOpenText,
   GraduationCap,
+  Headphones,
   Home,
   LogOut,
+  MessagesSquare,
   MessageSquareQuote,
   Shield,
   Sparkles,
@@ -24,6 +27,9 @@ const desktopLinks = [
   { to: "/app/verbs", label: "Глаголы", icon: WholeWord },
   { to: "/app/idioms", label: "Идиомы", icon: MessageSquareQuote },
   { to: "/app/exceptions", label: "Исключения", icon: AlertTriangle },
+  { to: "/app/reading", label: "Чтение", icon: BookOpen },
+  { to: "/app/listening", label: "Слушание", icon: Headphones },
+  { to: "/app/dialogues", label: "Диалоги", icon: MessagesSquare },
   { to: "/app/exams", label: "Экзамены", icon: GraduationCap },
   { to: "/app/profile", label: "Профиль", icon: UserRound },
 ];
@@ -37,17 +43,17 @@ export function Layout() {
         desktopLinks[0],
         desktopLinks[1],
         desktopLinks[3],
-        desktopLinks[4],
-        desktopLinks[8],
+        desktopLinks[7],
+        desktopLinks[11],
         { to: "/admin", label: "Админ", icon: Shield, end: false },
       ]
     : [
         desktopLinks[0],
         desktopLinks[1],
-        desktopLinks[3],
-        desktopLinks[4],
         desktopLinks[7],
         desktopLinks[8],
+        desktopLinks[9],
+        desktopLinks[11],
       ];
 
   return (

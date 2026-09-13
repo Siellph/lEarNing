@@ -16,6 +16,17 @@ export function parseMatchSides(options: QuizOptions): MatchSides | null {
   return null;
 }
 
+export function parseMatchAnswer(value: string): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const part of (value || "").split(";")) {
+    const trimmed = part.trim();
+    if (!trimmed.includes("=")) continue;
+    const [l, r] = trimmed.split("=", 2);
+    if (l.trim() && r.trim()) map[l.trim()] = r.trim();
+  }
+  return map;
+}
+
 export function formatMatchAnswer(pairs: Record<string, string>): string {
   return Object.entries(pairs)
     .filter(([, right]) => right)

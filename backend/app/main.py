@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import admin, assessments, auth, grammar, phonetics, practice, progress, public, study, vocab
+from app.api import admin, assessments, auth, grammar, phonetics, practice, progress, public, skills, study, vocab
 from app.core.config import settings
 from app import models  # noqa: F401
 from app.core.database import Base, engine
@@ -31,6 +31,7 @@ app.include_router(practice.router, prefix="/api")
 app.include_router(assessments.router, prefix="/api")
 app.include_router(vocab.router, prefix="/api")
 app.include_router(study.router, prefix="/api")
+app.include_router(skills.router, prefix="/api")
 app.include_router(phonetics.router, prefix="/api")
 app.include_router(progress.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")

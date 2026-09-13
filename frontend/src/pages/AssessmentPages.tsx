@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { kindLabel } from "../lib/kindLabels";
-import { extractEnglish, looksEnglish } from "../lib/speech";
+import { extractEnglish, looksEnglish, speakableEnglish } from "../lib/speech";
 import type { QuizOptions } from "../lib/match";
 import { MatchQuestion } from "../components/MatchQuestion";
-import { PromptWithBlanks } from "../components/PromptWithBlanks";
+import { PromptWithBlanks, countBlanks, joinGapAnswers } from "../components/PromptWithBlanks";
 import { SpeakButton, VoiceControls } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
 
@@ -189,49 +189,13 @@ function AssessmentRunner({ kind, id, back }: { kind: "test" | "exam"; id: numbe
       ) : (
         <div className="grid gap-4">
           {meta.questions.map((q, i) => (
-            <article key={q.id} className="card p-5">
-              <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
-                <span className="rounded-full bg-paper-2 px-2.5 py-1 font-semibold text-ink-soft">
-                  {i + 1}. {kindLabel(q.kind)}
-                </span>
-              </div>
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <p className="text-lg">
-                  <PromptWithBlanks text={q.prompt} />
-                </p>
-                {extractEnglish(q.prompt) && <SpeakButton text={extractEnglish(q.prompt) || q.prompt} />}
-              </div>
-              {q.kind === "match" ? (
-                <MatchQuestion
-                  options={q.options}
-                  value={answers[q.id] || ""}
-                  onChange={(next) => setAnswers((a) => ({ ...a, [q.id]: next }))}
-                />
-              ) : q.options && Array.isArray(q.options) ? (
-                <div className="grid gap-2">
-                  {q.options.map((opt) => (
-                    <div key={opt} className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt }))}
-                        className={`min-w-0 flex-1 rounded-xl border px-4 py-3 text-left ${
-                          answers[q.id] === opt ? "border-terra bg-[#fff1eb]" : "border-line"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                      {looksEnglish(opt) && <SpeakButton text={opt} />}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <input
-                  className="field"
-                  value={answers[q.id] || ""}
-                  onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
-                />
-              )}
-            </article>
+            <AssessmentQuestion
+              key={q.id}
+              index={i}
+              question={q}
+              value={answers[q.id] || ""}
+              onChange={(next) => setAnswers((a) => ({ ...a, [q.id]: next }))}
+            />
           ))}
           <button className="btn btn-primary justify-self-start" onClick={submit} disabled={busy}>
             {busy ? "Считаем…" : "Сдать работу"}
@@ -239,5 +203,74 @@ function AssessmentRunner({ kind, id, back }: { kind: "test" | "exam"; id: numbe
         </div>
       )}
     </div>
+  );
+}
+
+function AssessmentQuestion({
+  index,
+  question: q,
+  value,
+  onChange,
+}: {
+  index: number;
+  question: Question;
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const blankCount = countBlanks(q.prompt);
+  const isMatch = q.kind === "match";
+  const isMcq = Boolean(q.options && Array.isArray(q.options));
+  const useInlineGaps = blankCount > 0 && !isMatch && !isMcq;
+  const [blanks, setBlanks] = useState<string[]>(() => Array.from({ length: blankCount }, () => ""));
+  const speakText = speakableEnglish(q.prompt);
+  const showSpeak = Boolean(extractEnglish(q.prompt) || speakText);
+
+  return (
+    <article className="card p-5">
+      <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
+        <span className="rounded-full bg-paper-2 px-2.5 py-1 font-semibold text-ink-soft">
+          {index + 1}. {kindLabel(q.kind)}
+        </span>
+      </div>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <p className="text-lg leading-relaxed">
+          <PromptWithBlanks
+            text={q.prompt}
+            values={useInlineGaps ? blanks : undefined}
+            onChange={
+              useInlineGaps
+                ? (next) => {
+                    setBlanks(next);
+                    onChange(joinGapAnswers(next));
+                  }
+                : undefined
+            }
+          />
+        </p>
+        {showSpeak && <SpeakButton text={q.prompt} speak={speakText} />}
+      </div>
+      {isMatch ? (
+        <MatchQuestion options={q.options} value={value} onChange={onChange} />
+      ) : isMcq && Array.isArray(q.options) ? (
+        <div className="grid gap-2">
+          {q.options.map((opt) => (
+            <div key={opt} className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onChange(opt)}
+                className={`min-w-0 flex-1 rounded-xl border px-4 py-3 text-left ${
+                  value === opt ? "border-terra bg-[#fff1eb]" : "border-line"
+                }`}
+              >
+                {opt}
+              </button>
+              {looksEnglish(opt) && <SpeakButton text={opt} />}
+            </div>
+          ))}
+        </div>
+      ) : useInlineGaps ? null : (
+        <input className="field" value={value} onChange={(e) => onChange(e.target.value)} />
+      )}
+    </article>
   );
 }

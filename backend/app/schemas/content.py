@@ -151,6 +151,11 @@ class StudyCheckIn(BaseModel):
     remembered: bool | None = None
 
 
+class SkillCheckIn(BaseModel):
+    answer: str = ""
+    kind: str = ""
+
+
 class StudyCardIn(BaseModel):
     deck_id: int
     primary_text: str

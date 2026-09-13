@@ -78,8 +78,13 @@ def expand_contractions(text: str) -> str:
 
 
 def for_compare(value: str) -> str:
-    """Canonical key for answer matching (normalize + expand contractions)."""
-    return expand_contractions(normalize(value))
+    """Canonical key for answer matching (normalize + expand contractions).
+
+    Gap separators `` / `` and ``,`` collapse to spaces so ``have / had`` ≡ ``have had``.
+    """
+    text = expand_contractions(normalize(value))
+    text = re.sub(r"\s*[/,]\s*", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
 
 
 _MARKER_IN_PROMPT = re.compile(r"[«\"]([^»\"]{2,40})[»\"]")

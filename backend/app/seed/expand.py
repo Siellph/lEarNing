@@ -7,6 +7,7 @@ from app.core.security import hash_password
 from app.models.grammar import Exam, ExamQuestion, Exercise, GrammarLevel, GrammarModule, Lesson, ModuleTest, TestQuestion
 from app.models.settings import SiteSetting
 from app.models.study import StudyCard, StudyDeck
+from app.models.skills import SkillItem, SkillQuestion
 from app.models.user import User
 from app.models.vocabulary import VocabTopic, VocabWord
 from app.seed.extra_banks import practice_bank_for, test_bank_for
@@ -14,6 +15,7 @@ from app.seed.extra_exams import EXTRA_EXAMS
 from app.seed.extra_vocab import EXTRA_WORDS_BY_SLUG, NEW_TOPICS
 from app.seed.more_vocab import MORE_TOPICS, MORE_WORDS_BY_SLUG
 from app.seed.plus_vocab import PLUS_TOPICS, PLUS_WORDS_BY_SLUG
+from app.seed.skills_seed import SKILL_ITEMS
 from app.seed.study_seed import STUDY_DECKS
 from app.seed.topic_banks import (
     BANNED_PROMPTS,
@@ -308,6 +310,63 @@ def expand_study_decks(db) -> int:
                 )
             )
             known.add(key)
+            added += 1
+    return added
+
+
+def expand_skills(db) -> int:
+    """Idempotent seed for reading / listening / dialogue items (by slug + prompt)."""
+    added = 0
+    existing = {item.slug: item for item in db.query(SkillItem).all()}
+    max_order = max((i.sort_order for i in existing.values()), default=0)
+    for data in SKILL_ITEMS:
+        item = existing.get(data["slug"])
+        if item is None:
+            max_order += 1
+            item = SkillItem(
+                slug=data["slug"],
+                title=data["title"],
+                description=data.get("description", ""),
+                kind=data["kind"],
+                level_code=data.get("level_code", "A1"),
+                body=data.get("body", ""),
+                lines=data.get("lines") or [],
+                keywords=data.get("keywords") or [],
+                sort_order=max_order,
+            )
+            db.add(item)
+            db.flush()
+            existing[item.slug] = item
+            known_prompts: set[str] = set()
+        else:
+            known_prompts = {q.prompt for q in item.questions}
+            # Refresh mutable content if empty (safe upgrades without wipe)
+            if not item.body and data.get("body"):
+                item.body = data["body"]
+            if not item.lines and data.get("lines"):
+                item.lines = data["lines"]
+            if not item.keywords and data.get("keywords"):
+                item.keywords = data["keywords"]
+        order = max((q.sort_order for q in item.questions), default=0)
+        for qi, qdata in enumerate(data.get("questions") or [], start=1):
+            prompt = qdata["prompt"]
+            if prompt in known_prompts:
+                continue
+            order += 1
+            db.add(
+                SkillQuestion(
+                    item_id=item.id,
+                    kind=qdata["kind"],
+                    prompt=prompt,
+                    options=qdata.get("options"),
+                    answer=qdata["answer"],
+                    accepted=qdata.get("accepted"),
+                    speak=qdata.get("speak", ""),
+                    explanation=qdata.get("explanation", ""),
+                    sort_order=order if order else qi,
+                )
+            )
+            known_prompts.add(prompt)
             added += 1
     return added
 

@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { kindLabel } from "../lib/kindLabels";
-import { extractEnglish, looksEnglish } from "../lib/speech";
+import { extractEnglish, looksEnglish, speakableEnglish } from "../lib/speech";
 import { type QuizOptions } from "../lib/match";
 import { MatchQuestion, matchAnswerComplete } from "./MatchQuestion";
-import { PromptWithBlanks } from "./PromptWithBlanks";
+import { PromptWithBlanks, countBlanks, joinGapAnswers } from "./PromptWithBlanks";
 import { SpeakButton } from "./SpeakButton";
 
 export type QuizItem = {
@@ -49,7 +49,9 @@ function QuizCard({
   onCheck: (id: number, answer: string) => Promise<Result>;
   submitLabel: string;
 }) {
+  const blankCount = countBlanks(item.prompt);
   const [value, setValue] = useState("");
+  const [blanks, setBlanks] = useState<string[]>(() => Array.from({ length: blankCount }, () => ""));
   const [result, setResult] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
   const isMatch = item.kind === "match";
@@ -58,13 +60,17 @@ function QuizCard({
     return [...item.options].sort(() => Math.random() - 0.5);
   }, [item.id, item.prompt, item.options, isMatch]);
 
-  const canSubmit = isMatch ? matchAnswerComplete(item.options, value) : !!value.trim();
+  const useInlineGaps = blankCount > 0 && !isMatch && !choiceOptions;
+  const answerText = useInlineGaps ? joinGapAnswers(blanks) : value.trim();
+  const canSubmit = isMatch ? matchAnswerComplete(item.options, value) : !!answerText.trim();
+  const speakText = speakableEnglish(item.prompt);
+  const showSpeak = Boolean(extractEnglish(item.prompt) || speakText);
 
   const submit = async () => {
     if (!canSubmit) return;
     setBusy(true);
     try {
-      const res = await onCheck(item.id, value.trim());
+      const res = await onCheck(item.id, answerText.trim());
       setResult(res);
     } finally {
       setBusy(false);
@@ -83,9 +89,22 @@ function QuizCard({
       </div>
       <div className="mb-4 flex items-start justify-between gap-3">
         <p className="text-lg leading-relaxed">
-          <PromptWithBlanks text={item.prompt} />
+          <PromptWithBlanks
+            text={item.prompt}
+            values={useInlineGaps ? blanks : undefined}
+            onChange={
+              useInlineGaps
+                ? (next) => {
+                    setBlanks(next);
+                    setResult(null);
+                  }
+                : undefined
+            }
+            onSubmit={useInlineGaps ? submit : undefined}
+            disabled={!!result?.correct}
+          />
         </p>
-        {extractEnglish(item.prompt) && <SpeakButton text={extractEnglish(item.prompt) || item.prompt} />}
+        {showSpeak && <SpeakButton text={item.prompt} speak={speakText} />}
       </div>
       {isMatch ? (
         <MatchQuestion
@@ -96,6 +115,9 @@ function QuizCard({
             setResult(null);
           }}
           disabled={!!result?.correct}
+          checked={!!result}
+          correct={!!result?.correct}
+          expected={result?.expected}
         />
       ) : choiceOptions ? (
         <div className="grid gap-2">
@@ -117,7 +139,7 @@ function QuizCard({
             </div>
           ))}
         </div>
-      ) : (
+      ) : useInlineGaps ? null : (
         <input
           className="field"
           value={value}

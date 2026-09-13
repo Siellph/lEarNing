@@ -245,7 +245,11 @@ function cleanSpeakSegment(part: string): string {
 
 /** Grammar / CEFR / Russian seed tags in parentheses — speak sentence only. */
 const KNOWN_META_PAREN =
-  /^(be|to be|being|been|am|is|are|was|were|do|does|did|have|has|had|will|can|must|go|get|got|make|made|take|took|come|came|say|said|inf|infinitive|gerund|passive|active|v-?ing|v[123]|ed|ing|am\/is\/are|was\/were|do\/does|have\/has|go\/goes|is\/are|a1|a2|b1|b2|c1|c2|present simple|past simple|future simple|present continuous|past continuous|present perfect|past perfect|present perfect continuous|future continuous|future perfect)$/i;
+  /^(be|to be|being|been|am|is|are|was|were|do|does|did|have|has|had|will|can|must|go|get|got|make|made|take|took|come|came|say|said|open|opened|live|lived|play|played|work|worked|knock|write|written|see|seen|eat|eaten|hear|heard|watch|pay|clear|try|tell|miss|know|finish|leave|solve|heat|boil|cycle|listen|inf|infinitive|gerund|passive|active|v-?ing|v[123]|ed|ing|am\/is\/are|was\/were|do\/does|have\/has|go\/goes|is\/are|a1|a2|b1|b2|c1|c2|present simple|past simple|future simple|present continuous|past continuous|present perfect|past perfect|present perfect continuous|future continuous|future perfect)$/i;
+
+/** Lemma / form hints: (open), (live), (not do), (be / never), (in / on). */
+const LEMMA_HINT_PAREN =
+  /^(?:not\s+)?[a-z][a-z'-]{0,18}(?:\s*\/\s*(?:not\s+)?[a-z][a-z'-]{0,18}){0,4}(?:\s+[a-z][a-z'-]{0,12}){0,3}$/i;
 
 function isMetaParenthetical(inner: string): boolean {
   const t = inner.trim();
@@ -254,6 +258,8 @@ function isMetaParenthetical(inner: string): boolean {
   if (KNOWN_META_PAREN.test(t)) return true;
   // Short slash alternatives: am/is/are, do/does/did
   if (/^[a-z][a-z']*(?:\/[a-z][a-z']*){1,4}$/i.test(t) && t.length <= 28) return true;
+  // Verb / preposition lemma hints in exercises: (open), (play), (in / on)
+  if (LEMMA_HINT_PAREN.test(t) && !/[.!?]$/.test(t) && t.length <= 28) return true;
   // Trailing Title-Case tense / topic labels
   if (
     /^(Present|Past|Future|Present Perfect|Past Perfect|Future Perfect)\b[\w\s-]{0,28}$/i.test(t) &&
@@ -264,12 +270,12 @@ function isMetaParenthetical(inner: string): boolean {
   return false;
 }
 
-/** Strip meta tags like "(be)", "(Present Simple)", "(русский хинт)" from spoken text only. */
+/** Strip meta tags like "(be)", "(open)", "(Present Simple)", "(русский хинт)" from spoken text only. */
 export function stripMetaParentheticals(text: string): string {
   let out = text.replace(/\s+/g, " ").trim();
   if (!out) return "";
 
-  // Trailing tags (may stack): "I am a student. (be)" → "I am a student."
+  // Trailing tags (may stack): "I am a student. (be)" / "... ago. (open)" → sentence only
   for (;;) {
     const match = out.match(/^(.*)\s*\(([^)]+)\)\s*$/);
     if (!match || !isMetaParenthetical(match[2])) break;
@@ -277,20 +283,54 @@ export function stripMetaParentheticals(text: string): string {
   }
 
   // Inline known short meta tags only (keep rare legitimate parentheses)
-  out = out.replace(/\(([^)]+)\)/g, (full, inner: string) => {
-    const t = inner.trim();
-    if (KNOWN_META_PAREN.test(t) || /[А-Яа-яЁё]/.test(t) || (/^[a-z][a-z']*(?:\/[a-z][a-z']*){1,4}$/i.test(t) && t.length <= 28)) {
-      return " ";
-    }
-    return full;
-  });
+  out = out.replace(/\(([^)]+)\)/g, (full, inner: string) => (isMetaParenthetical(inner) ? " " : full));
 
   return out.replace(/\s+/g, " ").trim();
 }
 
-/** Plain English for TTS: drop /ipa/ blocks, keep words. "record /…/ vs /…/" → "record. record". */
+/** Drop leading Russian / UI instructions before the English example sentence. */
+export function stripLeadingInstruction(text: string): string {
+  let out = text.replace(/\s+/g, " ").trim();
+  if (!out) return "";
+
+  for (let i = 0; i < 4; i += 1) {
+    const idx = out.indexOf(":");
+    if (idx <= 0 || idx > 140) break;
+    const left = out.slice(0, idx).trim();
+    const right = out.slice(idx + 1).trim();
+    if (!right) break;
+    const leftIsInstruction =
+      /[А-Яа-яЁё]/.test(left) ||
+      /\b(вставьте|выберите|напишите|исправьте|перепишите|добавьте|укажите|соберите|переведите)\b/i.test(left) ||
+      /^(choose|select|fill|insert|complete|put|write|use|rewrite|correct|translate|make|form|type)\b/i.test(left);
+    if (!leftIsInstruction) break;
+    out = right;
+  }
+
+  // Leading Cyrillic-only clause before a capitalised English sentence
+  const splitEn = out.match(/^([^A-Za-z«"“]*[А-Яа-яЁё][^A-Za-z«"“]*)([A-Za-z«"“].*)$/);
+  if (splitEn?.[2] && /[A-Za-z]/.test(splitEn[2])) {
+    out = splitEn[2].trim();
+  }
+
+  return out.replace(/\s+/g, " ").trim();
+}
+
+/** Gaps → short pause for TTS; do not speak underscore runs. */
+function blanksForSpeech(text: string): string {
+  return text.replace(/_{2,}/g, " … ").replace(/\s+/g, " ").trim();
+}
+
+/** Plain English for TTS: drop instructions, meta parens, /ipa/; keep example sentence. */
 export function speakableEnglish(text: string): string {
-  const raw = stripMetaParentheticals(text.replace(/\s+/g, " ").trim());
+  const prepared = blanksForSpeech(
+    stripLeadingInstruction(stripMetaParentheticals(text.replace(/\s+/g, " ").trim())),
+  );
+  if (!prepared) return "";
+
+  // Prefer the English example when mixed leftovers remain
+  const extracted = extractEnglishCore(prepared);
+  const raw = extracted || prepared;
   if (!raw) return "";
   if (!/\/[^/\n]+\//.test(raw)) return collapseSpokenVariants(raw);
 
@@ -316,6 +356,23 @@ export function speakableEnglish(text: string): string {
 
   if (phrases.length) return collapseSpokenVariants(phrases.join(". "));
   return collapseSpokenVariants(raw.replace(/\/[^/\n]+\//g, " ").replace(/\s+/g, " ").trim());
+}
+
+function extractEnglishCore(source: string): string | null {
+  const quoted = source.match(/[«"“]([^»"”]+)[»"”]/);
+  if (quoted?.[1] && /[A-Za-z]/.test(quoted[1])) return quoted[1].trim();
+
+  const latin = source
+    .replace(/[А-Яа-яЁё]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    // Drop leftover tense labels glued before the sentence
+    .replace(/^(?:Present|Past|Future)(?:\s+(?:Simple|Continuous|Perfect))?\s*:?\s*/i, "")
+    .trim();
+  const words = latin.split(" ").filter((word) => /[A-Za-z…]/.test(word));
+  if (words.length >= 2) return latin;
+  if (words.length === 1 && words[0].replace(/[^A-Za-z]/g, "").length > 1) return words[0];
+  return null;
 }
 
 export function speakEnglish(text: string, options?: { rate?: number; accent?: Accent }) {
@@ -355,18 +412,9 @@ export function speakEnglish(text: string, options?: { rate?: number; accent?: A
 }
 
 export function extractEnglish(text: string): string | null {
-  const source = speakableEnglish(text);
-  const quoted = source.match(/[«"“]([^»"”]+)[»"”]/);
-  if (quoted?.[1] && /[A-Za-z]/.test(quoted[1])) return quoted[1];
-  const latin = source
-    .replace(/[А-Яа-яЁё]+/g, " ")
-    .replace(/_+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  const words = latin.split(" ").filter((word) => /[A-Za-z]/.test(word));
-  if (words.length >= 2) return latin;
-  if (words.length === 1 && words[0].replace(/[^A-Za-z]/g, "").length > 1) return words[0];
-  return null;
+  const spoken = speakableEnglish(text);
+  if (!spoken) return null;
+  return extractEnglishCore(spoken) || (/[A-Za-z]/.test(spoken) ? spoken : null);
 }
 
 export function looksEnglish(text: string): boolean {
