@@ -492,10 +492,30 @@ function blanksForSpeech(text: string): string {
   return text.replace(/_{2,}/g, " … ").replace(/\s+/g, " ").trim();
 }
 
+/**
+ * Web Speech API does not reliably parse SSML. Engines (esp. iOS/Safari) often
+ * read tags like `<speak>` / `<prosody rate="88%">` aloud as plain English.
+ * Never wrap utterance text in SSML — set tempo via `utterance.rate` only.
+ */
+export function stripSsmlMarkup(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/<\/?speak\b[^>]*>/gi, " ")
+    .replace(/<\/?prosody\b[^>]*>/gi, " ")
+    .replace(
+      /<\/?(?:break|emphasis|say-as|phoneme|sub|p|s|voice|audio|mark|desc|w|lang|token|bookmark)\b[^>]*>/gi,
+      " ",
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /** Plain English for TTS: drop instructions, meta parens, /ipa/; keep example sentence. */
 export function speakableEnglish(text: string): string {
   const prepared = blanksForSpeech(
-    stripLeadingInstruction(stripMetaParentheticals(text.replace(/\s+/g, " ").trim())),
+    stripLeadingInstruction(
+      stripMetaParentheticals(stripSsmlMarkup(text.replace(/\s+/g, " ").trim())),
+    ),
   );
   if (!prepared) return "";
 
@@ -547,6 +567,7 @@ function extractEnglishCore(source: string): string | null {
 }
 
 export function speakEnglish(text: string, options?: { rate?: number; accent?: Accent }) {
+  // Plain text only — never SSML. Rate/accent are utterance properties.
   const spoken = speakableEnglish(text);
   if (!spoken || typeof window === "undefined" || !window.speechSynthesis) return;
 
