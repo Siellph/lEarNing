@@ -1,6 +1,6 @@
 import math
 import random
-import re
+from collections import defaultdict
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -16,25 +16,38 @@ from app.services.scoring import is_correct, touch_user
 router = APIRouter(prefix="/vocab", tags=["vocab"])
 
 BATCH_SIZE = 10
-REVIEW_LIMIT = 3
-LEARNED_STRENGTH = 3
+
+# Four-way mastery bits — word is learned when mastery == LEARNED_MASTERY.
+MASTERY_BITS = {
+    "choice_en_ru": 1,
+    "type_en_ru": 2,
+    "choice_ru_en": 4,
+    "type_ru_en": 8,
+}
+# Legacy aliases from the previous practice pack.
+MASTERY_BITS["type_word"] = MASTERY_BITS["type_ru_en"]
+LEARNED_MASTERY = 15
+TASK_KINDS = ("choice_en_ru", "type_en_ru", "choice_ru_en", "type_ru_en")
 
 
 def _topic_words(db: Session, topic: VocabTopic) -> list[VocabWord]:
     return db.query(VocabWord).filter(VocabWord.topic_id == topic.id).order_by(VocabWord.id).all()
 
 
-def _progress_maps(db: Session, user_id: int, word_ids: list[int]) -> tuple[dict[int, int], dict[int, datetime | None]]:
+def _progress_maps(
+    db: Session, user_id: int, word_ids: list[int]
+) -> tuple[dict[int, int], dict[int, int], dict[int, datetime | None]]:
     if not word_ids:
-        return {}, {}
+        return {}, {}, {}
     rows = (
         db.query(VocabProgress)
         .filter(VocabProgress.user_id == user_id, VocabProgress.word_id.in_(word_ids))
         .all()
     )
     strength = {row.word_id: row.strength for row in rows}
+    mastery = {row.word_id: int(getattr(row, "mastery", 0) or 0) for row in rows}
     reviewed = {row.word_id: row.last_reviewed for row in rows}
-    return strength, reviewed
+    return strength, mastery, reviewed
 
 
 def _batch_count(total: int) -> int:
@@ -43,11 +56,19 @@ def _batch_count(total: int) -> int:
     return math.ceil(total / BATCH_SIZE)
 
 
-def _suggested_batch(words: list[VocabWord], strength: dict[int, int]) -> int:
+def _is_learned(mastery_value: int) -> bool:
+    return mastery_value >= LEARNED_MASTERY
+
+
+def _mastery_count(mastery_value: int) -> int:
+    return bin(mastery_value & LEARNED_MASTERY).count("1")
+
+
+def _suggested_batch(words: list[VocabWord], mastery: dict[int, int]) -> int:
     n = _batch_count(len(words))
     for index in range(n):
         chunk = words[index * BATCH_SIZE : (index + 1) * BATCH_SIZE]
-        if any(strength.get(word.id, 0) < LEARNED_STRENGTH for word in chunk):
+        if any(not _is_learned(mastery.get(word.id, 0)) for word in chunk):
             return index + 1
     return n
 
@@ -57,7 +78,7 @@ def _slice_batch(words: list[VocabWord], batch_index: int) -> list[VocabWord]:
     return words[start : start + BATCH_SIZE]
 
 
-def _word_payload(word: VocabWord, strength: int, role: str = "new") -> dict:
+def _word_payload(word: VocabWord, strength: int, mastery_value: int, role: str = "new") -> dict:
     return {
         "id": word.id,
         "word": word.word,
@@ -67,6 +88,9 @@ def _word_payload(word: VocabWord, strength: int, role: str = "new") -> dict:
         "example": word.example,
         "example_translation": word.example_translation,
         "strength": strength,
+        "mastery": mastery_value,
+        "mastery_count": _mastery_count(mastery_value),
+        "learned": _is_learned(mastery_value),
         "role": role,
     }
 
@@ -88,150 +112,101 @@ def _options(correct: str, pool: list[VocabWord], attr: str, extra: list[VocabWo
     return choices[: n + 1]
 
 
-def _gap_example(example: str, word: str) -> str:
-    pattern = re.compile(re.escape(word), re.IGNORECASE)
-    if pattern.search(example):
-        return pattern.sub("______", example, count=1)
-    return f"______ — {example}"
+def _build_task(word: VocabWord, kind: str, pool: list[VocabWord], topic_words: list[VocabWord]) -> dict:
+    if kind == "choice_en_ru":
+        return {
+            "uid": f"enru-{word.id}",
+            "id": word.id,
+            "kind": kind,
+            "prompt": f"Как переводится «{word.word}»?",
+            "options": _options(word.translation, pool, "translation", topic_words),
+            "speak": word.word,
+            "target": "translation",
+        }
+    if kind == "type_en_ru":
+        return {
+            "uid": f"typeru-{word.id}",
+            "id": word.id,
+            "kind": kind,
+            "prompt": f"Напишите перевод слова «{word.word}»",
+            "speak": word.word,
+            "hint": word.translation[:1],
+            "target": "translation",
+        }
+    if kind == "choice_ru_en":
+        return {
+            "uid": f"ruen-{word.id}",
+            "id": word.id,
+            "kind": kind,
+            "prompt": f"Как по-английски: «{word.translation}»?",
+            "options": _options(word.word, pool, "word", topic_words),
+            "target": "word",
+        }
+    # type_ru_en
+    return {
+        "uid": f"typeen-{word.id}",
+        "id": word.id,
+        "kind": kind,
+        "prompt": f"Напишите по-английски: «{word.translation}»",
+        "hint": word.word[:1].upper(),
+        "example": word.example,
+        "example_translation": word.example_translation,
+        "target": "word",
+    }
 
 
-def _pick_review(
-    core: list[VocabWord],
-    others: list[VocabWord],
-    strength: dict[int, int],
-    reviewed: dict[int, datetime | None],
-) -> list[VocabWord]:
-    core_ids = {word.id for word in core}
-    candidates = [word for word in others if word.id not in core_ids]
-    weak = [word for word in candidates if 0 < strength.get(word.id, 0) < LEARNED_STRENGTH]
-    weak.sort(key=lambda word: (strength.get(word.id, 0), reviewed.get(word.id) is None))
-    recent = [
-        word
-        for word in candidates
-        if word not in weak and reviewed.get(word.id) is not None
-    ]
-    recent.sort(key=lambda word: reviewed.get(word.id) or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
-    review: list[VocabWord] = []
-    for word in weak + recent:
-        if word not in review:
-            review.append(word)
-        if len(review) >= REVIEW_LIMIT:
-            break
-    return review
+def _interleave_shuffle(items: list[dict]) -> list[dict]:
+    """Shuffle tasks preferring not to show the same word twice in a row."""
+    by_word: dict[int, list[dict]] = defaultdict(list)
+    for item in items:
+        by_word[item["id"]].append(item)
+    for bucket in by_word.values():
+        random.shuffle(bucket)
+
+    word_ids = list(by_word.keys())
+    random.shuffle(word_ids)
+    result: list[dict] = []
+    last_id: int | None = None
+    remaining = sum(len(bucket) for bucket in by_word.values())
+    while remaining:
+        candidates = [wid for wid in word_ids if by_word[wid] and wid != last_id]
+        if not candidates:
+            candidates = [wid for wid in word_ids if by_word[wid]]
+        wid = random.choice(candidates)
+        result.append(by_word[wid].pop())
+        last_id = wid
+        remaining -= 1
+    return result
 
 
-def _make_items(session: list[VocabWord], topic_words: list[VocabWord], strength: dict[int, int]) -> list[dict]:
-    items: list[dict] = []
-    new_words = [word for word in session if strength.get(word.id, 0) == 0][:3]
-    for word in new_words:
-        items.append(
-            {
-                "uid": f"card-{word.id}",
-                "id": word.id,
-                "kind": "card",
-                "prompt": word.word,
-                "speak": word.word,
-                "transcription": word.transcription,
-                "translation": word.translation,
-                "part_of_speech": word.part_of_speech,
-                "example": word.example,
-                "example_translation": word.example_translation,
-                "target": "word",
-            }
-        )
-
-    kinds = ["choice_en_ru", "choice_ru_en", "type_word", "listen_pick"]
-    practice_words = list(session)
-    random.shuffle(practice_words)
-    for index, word in enumerate(practice_words):
-        kind = kinds[index % len(kinds)]
-        pool = session if len(session) >= 4 else topic_words
-        if kind == "choice_en_ru":
-            items.append(
-                {
-                    "uid": f"enru-{word.id}",
-                    "id": word.id,
-                    "kind": kind,
-                    "prompt": f"Как переводится «{word.word}»?",
-                    "options": _options(word.translation, pool, "translation", topic_words),
-                    "speak": word.word,
-                    "target": "translation",
-                }
-            )
-        elif kind == "choice_ru_en":
-            items.append(
-                {
-                    "uid": f"ruen-{word.id}",
-                    "id": word.id,
-                    "kind": kind,
-                    "prompt": f"Как по-английски: {word.translation}?",
-                    "options": _options(word.word, pool, "word", topic_words),
-                    "target": "word",
-                }
-            )
-        elif kind == "type_word":
-            items.append(
-                {
-                    "uid": f"type-{word.id}",
-                    "id": word.id,
-                    "kind": kind,
-                    "prompt": word.translation,
-                    "gap": _gap_example(word.example, word.word),
-                    "hint": word.word[:1].upper(),
-                    "example_translation": word.example_translation,
-                    "target": "word",
-                }
-            )
-        else:
-            pick_spelling = index % 8 >= 4
-            items.append(
-                {
-                    "uid": f"listen-{word.id}",
-                    "id": word.id,
-                    "kind": kind,
-                    "prompt": "Прослушайте и выберите написание" if pick_spelling else "Прослушайте и выберите значение",
-                    "options": _options(
-                        word.word if pick_spelling else word.translation,
-                        pool,
-                        "word" if pick_spelling else "translation",
-                        topic_words,
-                    ),
-                    "speak": word.word,
-                    "target": "word" if pick_spelling else "translation",
-                }
-            )
-
-    match_n = 5 if len(session) >= 5 else 4 if len(session) >= 4 else 0
-    if match_n:
-        match_words = list(session[:match_n])
-        left = [{"id": word.id, "text": word.word} for word in match_words]
-        right = [{"id": word.id, "text": word.translation} for word in match_words]
-        random.shuffle(left)
-        random.shuffle(right)
-        items.append(
-            {
-                "uid": f"match-{match_words[0].id}",
-                "id": match_words[0].id,
-                "kind": "match_pairs",
-                "prompt": "Соедините английские слова с переводом",
-                "word_ids": [word.id for word in match_words],
-                "left": left,
-                "right": right,
-                "target": "translation",
-            }
-        )
-    return items
+def _make_items(
+    batch_words: list[VocabWord],
+    topic_words: list[VocabWord],
+    mastery: dict[int, int],
+) -> list[dict]:
+    """One pending task per missing mastery bit for words not yet fully learned."""
+    pending: list[dict] = []
+    pool = batch_words if len(batch_words) >= 4 else topic_words
+    for word in batch_words:
+        flags = mastery.get(word.id, 0)
+        if _is_learned(flags):
+            continue
+        missing = [kind for kind in TASK_KINDS if not (flags & MASTERY_BITS[kind])]
+        random.shuffle(missing)
+        for kind in missing:
+            pending.append(_build_task(word, kind, pool, topic_words))
+    return _interleave_shuffle(pending)
 
 
 @router.get("/topics")
 def list_topics(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     topics = db.query(VocabTopic).order_by(VocabTopic.sort_order).all()
     all_ids = [word.id for topic in topics for word in topic.words]
-    strength, _ = _progress_maps(db, user.id, all_ids)
+    _, mastery, _ = _progress_maps(db, user.id, all_ids)
     result = []
     for topic in topics:
         words = sorted(topic.words, key=lambda word: word.id)
-        learned = sum(1 for word in words if strength.get(word.id, 0) >= LEARNED_STRENGTH)
+        learned = sum(1 for word in words if _is_learned(mastery.get(word.id, 0)))
         result.append(
             {
                 "id": topic.id,
@@ -242,7 +217,7 @@ def list_topics(db: Session = Depends(get_db), user: User = Depends(get_current_
                 "word_count": len(words),
                 "learned_count": learned,
                 "batch_count": _batch_count(len(words)),
-                "suggested_batch": _suggested_batch(words, strength),
+                "suggested_batch": _suggested_batch(words, mastery),
             }
         )
     return result
@@ -259,13 +234,13 @@ def get_topic(
     if not topic:
         raise HTTPException(status_code=404, detail="Тема не найдена")
     words = _topic_words(db, topic)
-    strength, _ = _progress_maps(db, user.id, [word.id for word in words])
+    strength, mastery, _ = _progress_maps(db, user.id, [word.id for word in words])
     batch_count = _batch_count(len(words))
-    suggested = _suggested_batch(words, strength)
+    suggested = _suggested_batch(words, mastery)
     batch_index = min(batch or suggested, batch_count)
     batch_words = _slice_batch(words, batch_index)
-    learned = sum(1 for word in words if strength.get(word.id, 0) >= LEARNED_STRENGTH)
-    batch_learned = sum(1 for word in batch_words if strength.get(word.id, 0) >= LEARNED_STRENGTH)
+    learned = sum(1 for word in words if _is_learned(mastery.get(word.id, 0)))
+    batch_learned = sum(1 for word in batch_words if _is_learned(mastery.get(word.id, 0)))
     return {
         "id": topic.id,
         "slug": topic.slug,
@@ -279,7 +254,9 @@ def get_topic(
         "batch_count": batch_count,
         "batch_learned": batch_learned,
         "suggested_batch": suggested,
-        "words": [_word_payload(word, strength.get(word.id, 0)) for word in batch_words],
+        "words": [
+            _word_payload(word, strength.get(word.id, 0), mastery.get(word.id, 0)) for word in batch_words
+        ],
     }
 
 
@@ -296,44 +273,57 @@ def vocab_practice(
     words = _topic_words(db, topic)
     if not words:
         raise HTTPException(status_code=404, detail="В теме пока нет слов")
-    strength, reviewed = _progress_maps(db, user.id, [word.id for word in words])
+    strength, mastery, _ = _progress_maps(db, user.id, [word.id for word in words])
     batch_count = _batch_count(len(words))
-    batch_index = min(batch or _suggested_batch(words, strength), batch_count)
+    batch_index = min(batch or _suggested_batch(words, mastery), batch_count)
     core = _slice_batch(words, batch_index)
-    review = _pick_review(core, words, strength, reviewed)
-    session = list(core) + [word for word in review if word not in core]
-    learned = sum(1 for word in words if strength.get(word.id, 0) >= LEARNED_STRENGTH)
+    pending_words = [word for word in core if not _is_learned(mastery.get(word.id, 0))]
+    items = _make_items(pending_words, words, mastery)
+    learned = sum(1 for word in words if _is_learned(mastery.get(word.id, 0)))
+    batch_learned = sum(1 for word in core if _is_learned(mastery.get(word.id, 0)))
     return {
         "topic": {"slug": topic.slug, "title": topic.title, "level_code": topic.level_code},
         "batch_index": batch_index,
         "batch_count": batch_count,
         "batch_size": BATCH_SIZE,
-        "new_count": len(core),
-        "review_count": len(review),
+        "new_count": len(pending_words),
+        "review_count": 0,
         "word_count": len(words),
         "learned_count": learned,
+        "batch_learned": batch_learned,
+        "batch_word_count": len(core),
+        "pending_tasks": len(items),
         "words": [
-            _word_payload(word, strength.get(word.id, 0), "review" if word in review else "new")
-            for word in session
+            _word_payload(word, strength.get(word.id, 0), mastery.get(word.id, 0), "new") for word in pending_words
         ],
-        "items": _make_items(session, words, strength),
+        "items": items,
     }
 
 
-def _touch_progress(db: Session, user: User, word: VocabWord, correct: bool) -> VocabProgress:
+def _touch_progress(
+    db: Session,
+    user: User,
+    word: VocabWord,
+    correct: bool,
+    kind: str,
+) -> VocabProgress:
     progress = (
         db.query(VocabProgress)
         .filter(VocabProgress.user_id == user.id, VocabProgress.word_id == word.id)
         .first()
     )
     if not progress:
-        progress = VocabProgress(user_id=user.id, word_id=word.id, strength=0)
+        progress = VocabProgress(user_id=user.id, word_id=word.id, strength=0, mastery=0)
         db.add(progress)
-    if correct:
-        progress.strength = min(progress.strength + 1, 5)
-        touch_user(db, user, 5)
-    else:
-        progress.strength = max(progress.strength - 1, 0)
+
+    bit = MASTERY_BITS.get(kind, 0)
+    if correct and bit:
+        before = int(progress.mastery or 0)
+        if not (before & bit):
+            progress.mastery = before | bit
+            touch_user(db, user, 5)
+        progress.strength = _mastery_count(progress.mastery)
+    # Wrong answers do not clear mastery bits — learner may retry immediately.
     progress.last_reviewed = datetime.now(timezone.utc)
     return progress
 
@@ -350,27 +340,25 @@ def check_word(
         raise HTTPException(status_code=404, detail="Слово не найдено")
 
     kind = payload.kind or ""
-    if kind == "card":
-        correct = bool(payload.remembered)
-    elif kind == "match_pairs":
-        correct = is_correct(payload.answer, word.translation, [word.word])
-    else:
-        target = payload.target or ("translation" if kind == "choice_en_ru" else "word")
-        expected = word.translation if target == "translation" else word.word
-        correct = is_correct(payload.answer, expected)
-        if not correct and not kind:
-            correct = is_correct(payload.answer, word.word, [word.translation])
+    target = payload.target or (
+        "translation" if kind in {"choice_en_ru", "type_en_ru"} else "word"
+    )
+    expected = word.translation if target == "translation" else word.word
+    correct = is_correct(payload.answer, expected)
+    if not correct and not kind:
+        correct = is_correct(payload.answer, word.word, [word.translation])
 
-    progress = _touch_progress(db, user, word, correct)
+    progress = _touch_progress(db, user, word, correct, kind)
     db.commit()
-    expected = word.translation if payload.target == "translation" or kind in {"choice_en_ru"} else word.word
-    if kind == "card":
-        expected = word.word
+    mastery_value = int(progress.mastery or 0)
     return {
         "correct": correct,
         "word": word.word,
         "translation": word.translation,
         "example": word.example,
         "strength": progress.strength,
+        "mastery": mastery_value,
+        "mastery_count": _mastery_count(mastery_value),
+        "learned": _is_learned(mastery_value),
         "expected": expected if not correct else None,
     }

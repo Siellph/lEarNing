@@ -30,6 +30,7 @@ from app.seed.expand import (
     ensure_email_verified_column,
     ensure_site_setting_columns,
     ensure_site_settings,
+    ensure_vocab_mastery_column,
     ensure_word_order_modules,
     expand_exams,
     expand_module_tests,
@@ -150,6 +151,7 @@ def main() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_email_verified_column(engine)
     ensure_site_setting_columns(engine)
+    ensure_vocab_mastery_column(engine)
     db = SessionLocal()
     try:
         already = db.query(GrammarLevel).first() is not None

@@ -43,6 +43,8 @@ class VocabProgress(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     word_id: Mapped[int] = mapped_column(ForeignKey("vocab_words.id", ondelete="CASCADE"))
     strength: Mapped[int] = mapped_column(Integer, default=0)
+    # Bitmask: choice_en_ru=1, type_en_ru=2, choice_ru_en=4, type_ru_en=8. Learned when == 15.
+    mastery: Mapped[int] = mapped_column(Integer, default=0)
     last_reviewed: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

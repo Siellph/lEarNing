@@ -625,6 +625,19 @@ def ensure_site_setting_columns(engine) -> None:
         )
 
 
+def ensure_vocab_mastery_column(engine) -> None:
+    """Add mastery bitmask; treat former strength>=3 rows as fully learned."""
+    inspector = inspect(engine)
+    if "vocab_progress" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("vocab_progress")}
+    if "mastery" in columns:
+        return
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE vocab_progress ADD COLUMN mastery INTEGER NOT NULL DEFAULT 0"))
+        conn.execute(text("UPDATE vocab_progress SET mastery = 15 WHERE strength >= 3"))
+
+
 # Leftover fixture accounts only. Never recreate. Do not add real people here.
 PROTECTED_EMAILS = frozenset({"i@vgordin.ru"})
 LEGACY_DEMO_EMAILS = (

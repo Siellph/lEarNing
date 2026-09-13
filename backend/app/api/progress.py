@@ -59,7 +59,7 @@ def my_progress(db: Session = Depends(get_db), user: User = Depends(get_current_
     )
     vocab_learned = (
         db.query(func.count(VocabProgress.id))
-        .filter(VocabProgress.user_id == user.id, VocabProgress.strength >= 3)
+        .filter(VocabProgress.user_id == user.id, VocabProgress.mastery >= 15)
         .scalar()
         or 0
     )
