@@ -4,8 +4,10 @@ Creates an admin only when ADMIN_EMAIL and ADMIN_PASSWORD are both set.
 Run: python -m app.seed.runner
 
 Policy (existing DB): insert-only for content. ensure_* may add columns/settings;
-expanders add missing rows by slug/prompt; they do NOT update lesson theory,
-study/skill/vocab text, or exercise prompts/answers already in the DB.
+expanders add missing rows by slug/prompt; they do NOT update lesson theory
+globally (sync_lesson_theory is a no-op). Narrow exception: sync_lesson_theory_for_slugs
+may overwrite Lesson.content for an explicit corrected-slug list only.
+Study/skill/vocab text and existing exercise prompts/answers stay untouched.
 """
 
 from app import models  # noqa: F401 — register metadata
@@ -52,6 +54,7 @@ from app.seed.expand import (
     scrub_duplicate_prompts,
     scrub_off_topic_pad_items,
     sync_lesson_theory,
+    sync_lesson_theory_for_slugs,
 )
 from app.seed.vocab import TOPICS
 
@@ -143,6 +146,7 @@ def _run_expanders(db) -> dict:
         "scrub_tests": scrubbed["tests"],
         "word_order": ensure_word_order_modules(db),
         "theory": sync_lesson_theory(db),
+        "theory_fixes": sync_lesson_theory_for_slugs(db),
         "practice": expand_practice_banks(db),
         "tests": expand_module_tests(db),
         "exams": expand_exams(db),

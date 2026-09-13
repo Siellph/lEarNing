@@ -159,7 +159,8 @@ A1_THEORY = {
                         ["Правило", "Единственное", "Множественное"],
                         [
                             ["обычно **+s**", "book", "books"],
-                            ["после s / x / ch / sh (и часто o) → **+es**", "watch, box, tomato", "watches, boxes, tomatoes"],
+                            ["после s / x / ch / sh → **+es**", "watch, box, bus", "watches, boxes, buses"],
+                            ["некоторые на **-o** → **+es**", "tomato, potato", "tomatoes, potatoes (но photo → photos)"],
                             ["**y** после согласной → **ies**", "city, baby", "cities, babies"],
                             ["**y** после гласной → **+s**", "day, key", "days, keys"],
                         ],

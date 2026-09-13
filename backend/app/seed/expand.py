@@ -422,6 +422,48 @@ def sync_lesson_theory(db) -> int:
     return 0
 
 
+# Slugs whose theory overlays were fact-checked and corrected; expand may push these only.
+THEORY_FIX_SLUGS: list[str] = [
+    "nouns-plurals",
+    "countable-uncountable",
+    "quantifiers-a2",
+    "will-vs-going-to",
+    "modals-possibility",
+    "reported-statements",
+    "question-tags",
+]
+
+
+def sync_lesson_theory_for_slugs(db, slugs: list[str] | None = None) -> int:
+    """Overwrite Lesson.content from THEORY_BY_SLUG for listed module slugs only.
+
+    Does not touch titles or unrelated modules (admin edits elsewhere stay intact).
+    Global sync_lesson_theory remains disabled.
+    """
+    from app.models.grammar import GrammarModule
+    from app.seed.theory_content import THEORY_BY_SLUG
+
+    target = list(slugs) if slugs is not None else list(THEORY_FIX_SLUGS)
+    if not target:
+        return 0
+
+    updated = 0
+    modules = (
+        db.query(GrammarModule)
+        .filter(GrammarModule.slug.in_(target))
+        .all()
+    )
+    for module in modules:
+        overlay = THEORY_BY_SLUG.get(module.slug)
+        if not overlay or not module.lessons:
+            continue
+        # Prefer primary lesson (sort_order 1); fall back to first.
+        lesson = sorted(module.lessons, key=lambda L: L.sort_order)[0]
+        lesson.content = overlay
+        updated += 1
+    return updated
+
+
 def _collect_seed_match_items() -> list[dict]:
     """All authored match exercises (core modules + topic/extra banks + exams)."""
     from app.seed.a1 import A1

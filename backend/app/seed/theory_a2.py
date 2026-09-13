@@ -228,17 +228,22 @@ A2_THEORY = {
                     ex("Shall I carry that bag?", "Давай я понесу эту сумку?"),
                     ex("Shall we start?", "Начнём?"),
                 ],
+                callouts=[
+                    callout("На A2 рядом с will / going to часто стоит ещё один контур будущего: Present Continuous для **уже договорённого** плана (I'm meeting Sam at 6). Это не «сейчас», а запись в календаре.", "tip"),
+                ],
             ),
         ],
         compare=[
             {"left": "I'll call her now.", "right": "I'm going to call her tonight.", "note": "Решение сейчас vs уже задуманный план."},
+            {"left": "I'm meeting the dentist on Friday.", "right": "I'll meet you there if you want.", "note": "Договорённость в календаре vs предложение/решение в момент речи."},
         ],
         watch_out=[
             "Не I will to go / she wills.",
             "Без be нет going to: не She going to leave.",
             "Не смешивают will и going to в одной клетке без причины.",
+            "I'm meeting… может быть будущим договорённым планом, не только «прямо сейчас».",
         ],
-        remember="Решил сейчас / обещание — **will**. Уже планировал или видна примета — **going to**.",
+        remember="Решил сейчас / обещание — **will**. Уже планировал или видна примета — **going to**. Договорённость в календаре — часто Present Continuous.",
     ),
     "comparatives": lesson(
         "Сравнительная степень показывает разницу между двумя людьми или вещами: A is … **than** B. Короткие прилагательные обычно берут **-er**, длинные — **more**. Отдельно: good → better, bad → worse.",
@@ -357,7 +362,8 @@ A2_THEORY = {
                             ["a/an", "да (a ticket)", "нет (не an advice)"],
                             ["множественное -s", "tickets", "обычно нет"],
                             ["many / few", "many tickets", "—"],
-                            ["much / little", "—", "much information"],
+                            ["much / little", "—", "not much information (часто вопрос/отриц.)"],
+                            ["a lot of", "a lot of tickets", "a lot of information"],
                             ["пример", "chair, idea, ticket", "milk, news, advice, furniture"],
                         ],
                     ),
@@ -365,6 +371,9 @@ A2_THEORY = {
                 pairs=[
                     pair("an advice", "some advice / a piece of advice", "Advice неисчисляемое."),
                     pair("informations", "information", "Без обычного множественного."),
+                ],
+                callouts=[
+                    callout("Much с неисчисляемыми естественнее в вопросах и отрицаниях; в обычном утверждении «много» чаще говорят **a lot of** information.", "tip"),
                 ],
             ),
             rule(
@@ -378,7 +387,7 @@ A2_THEORY = {
             ),
         ],
         compare=[
-            {"left": "a ticket / many tickets", "right": "some information / much information", "note": "Штуки vs масса/абстракция."},
+            {"left": "a ticket / many tickets", "right": "some information / a lot of information", "note": "Штуки vs масса/абстракция; в утверждении про «много» чаще a lot of, не much."},
         ],
         watch_out=[
             "An advice / informations — ошибки.",
@@ -411,31 +420,36 @@ A2_THEORY = {
                     table(
                         ["", "Исчисляемые", "Неисчисляемые"],
                         [
-                            ["много (нейтр.)", "many / a lot of", "much / a lot of"],
+                            ["много (утверждение, обычный стиль)", "**a lot of**", "**a lot of**"],
+                            ["много (вопрос / отрицание)", "**many**", "**much**"],
                             ["немного есть", "**a few**", "**a little**"],
                             ["мало (негативно)", "**few**", "**little**"],
                         ],
                     ),
                 ],
                 pairs=[
-                    pair("much apples", "many apples", "Apples — исчисляемые."),
+                    pair("much apples", "many apples / a lot of apples", "Apples — исчисляемые; much с ними не ставят."),
                     pair("many rice", "much rice / a lot of rice", "Rice — неисчисляемое."),
+                    pair("I have much time today.", "I have a lot of time today.", "Much в обычном утверждении звучит тяжело/формально."),
                 ],
                 callouts=[
                     callout("**Few** и **a few** — не синонимы по тону: few friends ≈ почти нет друзей; a few friends ≈ несколько друзей есть.", "key"),
+                    callout("Much/many естественны в вопросах и отрицаниях. В обычном утверждении чаще **a lot of**; much в утверждении — скорее формальный регистр (Much has been written…).", "tip"),
                 ],
             ),
         ],
         compare=[
             {"left": "a few eggs", "right": "a little milk", "note": "Штуки vs неисчисляемое."},
             {"left": "few friends", "right": "a few friends", "note": "Мало (почти нет) vs немного есть."},
+            {"left": "How much time have we got?", "right": "We haven't got much time.", "note": "Much уместен в вопросе и отрицании."},
         ],
         watch_out=[
             "Much apples / many rice — перепутан тип существительного.",
+            "I have much money — в обычной речи лучше **a lot of** money.",
             "Few и a few — не синонимы по тону.",
             "Some в грубом отрицании обычно не ставят: I haven't got **any**.",
         ],
-        remember="Many/few — штуки. Much/little — масса. A few / a little — «есть немного».",
+        remember="Many/much — штуки/масса, чаще в вопросе и отрицании. Утверждение «много» — обычно a lot of. A few / a little — «есть немного».",
     ),
     "modals-must-should-have-to": lesson(
         "Три модальных контура A2: обязанность, совет и запрет. Must и have to близки по силе обязанности, но источник разный. Should мягче. **Mustn't** и **don't have to** — почти противоположны.",
