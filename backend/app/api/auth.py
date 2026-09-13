@@ -125,6 +125,12 @@ def resend_verification(payload: EmailIn, db: Session = Depends(get_db)):
     return MessageOut(message="Если аккаунт существует и ещё не подтверждён, мы отправили письмо.")
 
 
+@router.post("/refresh", response_model=TokenOut)
+def refresh_access_token(user: User = Depends(get_current_user)):
+    """Issue a new access token while the current one is still valid."""
+    return TokenOut(access_token=create_access_token(str(user.id), {"role": user.role}))
+
+
 @router.get("/me", response_model=UserOut)
 def me(user: User = Depends(get_current_user)):
     return user
