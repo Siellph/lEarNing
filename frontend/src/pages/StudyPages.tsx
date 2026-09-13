@@ -118,6 +118,18 @@ const KIND_LABEL: Record<string, string> = {
   choice_ru_en: "Выбор RU→EN",
 };
 
+const EXCEPTION_KIND_LABEL: Record<string, string> = {
+  choice_en_ru: "Правило",
+  choice_ru_en: "Пример",
+};
+
+function kindLabel(taskKind: string, deckKind?: string) {
+  if (deckKind === "exceptions") {
+    return EXCEPTION_KIND_LABEL[taskKind] || KIND_LABEL[taskKind] || taskKind;
+  }
+  return KIND_LABEL[taskKind] || taskKind;
+}
+
 const FEEDBACK_ADVANCE_MS = 1500;
 
 export function StudyHub({ kind }: { kind: "verbs" | "idioms" | "exceptions" }) {
@@ -276,7 +288,11 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
               <div className="mt-3 flex items-center justify-between">
                 <span
                   className={`rounded-full px-2 py-1 text-xs ${c.learned ? "bg-sage-soft text-sage" : "text-ink-soft"}`}
-                  title="Выучено, когда верны обе стороны (EN→RU и RU→EN)"
+                  title={
+                    kind === "exceptions"
+                      ? "Выучено, когда верны обе стороны (правило и пример)"
+                      : "Выучено, когда верны обе стороны (EN→RU и RU→EN)"
+                  }
                 >
                   {c.learned ? "выучено" : `${Math.min(c.mastery_count ?? 0, 2)}/2 · сила ${c.strength}/5`}
                 </span>
@@ -431,7 +447,9 @@ function StudySession({
                   <p className="font-semibold">
                     {group.primary} — {group.translation}
                   </p>
-                  <p className="mt-1 text-sm text-ink-soft">{group.kinds.map((k) => KIND_LABEL[k] || k).join(" · ")}</p>
+                  <p className="mt-1 text-sm text-ink-soft">
+                    {group.kinds.map((k) => kindLabel(k, pack.deck.kind)).join(" · ")}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -477,7 +495,14 @@ function StudySession({
         <ProgressBar value={percent(answeredCount, total)} />
       </div>
       <div className="vocab-session-stage">
-        <ChoiceExercise key={item.uid} item={item} index={index} onCheck={onCheck} onResolved={advance} />
+        <ChoiceExercise
+          key={item.uid}
+          item={item}
+          index={index}
+          deckKind={pack.deck.kind}
+          onCheck={onCheck}
+          onResolved={advance}
+        />
       </div>
     </div>
   );
@@ -533,11 +558,13 @@ function useAutoAdvance(
 function ChoiceExercise({
   item,
   index,
+  deckKind,
   onCheck,
   onResolved,
 }: {
   item: PracticeItem;
   index: number;
+  deckKind?: string;
   onCheck: (item: PracticeItem, answer: string) => Promise<CheckResult>;
   onResolved: (res: CheckResult, item: PracticeItem) => void;
 }) {
@@ -571,7 +598,7 @@ function ChoiceExercise({
     >
       <header className="quiz-card-head">
         <span className="rounded-full bg-paper-2 px-2.5 py-1 text-xs font-semibold text-ink-soft">
-          {KIND_LABEL[item.kind] || "Задание"}
+          {kindLabel(item.kind, deckKind) || "Задание"}
         </span>
         {result && <CardResultIcon correct={result.correct} />}
       </header>

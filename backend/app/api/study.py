@@ -104,7 +104,36 @@ def _options(correct: str, pool: list[StudyCard], attr: str, extra: list[StudyCa
     return choices[: n + 1]
 
 
-def _build_task(card: StudyCard, kind: str, pool: list[StudyCard], deck_cards: list[StudyCard]) -> dict:
+def _build_task(
+    card: StudyCard,
+    kind: str,
+    pool: list[StudyCard],
+    deck_cards: list[StudyCard],
+    deck_kind: str,
+) -> dict:
+    # Exceptions: front = pattern/form, back = rule (RU) — not a translation pair.
+    if deck_kind == "exceptions":
+        if kind == "choice_en_ru":
+            return {
+                "uid": f"enru-{card.id}",
+                "id": card.id,
+                "kind": kind,
+                "prompt": f"Какое правило верно для «{card.primary_text}»?",
+                "options": _options(card.translation, pool, "translation", deck_cards),
+                "speak": card.primary_text.split("→")[0].strip(),
+                "target": "translation",
+                "example": card.example or None,
+            }
+        return {
+            "uid": f"ruen-{card.id}",
+            "id": card.id,
+            "kind": kind,
+            "prompt": f"К какой форме относится правило: «{card.translation}»?",
+            "options": _options(card.primary_text, pool, "primary_text", deck_cards),
+            "target": "primary",
+            "example": card.example or None,
+        }
+
     if kind == "choice_en_ru":
         return {
             "uid": f"enru-{card.id}",
@@ -154,6 +183,7 @@ def _make_items(
     batch_cards: list[StudyCard],
     deck_cards: list[StudyCard],
     mastery: dict[int, int],
+    deck_kind: str,
 ) -> list[dict]:
     """Both directions for every card that is not yet fully learned."""
     pending: list[dict] = []
@@ -164,7 +194,7 @@ def _make_items(
         kinds = list(TASK_KINDS)
         random.shuffle(kinds)
         for kind in kinds:
-            pending.append(_build_task(card, kind, pool, deck_cards))
+            pending.append(_build_task(card, kind, pool, deck_cards, deck_kind))
     return _interleave_shuffle(pending)
 
 
@@ -338,7 +368,7 @@ def practice_deck(
     batch_index = max(1, batch_index)
     chunk = cards[(batch_index - 1) * BATCH_SIZE : batch_index * BATCH_SIZE]
     pending_cards = [c for c in chunk if not _is_learned(mastery.get(c.id, 0))]
-    items = _make_items(pending_cards, cards, mastery)
+    items = _make_items(pending_cards, cards, mastery, deck.kind)
     learned = sum(1 for c in cards if _is_learned(mastery.get(c.id, 0)))
     batch_learned = sum(1 for c in chunk if _is_learned(mastery.get(c.id, 0)))
     return {
