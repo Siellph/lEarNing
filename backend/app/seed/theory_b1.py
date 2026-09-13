@@ -407,15 +407,15 @@ B1_THEORY = {
         remember="Be нужного времени + V3. Perfect: has/have been + V3. Modal: modal + be + V3.",
     ),
     "defining-nondefining": lesson(
-        "Defining relative clauses уточняют, о ком/чём речь, и без них смысл ломается. Non-defining дают дополнительную информацию и выделяются запятыми; **that** в них обычно не используют.",
+        "Defining relative clauses уточняют, о ком/чём речь, и без них смысл ломается. Non-defining дают дополнительную информацию и выделяются запятыми; **that** в них обычно не используют.\n\nЗапятая — не украшение: она меняет, сколько объектов подразумевается в классе.",
         [
             rule(
                 "Defining vs non-defining",
-                "Defining — без запятых. Non-defining — добавка в запятых.",
+                "Defining — без запятых: придаточное нужно, чтобы понять «какой именно». Non-defining — добавка к уже ясному объекту, в запятых.",
                 [
-                    ex("The students who arrived late missed the test.", "Студенты, которые опоздали, пропустили тест."),
-                    ex("My sister, who lives in Oslo, is visiting.", "Моя сестра, которая живёт в Осло, приезжает."),
-                    ex("The book I read was excellent.", "Книга, которую я прочитал, была отличной."),
+                    ex("The students who arrived late missed the test.", "Студенты, которые опоздали, пропустили тест (не все, а опоздавшие)."),
+                    ex("My sister, who lives in Oslo, is visiting.", "Сестра (она и так известна) живёт в Осло — это ремарка."),
+                    ex("The book I read was excellent.", "Книга, которую прочитали, была отличной (дополнение можно опустить: that/which)."),
                 ],
                 tables=[
                     table(
@@ -427,6 +427,13 @@ B1_THEORY = {
                             ["пропуск дополнения", "можно", "нельзя"],
                         ],
                     ),
+                ],
+                pairs=[
+                    pair("Paris, that we visited in March, was cold.", "Paris, which we visited in March, was cold.", "Non-defining не берёт that."),
+                    pair("My brother, who lives abroad called.", "My brother, who lives abroad, called.", "Non-defining требует пару запятых."),
+                ],
+                callouts=[
+                    callout("My brother who lives abroad… подразумевает нескольких братьев. My brother, who lives abroad,… — один брат, abroad — ремарка.", "key"),
                 ],
             ),
         ],
@@ -522,14 +529,14 @@ B1_THEORY = {
         remember="Wish + Past Simple — про нереальное сейчас. Wish + would — про чужое поведение.",
     ),
     "question-tags": lesson(
-        "Question tags — короткий хвост-вопрос в конце фразы: It's cold, isn't it? Обычно утверждение → отрицательный tag, и наоборот.",
+        "Question tags — короткий хвост-вопрос в конце фразы: It's cold, isn't it? Обычно утверждение → отрицательный tag, и наоборот.\n\nTag не вводит новую грамматику времени: он **зеркалит** вспомогательный глагол (или подставляет do) и меняет полярность.",
         [
             rule(
                 "Полярность и особые случаи",
-                "Вспомогательный глагол в tag повторяет время/модальность основной части.",
+                "Вспомогательный глагол в tag повторяет время/модальность основной части. Если aux нет — подставляют do/does/did.",
                 [
-                    ex("You're ready, aren't you?", "Ты готов, правда?"),
-                    ex("You like jazz, don't you?", "Ты любишь джаз, да?"),
+                    ex("You're ready, aren't you?", "Готов, правда?"),
+                    ex("You like jazz, don't you?", "Любишь джаз, да?"),
                     ex("I'm early, aren't I?", "Я рано, правда?"),
                     ex("Let's go, shall we?", "Пойдём, а?"),
                 ],
@@ -546,6 +553,13 @@ B1_THEORY = {
                             ["Everyone …", "… **didn't they?** / aren't they?"],
                         ],
                     ),
+                ],
+                pairs=[
+                    pair("You like jazz, like you?", "You like jazz, don't you?", "В tag не повторяют смысловой глагол — нужен do."),
+                    pair("I'm early, amn't I?", "I'm early, aren't I?", "Устойчивое исключение: aren't I."),
+                ],
+                callouts=[
+                    callout("Утверждение → отрицательный tag; отрицание → положительный. Это учебный default; интонация потом отличает «проверка» от «согласие».", "tip"),
                 ],
             ),
         ],
