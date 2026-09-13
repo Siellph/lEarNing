@@ -4,6 +4,8 @@
 
 <p><strong>learning EN</strong> · грамматика, словарь и звуки по CEFR A1–C2</p>
 
+[![Deploy to VPS](https://github.com/Siellph/lEarNing/actions/workflows/main.yml/badge.svg)](https://github.com/Siellph/lEarNing/actions/workflows/main.yml)
+
 <img src="assets/landing.png" alt="Главная lEarNing" width="920" />
 
 </div>
