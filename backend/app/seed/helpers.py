@@ -82,8 +82,46 @@ def ex(en: str, ru: str) -> dict:
     return {"en": en, "ru": ru}
 
 
-def rule(title: str, body: str, examples: list[dict]) -> dict:
-    return {"title": title, "body": body, "examples": examples}
+def table(headers: list[str], rows: list[list[str]]) -> dict:
+    """HTML table block for LessonView (headers + row cells as plain strings)."""
+    return {"headers": headers, "rows": rows}
+
+
+def callout(text: str, tone: str = "key") -> dict:
+    """Inline teaching note. tone: key | warn | tip."""
+    return {"tone": tone, "text": text}
+
+
+def pair(wrong: str, right: str, note: str = "") -> dict:
+    """Wrong vs right form pair for visual contrast."""
+    item = {"wrong": wrong, "right": right}
+    if note:
+        item["note"] = note
+    return item
+
+
+def rule(
+    title: str,
+    body: str,
+    examples: list[dict] | None = None,
+    *,
+    tables: list[dict] | None = None,
+    callouts: list[dict] | None = None,
+    pairs: list[dict] | None = None,
+) -> dict:
+    """One theory block. Body may use **…** for emphasis (rendered by LessonView)."""
+    out: dict = {
+        "title": title,
+        "body": body,
+        "examples": examples or [],
+    }
+    if tables:
+        out["tables"] = tables
+    if callouts:
+        out["callouts"] = callouts
+    if pairs:
+        out["pairs"] = pairs
+    return out
 
 
 def lesson(

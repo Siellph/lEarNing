@@ -2,11 +2,23 @@ from pydantic import BaseModel, Field
 
 
 class LessonContent(BaseModel):
+    """Lesson theory payload.
+
+    Each rule may include optional structured blocks (ignored if absent):
+    - tables: [{headers: [...], rows: [[...], ...]}]
+    - callouts: [{tone: key|warn|tip, text}]
+    - pairs: [{wrong, right, note?}]
+    Body text may use **…** for emphasis (frontend-only; not HTML).
+    """
+
     intro: str
     rules: list[dict]
     compare: list[dict] = []
     watch_out: list[str] = []
     remember: str = ""
+    articulation: str = ""
+    contrast: str = ""
+    tips: list[str] = []
 
 
 class LessonIn(BaseModel):

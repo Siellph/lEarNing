@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from harvest_glossary import collect_sentences, words_from_sentences, load_glossary_keys  # noqa: E402
 
 ENTRY_RE = re.compile(
-    r'^\s*([a-z][a-z0-9\']*)\s*:\s*"((?:\\.|[^"\\])*)"\s*,?\s*$',
+    r'^\s*(?:"([a-z][a-z0-9\']*)"|([a-z][a-z0-9\']*))\s*:\s*"((?:\\.|[^"\\])*)"\s*,?\s*$',
     re.M,
 )
 
@@ -33,7 +33,7 @@ def parse_existing() -> dict[str, str]:
     text = GLOSSARY_TS.read_text(encoding="utf-8")
     out: dict[str, str] = {}
     for m in ENTRY_RE.finditer(text):
-        key, val = m.group(1), m.group(2)
+        key, val = m.group(1) or m.group(2), m.group(3)
         out[key] = bytes(val, "utf-8").decode("unicode_escape") if "\\" in val else val
         # Prefer literal_eval-style for escapes
         try:
@@ -49,6 +49,11 @@ def ts_escape(s: str) -> str:
     return s.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def ts_key(key: str) -> str:
+    """Always quote keys so apostrophes (i'll, don't, …) stay valid TS/JS."""
+    return json.dumps(key, ensure_ascii=True)
+
+
 def render(glossary: dict[str, str]) -> str:
     lines = [
         "/**",
@@ -61,7 +66,7 @@ def render(glossary: dict[str, str]) -> str:
         "export const GLOSSARY: Record<string, string> = {",
     ]
     for key in sorted(glossary.keys()):
-        lines.append(f'  {key}: "{ts_escape(glossary[key])}",')
+        lines.append(f'  {ts_key(key)}: "{ts_escape(glossary[key])}",')
     lines.append("};")
     lines.append("")
     lines.append(

@@ -214,6 +214,136 @@ input.gap-blank-input:disabled {
   margin: 0 0 0.4rem;
 }
 
+.lesson-em {
+  color: var(--color-terra-dark);
+  font-weight: 700;
+  font-style: normal;
+}
+
+.lesson-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-line);
+  border-radius: 0.85rem;
+  background: var(--color-paper);
+}
+
+.lesson-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.lesson-table th,
+.lesson-table td {
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.lesson-table th {
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.lesson-table tr:last-child td {
+  border-bottom: none;
+}
+
+.lesson-table tbody tr:nth-child(even) td {
+  background: rgba(255, 253, 248, 0.65);
+}
+
+.lesson-callout {
+  border-radius: 0.85rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-line);
+}
+
+.lesson-callout-key {
+  background: var(--color-sage-soft);
+  border-color: #b7cfc3;
+  color: var(--color-sage);
+}
+
+.lesson-callout-warn {
+  background: #fff4ef;
+  border-color: #f0c7b8;
+  color: var(--color-terra-dark);
+}
+
+.lesson-callout-tip {
+  background: var(--color-paper);
+  border-color: var(--color-line);
+  color: var(--color-ink-soft);
+}
+
+.lesson-pair {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-card);
+}
+
+@media (min-width: 640px) {
+  .lesson-pair {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .lesson-pair-note {
+    grid-column: 1 / -1;
+  }
+}
+
+.lesson-pair-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lesson-pair-wrong {
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.65rem;
+  background: #fff4ef;
+  border: 1px solid #f0c7b8;
+}
+
+.lesson-pair-wrong .lesson-pair-label {
+  color: var(--color-rose);
+}
+
+.lesson-pair-wrong p {
+  text-decoration: line-through;
+  text-decoration-color: rgba(180, 35, 24, 0.45);
+  color: var(--color-ink-soft);
+}
+
+.lesson-pair-right {
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.65rem;
+  background: var(--color-sage-soft);
+  border: 1px solid #b7cfc3;
+}
+
+.lesson-pair-right .lesson-pair-label {
+  color: var(--color-sage);
+}
+
+.lesson-pair-note {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-ink-soft);
+  line-height: 1.55;
+}
+
 .speak-btn {
   display: inline-flex;
   align-items: center;
