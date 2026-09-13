@@ -12,8 +12,8 @@ ensure_email_verified_column(engine)
 ensure_site_setting_columns(engine)
 
 app = FastAPI(
-    title="lEarNing",
-    description="lEarNing — учим EN. Платформа изучения английской грамматики и словарного запаса",
+    title="lEarNinG",
+    description="lEarNinG — учим ENG. Платформа изучения английской грамматики и словарного запаса",
     version="1.0.0",
 )
 

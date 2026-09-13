@@ -1,18 +1,18 @@
 <div align="center">
 
-<img src="assets/wordmark.svg" alt="lEarNing — учим EN" width="420" />
+<img src="assets/wordmark.svg" alt="lEarNinG — учим ENG" width="420" />
 
-<p><strong>learning EN</strong> · грамматика, словарь и звуки по CEFR A1–C2</p>
+<p><strong>learning ENG</strong> · грамматика, словарь и звуки по CEFR A1–C2</p>
 
 [![Deploy to VPS](https://github.com/Siellph/lEarNing/actions/workflows/main.yml/badge.svg)](https://github.com/Siellph/lEarNing/actions/workflows/main.yml)
 
-<img src="assets/landing.png" alt="Главная lEarNing" width="920" />
+<img src="assets/landing.png" alt="Главная lEarNinG" width="920" />
 
 </div>
 
 <br />
 
-Курс английского в браузере: теория на русском, примеры на английском, практика сразу после урока. Заглавные **E** и **N** в названии — это **EN**.
+Курс английского в браузере: теория на русском, примеры на английском, практика сразу после урока. Заглавные **E**, **N** и **G** в названии — это **ENG**.
 
 Тематическая карта опирается на открытые структуры [CEFR](https://www.coe.int/en/web/common-european-framework-reference-languages) / Cambridge English, British Council LearnEnglish, Oxford Practice Grammar и English Grammar in Use. Тексты уроков — свои, не копирайт учебников.
 

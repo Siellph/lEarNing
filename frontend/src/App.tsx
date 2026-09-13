@@ -7,6 +7,7 @@ import { ExamPage, ExamsPage, TestPage } from "./pages/AssessmentPages";
 import { Dashboard } from "./pages/Dashboard";
 import { GrammarLevels, ModuleList } from "./pages/Grammar";
 import { AboutPage } from "./pages/About";
+import { HelpPage } from "./pages/HelpPage";
 import { Landing } from "./pages/Landing";
 import { LessonPage } from "./pages/LessonPage";
 import { Login } from "./pages/Login";
@@ -105,6 +106,7 @@ export function App() {
             <Route path="listening/:slug" element={<SkillItemPage kind="listening" />} />
             <Route path="dialogues" element={<SkillHub kind="dialogue" />} />
             <Route path="dialogues/:slug" element={<SkillItemPage kind="dialogue" />} />
+            <Route path="help" element={<HelpPage />} />
             <Route path="profile" element={<Profile />} />
           </Route>
         </Route>

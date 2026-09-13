@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    SMTP_FROM: str = "lEarNing <noreply@example.com>"
+    SMTP_FROM: str = "lEarNinG <noreply@example.com>"
     SMTP_USE_TLS: bool = True
     SMTP_USE_SSL: bool = False
     ADMIN_EMAIL: str = ""

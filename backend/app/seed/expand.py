@@ -408,7 +408,7 @@ def fix_known_article_answers(db) -> int:
 
 def rewrite_known_prompts(db) -> int:
     """Update terse transform prompts in live DB (old exact prompt → clearer wording)."""
-    from app.seed.prompt_rewrites import EXPLANATION_REWRITES, PROMPT_REWRITES
+    from app.seed.prompt_rewrites import ANSWER_REWRITES, EXPLANATION_REWRITES, PROMPT_REWRITES
 
     fixed = 0
     for old_prompt, new_prompt in PROMPT_REWRITES.items():
@@ -420,6 +420,8 @@ def rewrite_known_prompts(db) -> int:
                 row.prompt = new_prompt
                 if old_prompt in EXPLANATION_REWRITES:
                     row.explanation = EXPLANATION_REWRITES[old_prompt]
+                if old_prompt in ANSWER_REWRITES:
+                    row.answer = ANSWER_REWRITES[old_prompt]
                 fixed += 1
     return fixed
 
@@ -460,16 +462,107 @@ def sync_lesson_theory(db) -> int:
 
 
 
+def _collect_seed_match_items() -> list[dict]:
+    """All authored match exercises (core modules + topic/extra banks + exams)."""
+    from app.seed.a1 import A1
+    from app.seed.a2 import A2
+    from app.seed.b1 import B1
+    from app.seed.b2 import B2
+    from app.seed.c1 import C1
+    from app.seed.c2 import C2
+    from app.seed.exams import EXAMS
+    from app.seed.extra_banks import EXTRA_PRACTICE, EXTRA_TEST
+    from app.seed.extra_exams import EXTRA_EXAMS
+    from app.seed.topic_banks import TOPIC_PRACTICE, TOPIC_TEST
+
+    items: list[dict] = []
+
+    def add(item):
+        if isinstance(item, dict) and item.get("kind") == "match":
+            items.append(item)
+
+    for pack in (A1, A2, B1, B2, C1, C2, WORD_ORDER_MODULES):
+        for data in pack:
+            for item in data.get("exercises", []):
+                add(item)
+            for item in data.get("test", []):
+                add(item)
+
+    for bank in (TOPIC_PRACTICE, TOPIC_TEST, EXTRA_PRACTICE, EXTRA_TEST):
+        for rows in bank.values():
+            for item in rows:
+                add(item)
+
+    for exam in EXAMS:
+        for item in exam.get("questions", []):
+            add(item)
+    for rows in EXTRA_EXAMS.values():
+        for item in rows:
+            add(item)
+
+    return items
+
+
+def _pick_seed_match(row, seeds: list[dict]) -> dict | None:
+    """Choose the best seed match for a DB row (same prompt; prefer left overlap)."""
+    candidates = [s for s in seeds if s.get("prompt") == row.prompt]
+    if not candidates:
+        return None
+    if len(candidates) == 1:
+        return candidates[0]
+
+    row_left: set[str] = set()
+    opts = row.options
+    if isinstance(opts, dict):
+        row_left = {str(x) for x in (opts.get("left") or [])}
+    elif isinstance(opts, list):
+        row_left = {str(x) for x in opts}
+    answer = (row.answer or "").lower()
+
+    def score(seed: dict) -> tuple[int, int]:
+        seed_left = set((seed.get("options") or {}).get("left") or [])
+        overlap = len(row_left & seed_left)
+        # Disambiguate duplicate prompts like «Паттерны» / «Соедините маркер и время»
+        blob = " ".join(seed_left) + " " + (seed.get("answer") or "")
+        hint = 0
+        if row_left & seed_left:
+            hint += 2
+        if any(tok in answer for tok in seed_left if len(tok) > 2):
+            hint += 1
+        if "avoid" in blob.lower() and ("avoid" in answer or any("avoid" in x.lower() for x in row_left)):
+            hint += 3
+        if "enjoy" in blob.lower() and ("enjoy" in answer or any("enjoy" in x.lower() for x in row_left)):
+            hint += 3
+        if "yesterday" in blob.lower() and ("yesterday" in answer or "yesterday" in " ".join(row_left).lower()):
+            hint += 3
+        if "ago" in blob.lower() and ("ago" in answer or "ago" in " ".join(row_left).lower()):
+            hint += 3
+        return (overlap + hint, len(seed_left))
+
+    return max(candidates, key=score)
+
+
 def repair_match_options(db) -> int:
-    """Ensure match items store {left, right} and aligned a=b answer keys."""
+    """Ensure match items store equal-capable {left, right} and aligned a=b answers.
+
+    Re-applies authored seed payloads when the prompt matches a seed item (so legacy
+    short chip lists and broken '=' labels get fixed). Otherwise only normalizes the
+    live row. Idempotent — safe on every expand run; does not wipe the DB.
+    """
     from app.services.match_format import normalize_match_payload
 
+    seeds = _collect_seed_match_items()
     fixed = 0
     for model in (Exercise, TestQuestion, ExamQuestion):
         rows = db.query(model).filter(model.kind == "match").all()
         for row in rows:
-            sides, aligned = normalize_match_payload(row.options, row.answer)
-            if not sides["left"] or not sides["right"]:
+            seed = _pick_seed_match(row, seeds)
+            if seed:
+                sides, aligned = seed["options"], seed["answer"]
+            else:
+                sides, aligned = normalize_match_payload(row.options, row.answer)
+            sides, aligned = normalize_match_payload(sides, aligned)
+            if not sides.get("left") or not sides.get("right"):
                 continue
             if row.options != sides or row.answer != aligned:
                 row.options = sides
@@ -479,7 +572,7 @@ def repair_match_options(db) -> int:
 
 
 DONATION_MESSAGE = (
-    "Если lEarNing помогает учить EN, можно оставить чаевые — это поддерживает развитие курса."
+    "Если lEarNinG помогает учить ENG, можно оставить чаевые — это поддерживает развитие курса."
 )
 
 
@@ -494,7 +587,7 @@ def ensure_site_settings(db) -> None:
             )
         )
         return
-    if "Lumina" in (row.donation_message or ""):
+    if "Lumina" in (row.donation_message or "") or "lEarNing" in (row.donation_message or ""):
         row.donation_message = DONATION_MESSAGE
     # Column may be missing on older rows until migration helper runs
     if getattr(row, "email_verification_required", None) is None:

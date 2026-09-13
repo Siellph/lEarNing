@@ -5,7 +5,7 @@ import { BrandMark } from "../components/BrandMark";
 export function AboutPage() {
   useEffect(() => {
     const prev = document.title;
-    document.title = "О проекте — lEarNing";
+    document.title = "О проекте — lEarNinG";
     return () => {
       document.title = prev;
     };
@@ -16,15 +16,15 @@ export function AboutPage() {
       <div className="mx-auto w-full max-w-3xl">
         <Link to="/" className="inline-block">
           <BrandMark size="md" />
-          <p className="mt-1 text-sm text-ink-soft">учим EN</p>
+          <p className="mt-1 text-sm text-ink-soft">учим ENG</p>
         </Link>
 
         <article className="mt-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-terra">О проекте</p>
-          <h1 className="mt-3 font-display text-3xl text-ink sm:text-4xl">lEarNing — учим EN</h1>
+          <h1 className="mt-3 font-display text-3xl text-ink sm:text-4xl">lEarNinG — учим ENG</h1>
           <p className="mt-5 text-[1.05rem] leading-8 text-ink-soft">
             Название читается как <strong className="text-ink">learning</strong> и одновременно как{" "}
-            <strong className="text-ink">учим EN</strong>: небольшой учебный сервис для тех, кто хочет
+            <strong className="text-ink">учим ENG</strong>: небольшой учебный сервис для тех, кто хочет
             спокойно разобраться в английском — без рекламы курса «за три недели» и без имитации крупной
             школы.
           </p>
@@ -58,7 +58,7 @@ export function AboutPage() {
           <section className="mt-10 grid gap-3">
             <h2 className="font-display text-2xl text-ink">Свободный учебный проект</h2>
             <p className="text-[1.05rem] leading-8 text-ink-soft">
-              lEarNing — образовательный проект, а не коммерческая платформа с обещаниями дипломов и
+              lEarNinG — образовательный проект, а не коммерческая платформа с обещаниями дипломов и
               «гарантированного уровня». Материалы открыты для обучения; аккаунт нужен, чтобы сохранить
               прогресс.
             </p>

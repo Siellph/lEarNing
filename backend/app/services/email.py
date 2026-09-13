@@ -31,10 +31,10 @@ def verification_link(raw_token: str) -> str:
 
 def send_verification_email(to_email: str, raw_token: str) -> None:
     link = verification_link(raw_token)
-    subject = "Подтвердите email — lEarNing"
+    subject = "Подтвердите email — lEarNinG"
     body = (
         "Здравствуйте!\n\n"
-        "Подтвердите адрес электронной почты, чтобы войти в lEarNing:\n"
+        "Подтвердите адрес электронной почты, чтобы войти в lEarNinG:\n"
         f"{link}\n\n"
         "Ссылка действует 24 часа.\n\n"
         "Если вы не регистрировались, просто проигнорируйте это письмо.\n"

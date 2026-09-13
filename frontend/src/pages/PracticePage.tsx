@@ -24,7 +24,13 @@ export function PracticePage() {
             ← {pack.module.title}
           </Link>
           <h1 className="font-display mt-2 text-4xl">Практика</h1>
-          <p className="mt-2 text-ink-soft">Ответьте на задания. Объяснение появится сразу после проверки.</p>
+          <p className="mt-2 text-ink-soft">
+            Ответьте на задания. Неясно, что делать?{" "}
+            <Link to="/app/help" className="font-semibold text-terra">
+              Как решать задания
+            </Link>
+            .
+          </p>
         </div>
         <VoiceControls />
       </div>

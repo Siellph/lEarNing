@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { kindLabel } from "../lib/kindLabels";
+import { CheckCircle2, CircleAlert } from "lucide-react";
+import { fullSentenceInstruction, kindLabel } from "../lib/kindLabels";
 import { extractEnglish, looksEnglish, speakableEnglish } from "../lib/speech";
 import { type QuizOptions } from "../lib/match";
 import { MatchQuestion, matchAnswerComplete } from "./MatchQuestion";
@@ -30,7 +31,7 @@ export function Quiz({
   submitLabel?: string;
 }) {
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-5">
       {items.map((item, index) => (
         <QuizCard key={`${item.id}-${item.kind}-${index}`} item={item} index={index} onCheck={onCheck} submitLabel={submitLabel} />
       ))}
@@ -65,6 +66,8 @@ function QuizCard({
   const canSubmit = isMatch ? matchAnswerComplete(item.options, value) : !!answerText.trim();
   const speakText = speakableEnglish(item.prompt);
   const showSpeak = Boolean(extractEnglish(item.prompt) || speakText);
+  const rewriteHint = fullSentenceInstruction(item.kind, blankCount > 0);
+  const done = Boolean(item.solved || result?.correct);
 
   const submit = async () => {
     if (!canSubmit) return;
@@ -78,90 +81,124 @@ function QuizCard({
   };
 
   return (
-    <article className="card p-5 sm:p-6">
-      <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
-        <span className="rounded-full bg-paper-2 px-2.5 py-1 font-semibold text-ink-soft">
+    <article className={`quiz-card ${result ? (result.correct ? "quiz-card-ok" : "quiz-card-bad") : ""}`}>
+      <header className="quiz-card-head">
+        <span className="quiz-kind">
           {index + 1}. {kindLabel(item.kind)}
         </span>
-        {(item.solved || result?.correct) && (
-          <span className="rounded-full bg-sage-soft px-2.5 py-1 font-semibold text-sage">Верно</span>
-        )}
-      </div>
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <p className="text-lg leading-relaxed">
-          <PromptWithBlanks
-            text={item.prompt}
-            values={useInlineGaps ? blanks : undefined}
-            onChange={
-              useInlineGaps
-                ? (next) => {
-                    setBlanks(next);
-                    setResult(null);
-                  }
-                : undefined
-            }
-            onSubmit={useInlineGaps ? submit : undefined}
-            disabled={!!result?.correct}
-          />
-        </p>
-        {showSpeak && <SpeakButton text={item.prompt} speak={speakText} />}
-      </div>
-      {isMatch ? (
-        <MatchQuestion
-          options={item.options}
-          value={value}
-          onChange={(next) => {
-            setValue(next);
-            setResult(null);
-          }}
-          disabled={!!result?.correct}
-          checked={!!result}
-          correct={!!result?.correct}
-          expected={result?.expected}
-        />
-      ) : choiceOptions ? (
-        <div className="grid gap-2">
-          {choiceOptions.map((opt) => (
-            <div key={opt} className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setValue(opt);
-                  setResult(null);
-                }}
-                className={`min-w-0 flex-1 rounded-xl border px-4 py-3 text-left transition ${
-                  value === opt ? "border-terra bg-[#fff1eb]" : "border-line bg-white hover:border-terra/50"
-                }`}
-              >
-                {opt}
-              </button>
-              {looksEnglish(opt) && <SpeakButton text={opt} />}
-            </div>
-          ))}
-        </div>
-      ) : useInlineGaps ? null : (
-        <input
-          className="field"
-          value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            setResult(null);
-          }}
-          placeholder={item.kind === "order" ? "Соберите фразу" : "Введите ответ"}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-        />
-      )}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button className="btn btn-primary" disabled={busy || !canSubmit} onClick={submit}>
-          {busy ? "Проверяем…" : submitLabel}
-        </button>
-        {result && (
-          <span className={`text-sm font-semibold ${result.correct ? "text-sage" : "text-rose"}`}>
-            {result.correct ? "Отлично" : `Правильный ответ: ${result.expected}`}
+        {done && (
+          <span className="quiz-status-ok">
+            <CheckCircle2 size={14} /> Верно
           </span>
         )}
+      </header>
+
+      <div className="grid gap-4 p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-[1.05rem] leading-relaxed sm:text-lg">
+            <PromptWithBlanks
+              text={item.prompt}
+              values={useInlineGaps ? blanks : undefined}
+              onChange={
+                useInlineGaps
+                  ? (next) => {
+                      setBlanks(next);
+                      setResult(null);
+                    }
+                  : undefined
+              }
+              onSubmit={useInlineGaps ? submit : undefined}
+              disabled={!!result?.correct}
+            />
+          </p>
+          {showSpeak && <SpeakButton text={item.prompt} speak={speakText} />}
+        </div>
+
+        {rewriteHint && !choiceOptions && !isMatch && <p className="quiz-hint">{rewriteHint}</p>}
+
+        {isMatch ? (
+          <MatchQuestion
+            options={item.options}
+            value={value}
+            onChange={(next) => {
+              setValue(next);
+              setResult(null);
+            }}
+            disabled={!!result?.correct}
+            checked={!!result}
+            correct={!!result?.correct}
+            expected={result?.expected}
+          />
+        ) : choiceOptions ? (
+          <div className="grid gap-2">
+            {choiceOptions.map((opt) => (
+              <div key={opt} className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue(opt);
+                    setResult(null);
+                  }}
+                  className={`quiz-choice ${value === opt ? "is-selected" : ""}`}
+                >
+                  {opt}
+                </button>
+                {looksEnglish(opt) && <SpeakButton text={opt} />}
+              </div>
+            ))}
+          </div>
+        ) : useInlineGaps ? null : (
+          <input
+            className="field"
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+              setResult(null);
+            }}
+            placeholder={
+              item.kind === "order"
+                ? "Соберите фразу"
+                : rewriteHint
+                  ? "Введите предложение целиком"
+                  : "Введите ответ"
+            }
+            onKeyDown={(e) => e.key === "Enter" && submit()}
+          />
+        )}
+
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          <button className="btn btn-primary" disabled={busy || !canSubmit || !!result?.correct} onClick={submit}>
+            {busy ? "Проверяем…" : result?.correct ? "Готово" : submitLabel}
+          </button>
+        </div>
+
+        {result && (
+          <div className={`quiz-feedback ${result.correct ? "is-ok" : "is-bad"}`} aria-live="polite">
+            <div className="quiz-feedback-title">
+              {result.correct ? (
+                <>
+                  <CheckCircle2 size={18} /> Отлично
+                </>
+              ) : (
+                <>
+                  <CircleAlert size={18} /> Нужно иначе
+                </>
+              )}
+            </div>
+            {!result.correct && result.expected && (
+              <p className="quiz-feedback-expected">
+                Верный ответ: <strong>{result.expected}</strong>
+              </p>
+            )}
+            {!result.correct && result.explanation && (
+              <p className="quiz-feedback-note">{result.explanation}</p>
+            )}
+            {result.correct && result.explanation && (
+              <p className="quiz-feedback-note">{result.explanation}</p>
+            )}
+          </div>
+        )}
       </div>
-      {result && <p className="mt-3 text-sm leading-relaxed text-ink-soft">{result.explanation}</p>}
     </article>
   );
 }

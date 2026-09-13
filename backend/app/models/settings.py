@@ -12,7 +12,7 @@ class SiteSetting(Base):
     donation_title: Mapped[str] = mapped_column(String(200), default="Сайт оказался полезным?")
     donation_message: Mapped[str] = mapped_column(
         Text,
-        default="Если lEarNing помогает учить EN, можно оставить чаевые — это поддерживает развитие курса.",
+        default="Если lEarNinG помогает учить ENG, можно оставить чаевые — это поддерживает развитие курса.",
     )
     donation_url: Mapped[str] = mapped_column(String(500), default="")
     donation_button: Mapped[str] = mapped_column(String(80), default="Оставить чаевые")

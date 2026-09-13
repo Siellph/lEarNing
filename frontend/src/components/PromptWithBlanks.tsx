@@ -1,4 +1,5 @@
 import type { KeyboardEvent, ReactNode } from "react";
+import { withHoverTranslate } from "./HoverTranslate";
 
 const BLANK_RE = /___+/g;
 
@@ -21,6 +22,8 @@ type PromptWithBlanksProps = {
   onChange?: (values: string[]) => void;
   onSubmit?: () => void;
   disabled?: boolean;
+  /** Hover RU gloss on English words (default on). */
+  translate?: boolean;
 };
 
 /** Renders prompt text, replacing ___ with a dashed blank (read-only) or inline input. */
@@ -31,17 +34,21 @@ export function PromptWithBlanks({
   onChange,
   onSubmit,
   disabled = false,
+  translate = true,
 }: PromptWithBlanksProps) {
   const editable = Array.isArray(values) && typeof onChange === "function";
+  const renderText = (chunk: string, key: string): ReactNode =>
+    translate ? <span key={key}>{withHoverTranslate(chunk)}</span> : <span key={key}>{chunk}</span>;
+
   if (!text.includes("___")) {
-    return <span className={className}>{text}</span>;
+    return <span className={className}>{translate ? withHoverTranslate(text) : text}</span>;
   }
 
   const parts = text.split(BLANK_RE);
   const nodes: ReactNode[] = [];
 
   parts.forEach((part, index) => {
-    nodes.push(<span key={`t-${index}`}>{part}</span>);
+    nodes.push(renderText(part, `t-${index}`));
     if (index >= parts.length - 1) return;
 
     if (editable) {

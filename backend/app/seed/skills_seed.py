@@ -1,4 +1,4 @@
-"""Original graded reading, listening, and dialogue content for lEarNing.
+"""Original graded reading, listening, and dialogue content for lEarNinG.
 
 All English texts and Russian glosses are written for this product.
 Do not import plots or wording from Easy English or other publishers.

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { CheckCircle2, CircleAlert } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
-import { kindLabel } from "../lib/kindLabels";
+import { fullSentenceInstruction, kindLabel } from "../lib/kindLabels";
 import { extractEnglish, looksEnglish, speakableEnglish } from "../lib/speech";
 import type { QuizOptions } from "../lib/match";
 import { MatchQuestion } from "../components/MatchQuestion";
@@ -165,29 +166,52 @@ function AssessmentRunner({ kind, id, back }: { kind: "test" | "exam"; id: numbe
       </div>
       {result ? (
         <div className="grid gap-4">
-          <div className={`card p-6 ${result.passed ? "border-sage" : "border-terra"}`}>
+          <div className={`quiz-card p-6 ${result.passed ? "quiz-card-ok" : "quiz-card-bad"}`}>
             <p className="font-display text-3xl">{result.score}%</p>
             <p className="mt-1">{result.passed ? "Зачёт. Тема закреплена." : "Пока не зачёт. Разберите ошибки и попробуйте снова."}</p>
           </div>
           {result.details.map((item, i) => (
-            <article key={item.id} className="card p-5">
-              <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-                <span className="rounded-full bg-paper-2 px-2.5 py-1 font-semibold text-ink-soft">
+            <article key={item.id} className={`quiz-card ${item.correct ? "quiz-card-ok" : "quiz-card-bad"}`}>
+              <header className="quiz-card-head">
+                <span className="quiz-kind">
                   {i + 1}. {kindLabel(item.kind || "")}
                 </span>
+                {item.correct ? (
+                  <span className="quiz-status-ok">
+                    <CheckCircle2 size={14} /> Верно
+                  </span>
+                ) : null}
+              </header>
+              <div className="grid gap-3 p-5">
+                <p className="font-medium leading-relaxed">
+                  <PromptWithBlanks text={item.prompt} />
+                </p>
+                <p className="text-sm text-ink-soft">Ваш ответ: {item.given || "—"}</p>
+                {!item.correct && (
+                  <div className="quiz-feedback is-bad">
+                    <div className="quiz-feedback-title">
+                      <CircleAlert size={18} /> Нужно иначе
+                    </div>
+                    <p className="quiz-feedback-expected">
+                      Верный ответ: <strong>{item.expected}</strong>
+                    </p>
+                    {item.explanation && <p className="quiz-feedback-note">{item.explanation}</p>}
+                  </div>
+                )}
+                {item.correct && item.explanation && (
+                  <div className="quiz-feedback is-ok">
+                    <div className="quiz-feedback-title">
+                      <CheckCircle2 size={18} /> Отлично
+                    </div>
+                    <p className="quiz-feedback-note">{item.explanation}</p>
+                  </div>
+                )}
               </div>
-              <p className="mt-1 font-medium">
-                <PromptWithBlanks text={item.prompt} />
-              </p>
-              <p className={`mt-2 text-sm ${item.correct ? "text-sage" : "text-rose"}`}>
-                Ваш ответ: {item.given || "—"} {item.correct ? "" : `· верно: ${item.expected}`}
-              </p>
-              <p className="mt-2 text-sm text-ink-soft">{item.explanation}</p>
             </article>
           ))}
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-5">
           {meta.questions.map((q, i) => (
             <AssessmentQuestion
               key={q.id}
@@ -224,53 +248,60 @@ function AssessmentQuestion({
   const [blanks, setBlanks] = useState<string[]>(() => Array.from({ length: blankCount }, () => ""));
   const speakText = speakableEnglish(q.prompt);
   const showSpeak = Boolean(extractEnglish(q.prompt) || speakText);
+  const rewriteHint = fullSentenceInstruction(q.kind, blankCount > 0);
 
   return (
-    <article className="card p-5">
-      <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
-        <span className="rounded-full bg-paper-2 px-2.5 py-1 font-semibold text-ink-soft">
+    <article className="quiz-card">
+      <header className="quiz-card-head">
+        <span className="quiz-kind">
           {index + 1}. {kindLabel(q.kind)}
         </span>
-      </div>
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <p className="text-lg leading-relaxed">
-          <PromptWithBlanks
-            text={q.prompt}
-            values={useInlineGaps ? blanks : undefined}
-            onChange={
-              useInlineGaps
-                ? (next) => {
-                    setBlanks(next);
-                    onChange(joinGapAnswers(next));
-                  }
-                : undefined
-            }
-          />
-        </p>
-        {showSpeak && <SpeakButton text={q.prompt} speak={speakText} />}
-      </div>
-      {isMatch ? (
-        <MatchQuestion options={q.options} value={value} onChange={onChange} />
-      ) : isMcq && Array.isArray(q.options) ? (
-        <div className="grid gap-2">
-          {q.options.map((opt) => (
-            <div key={opt} className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onChange(opt)}
-                className={`min-w-0 flex-1 rounded-xl border px-4 py-3 text-left ${
-                  value === opt ? "border-terra bg-[#fff1eb]" : "border-line"
-                }`}
-              >
-                {opt}
-              </button>
-              {looksEnglish(opt) && <SpeakButton text={opt} />}
-            </div>
-          ))}
+      </header>
+      <div className="grid gap-4 p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-[1.05rem] leading-relaxed sm:text-lg">
+            <PromptWithBlanks
+              text={q.prompt}
+              values={useInlineGaps ? blanks : undefined}
+              onChange={
+                useInlineGaps
+                  ? (next) => {
+                      setBlanks(next);
+                      onChange(joinGapAnswers(next));
+                    }
+                  : undefined
+              }
+            />
+          </p>
+          {showSpeak && <SpeakButton text={q.prompt} speak={speakText} />}
         </div>
-      ) : useInlineGaps ? null : (
-        <input className="field" value={value} onChange={(e) => onChange(e.target.value)} />
-      )}
+        {rewriteHint && !isMcq && !isMatch && <p className="quiz-hint">{rewriteHint}</p>}
+        {isMatch ? (
+          <MatchQuestion options={q.options} value={value} onChange={onChange} />
+        ) : isMcq && Array.isArray(q.options) ? (
+          <div className="grid gap-2">
+            {q.options.map((opt) => (
+              <div key={opt} className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onChange(opt)}
+                  className={`quiz-choice ${value === opt ? "is-selected" : ""}`}
+                >
+                  {opt}
+                </button>
+                {looksEnglish(opt) && <SpeakButton text={opt} />}
+              </div>
+            ))}
+          </div>
+        ) : useInlineGaps ? null : (
+          <input
+            className="field"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={rewriteHint ? "Введите предложение целиком" : "Введите ответ"}
+          />
+        )}
+      </div>
     </article>
   );
 }

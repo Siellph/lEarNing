@@ -130,7 +130,7 @@ A1 = [
             err("There are many person here.", "There are many people here.", "Множественное от person — people."),
             fill("one box — two ___", "boxes", "После x добавляется es."),
             mc("The news ___ interesting.", ["are", "is", "be"], "is", "News согласуется в единственном числе."),
-            xf("Сделайте множественное: This woman is a teacher.", "These women are teachers.", "woman→women, this→these, is→are."),
+            xf("Сделайте множественное: The woman is a teacher.", "The women are teachers.", "woman→women, is→are."),
         ],
         [
             fill("Вставьте форму множественного числа: one tomato — three ___", "tomatoes", "После o часто es."),

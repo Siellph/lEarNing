@@ -7,7 +7,7 @@ function LegalShell({ title, children }: { title: string; children: React.ReactN
       <div className="mx-auto w-full max-w-3xl">
         <Link to="/" className="inline-block">
           <BrandMark size="md" />
-          <p className="mt-1 text-sm text-ink-soft">учим EN</p>
+          <p className="mt-1 text-sm text-ink-soft">учим ENG</p>
         </Link>
         <article className="card mt-6 p-6 sm:p-8">
           <p className="text-sm text-ink-soft">Обновлено 13 сентября 2026</p>
@@ -37,7 +37,7 @@ export function TermsPage() {
   return (
     <LegalShell title="Пользовательское соглашение">
       <p>
-        Это типовые положения учебного проекта <strong className="text-ink">lEarNing</strong> («сервис»).
+        Это типовые положения учебного проекта <strong className="text-ink">lEarNinG</strong> («сервис»).
         Сервис помогает изучать английский язык: грамматика, словарь, звуки, практика и экзамены. Документ
         не является юридической консультацией и не заменяет договор с профессиональной образовательной
         организацией.
@@ -70,7 +70,7 @@ export function TermsPage() {
       <section className="grid gap-2">
         <h2 className="font-display text-2xl text-ink">4. Интеллектуальная собственность</h2>
         <p>
-          Тексты уроков, упражнения, структура курса и оформление принадлежат проекту lEarNing или
+          Тексты уроков, упражнения, структура курса и оформление принадлежат проекту lEarNinG или
           используются на законных основаниях. Карта тем опирается на открытые учебные структуры (CEFR и
           др.), но сам контент сервиса копировать целиком нельзя. Личный прогресс остаётся вашим.
         </p>
@@ -97,7 +97,7 @@ export function PrivacyPage() {
   return (
     <LegalShell title="Политика конфиденциальности">
       <p>
-        Учебный проект <strong className="text-ink">lEarNing</strong> обрабатывает минимум данных, чтобы
+        Учебный проект <strong className="text-ink">lEarNinG</strong> обрабатывает минимум данных, чтобы
         создать аккаунт и сохранить прогресс. Ниже — типовые положения: что собираем, зачем и какие у вас
         есть права.
       </p>

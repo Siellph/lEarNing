@@ -73,9 +73,12 @@ export function MatchQuestion({
 
   const assign = (slot: string, chip: Chip) => {
     const next = { ...pairs };
-    for (const [s, label] of Object.entries(next)) {
-      if (label === chip.label || s === slot) delete next[s];
+    // Clear only this chip's current slot (by id), not every slot with the same label —
+    // duplicate labels (e.g. two «Perfect») are valid.
+    for (const [s, occupied] of Object.entries(chipInSlot)) {
+      if (occupied.id === chip.id) delete next[s];
     }
+    delete next[slot];
     next[slot] = chip.label;
     commitPairs(next);
   };
@@ -176,7 +179,11 @@ export function MatchQuestion({
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft">Формы</p>
           <div className="flex min-h-[3.25rem] flex-wrap content-start gap-2 rounded-xl border border-dashed border-line bg-paper-2/60 p-3">
             {poolChips.length === 0 ? (
-              <p className="self-center text-sm text-ink-soft">Все формы назначены</p>
+              <p className="self-center text-sm text-ink-soft">
+                {left.some((slot) => !chipInSlot[slot])
+                  ? "Не хватает форм для всех слотов — обновите страницу или перезапустите seed."
+                  : "Все формы назначены"}
+              </p>
             ) : (
               poolChips.map((chip) => (
                 <div key={chip.id} className="inline-flex max-w-full items-center gap-1">

@@ -1,4 +1,4 @@
-"""Seed lEarNing: CEFR levels, grammar modules, vocabulary, exams, study decks.
+"""Seed lEarNinG: CEFR levels, grammar modules, vocabulary, exams, study decks.
 
 Creates an admin only when ADMIN_EMAIL and ADMIN_PASSWORD are both set.
 Run: python -m app.seed.runner

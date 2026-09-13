@@ -49,7 +49,7 @@ export function Login() {
   };
 
   return (
-    <AuthShell title="Вход в lEarNing" subtitle="Продолжите путь по грамматике">
+    <AuthShell title="Вход в lEarNinG" subtitle="Продолжите путь по грамматике">
       <form className="grid gap-4" onSubmit={submit}>
         <label className="grid gap-1 text-sm">
           Email
@@ -83,7 +83,7 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
       <div className="w-full max-w-md">
         <Link to="/" className="inline-block">
           <BrandMark size="md" />
-          <p className="mt-1 text-sm text-ink-soft">учим EN</p>
+          <p className="mt-1 text-sm text-ink-soft">учим ENG</p>
         </Link>
         <div className="card mt-6 p-6 sm:p-8">
           <h1 className="font-display text-3xl">{title}</h1>

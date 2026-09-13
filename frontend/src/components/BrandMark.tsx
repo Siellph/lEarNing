@@ -14,11 +14,12 @@ const accents: Record<BrandSize, string> = {
   hero: "text-terra underline decoration-terra/40 decoration-[3px] underline-offset-[0.14em]",
 };
 
+/** Brand: lEarNinG — capitals E·N·G spell ENG. */
 export function BrandMark({ size = "md", className = "" }: { size?: BrandSize; className?: string }) {
   const accent = accents[size];
   return (
-    <span className={`font-display tracking-tight ${sizes[size]} ${className}`} aria-label="lEarNing">
-      l<span className={accent}>E</span>ar<span className={accent}>N</span>ing
+    <span className={`font-display tracking-tight ${sizes[size]} ${className}`} aria-label="lEarNinG">
+      l<span className={accent}>E</span>ar<span className={accent}>N</span>in<span className={accent}>G</span>
     </span>
   );
 }

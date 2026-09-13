@@ -1540,7 +1540,10 @@ TEST_GAP_REWRITES: dict[str, str] = {
         'Выберите quantifier (some/any/much…): There was ___ hope left.'
     ),
     'These ___ my books.': (
-        'Выберите форму to be: These ___ my books.'
+        'Выберите форму to be: They ___ my books.'
+    ),
+    'They ___ my books.': (
+        'Выберите форму to be: They ___ my books.'
     ),
     'These cars ___ in Japan. (produce, present)': (
         'Вставьте нужную форму (produce, present): These cars ___ in Japan. (produce, present)'

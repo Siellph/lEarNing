@@ -69,7 +69,12 @@ TOPIC_PRACTICE_C: dict[str, list] = {
         mc("The ___ of the bridge took a year.", ["construct", "construction", "constructing"], "construction", "nominalization."),
         err("Because of they arrived late, we waited.", "Because of their late arrival, we waited.", "N-фраза."),
         fill("Her ___ to help surprised us. (refuse)", "refusal", "refusal."),
-        match("Noun forms", ["decide→decision", "refuse→refusal", "arrive→arrival"], "типичные суффиксы", "Номинализация."),
+        match(
+            "Noun forms",
+            ["decide", "refuse", "arrive"],
+            "decide=decision; refuse=refusal; arrive=arrival",
+            "Номинализация.",
+        ),
         mc("We discussed the ___ of the policy.", ["implement", "implementation", "implementing"], "implementation", "of + N."),
         fill("The committee noted a significant ___. (improve)", "improvement", "improvement."),
         order("Соберите: of / the / cancellation / flight / the", "the cancellation of the flight", "N of N."),

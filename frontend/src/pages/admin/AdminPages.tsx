@@ -1113,7 +1113,7 @@ export function AdminDonation() {
   const [form, setForm] = useState({
     donation_enabled: false,
     donation_title: "Сайт оказался полезным?",
-    donation_message: "Если lEarNing помогает учить EN, можно оставить чаевые.",
+    donation_message: "Если lEarNinG помогает учить ENG, можно оставить чаевые.",
     donation_url: "",
     donation_button: "Оставить чаевые",
   });

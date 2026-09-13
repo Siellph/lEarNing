@@ -103,6 +103,7 @@ LEGACY_GENERIC_TEST_PROMPTS: frozenset[str] = frozenset(
         "Вставьте вспомогательный глагол: ___ you got a pen?",
         "Слова: bus / the / takes / she",
         "Выберите форму to be: These ___ my books.",
+        "Выберите форму to be: They ___ my books.",
         "Вставьте нужную форму (close): Please ___ the door. (close)",
         "I no understand.",
         "Вставьте вспомогательный глагол: She ___ just left. (have)",
@@ -371,7 +372,7 @@ TOPIC_PRACTICE: dict[str, list] = {
 TOPIC_TEST: dict[str, list] = {
     "to-be": [
         fill("Вставьте форму to be: He ___ a teacher. (be)", "is", "He + is."),
-        mc("Выберите форму to be: These ___ my books.", ["is", "are", "am"], "are", "These + are."),
+        mc("Выберите форму to be: They ___ my books.", ["is", "are", "am"], "are", "They + are."),
         err("You is late.", "You are late.", "You + are."),
         order("Соберите: from / are / they / Spain", "They are from Spain.", "S + are + prep."),
         match("Be", ["I", "she", "we"], "I=am; she=is; we=are", "Согласование be."),

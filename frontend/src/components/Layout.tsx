@@ -2,6 +2,7 @@ import {
   AlertTriangle,
   BookOpen,
   BookOpenText,
+  CircleHelp,
   GraduationCap,
   Headphones,
   Home,
@@ -31,6 +32,7 @@ const desktopLinks = [
   { to: "/app/listening", label: "Слушание", icon: Headphones },
   { to: "/app/dialogues", label: "Диалоги", icon: MessagesSquare },
   { to: "/app/exams", label: "Экзамены", icon: GraduationCap },
+  { to: "/app/help", label: "Справка", icon: CircleHelp },
   { to: "/app/profile", label: "Профиль", icon: UserRound },
 ];
 
@@ -38,13 +40,14 @@ export function Layout() {
   const { user, logout } = useAuth();
   const isAdmin = user?.role === "admin";
 
+  const profileLink = desktopLinks.find((l) => l.to === "/app/profile")!;
   const mobileNav = isAdmin
     ? [
         desktopLinks[0],
         desktopLinks[1],
         desktopLinks[3],
         desktopLinks[7],
-        desktopLinks[11],
+        profileLink,
         { to: "/admin", label: "Админ", icon: Shield, end: false },
       ]
     : [
@@ -53,7 +56,7 @@ export function Layout() {
         desktopLinks[7],
         desktopLinks[8],
         desktopLinks[9],
-        desktopLinks[11],
+        profileLink,
       ];
 
   return (
@@ -62,7 +65,7 @@ export function Layout() {
       <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1">
         <aside className="hide-sm flex h-full w-64 shrink-0 flex-col border-r border-line/70 px-5 py-6">
           <BrandMark size="md" />
-          <p className="mt-1 text-sm text-ink-soft">учим EN</p>
+          <p className="mt-1 text-sm text-ink-soft">учим ENG</p>
           <nav className="mt-8 grid gap-1 overflow-y-auto">
             {desktopLinks.map((link) => (
               <NavLink

@@ -1,4 +1,5 @@
 import { speakableEnglish } from "../lib/speech";
+import { HoverTranslateText } from "./HoverTranslate";
 import { SpeakButton } from "./SpeakButton";
 
 type Example = { en: string; ru: string };
@@ -38,7 +39,9 @@ export function LessonView({ content }: { content: LessonContent }) {
             {rule.examples?.map((ex) => (
               <div key={ex.en} className="flex items-start justify-between gap-3 rounded-xl bg-paper px-4 py-3">
                 <div>
-                  <p className="font-medium">{ex.en}</p>
+                  <p className="font-medium">
+                    <HoverTranslateText text={ex.en} />
+                  </p>
                   <p className="text-sm text-ink-soft">{ex.ru}</p>
                 </div>
                 <SpeakButton text={ex.en} speak={speakableEnglish(ex.en)} />
@@ -52,11 +55,15 @@ export function LessonView({ content }: { content: LessonContent }) {
           {content.compare.map((row) => (
             <div key={row.left} className="card p-5">
               <div className="flex items-start justify-between gap-3">
-                <p className="font-medium">{row.left}</p>
+                <p className="font-medium">
+                  <HoverTranslateText text={row.left} />
+                </p>
                 <SpeakButton text={row.left} speak={speakableEnglish(row.left)} />
               </div>
               <div className="mt-2 flex items-start justify-between gap-3">
-                <p className="font-medium">{row.right}</p>
+                <p className="font-medium">
+                  <HoverTranslateText text={row.right} />
+                </p>
                 <SpeakButton text={row.right} speak={speakableEnglish(row.right)} />
               </div>
               {row.note && <p className="mt-3 text-sm text-ink-soft">{row.note}</p>}

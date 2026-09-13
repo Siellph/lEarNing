@@ -10,7 +10,7 @@ export function Landing() {
       <header className="mx-auto flex w-full max-w-6xl shrink-0 items-center justify-between px-5 py-5">
         <div>
           <BrandMark size="md" />
-          <p className="text-xs text-ink-soft">учим EN</p>
+          <p className="text-xs text-ink-soft">учим ENG</p>
         </div>
         <div className="flex gap-2">
           <Link to="/login" className="btn btn-ghost">
@@ -27,7 +27,7 @@ export function Landing() {
           <h1>
             <BrandMark size="hero" />
           </h1>
-          <p className="mt-5 font-display text-2xl text-ink-soft sm:text-3xl">lEarNing — учим EN</p>
+          <p className="mt-5 font-display text-2xl text-ink-soft sm:text-3xl">lEarNinG — учим ENG</p>
           <p className="mt-4 max-w-xl text-lg leading-8 text-ink-soft">
             Английская грамматика целиком — блоками, с практикой и экзаменами. Теория на русском,
             примеры на английском, закрепление сразу после урока.
@@ -64,7 +64,7 @@ export function Landing() {
         </div>
       </section>
       <footer className="mx-auto flex w-full max-w-6xl shrink-0 flex-wrap items-center gap-x-5 gap-y-2 px-5 py-8 text-sm text-ink-soft">
-        <span>© 2026 lEarNing</span>
+        <span>© 2026 lEarNinG</span>
         <Link to="/about" className="hover:text-terra">
           О проекте
         </Link>

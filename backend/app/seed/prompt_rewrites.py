@@ -12,6 +12,12 @@ PROMPT_REWRITES: dict[str, str] = {
         "Перепишите в Past Simple и добавьте в предложение маркер «last Tuesday»: "
         "She has already called the clinic."
     ),
+    # --- Curriculum order: these taught in demonstratives (A1 lesson 5), not to-be ---
+    "Выберите форму to be: These ___ my books.": "Выберите форму to be: They ___ my books.",
+    "These ___ my books.": "Выберите форму to be: They ___ my books.",
+    "Сделайте множественное: This woman is a teacher.": (
+        "Сделайте множественное: The woman is a teacher."
+    ),
     # --- A1 / plurals / possessives ---
     "one man → ?": "Напишите форму множественного числа: one man → ?",
     "one of / best / bakeries / the / city / in / the": (
@@ -413,4 +419,11 @@ EXPLANATION_REWRITES: dict[str, str] = {
     "She ___ play the piano.": (
         "Can не меняется по лицам: she can. Нужен именно модальный can, не отрицание don't/doesn't."
     ),
+    "Сделайте множественное: This woman is a teacher.": "woman→women, is→are.",
+    "Выберите форму to be: These ___ my books.": "They + are.",
+}
+
+# When prompt is rewritten, also patch answer if the expected string changed.
+ANSWER_REWRITES: dict[str, str] = {
+    "Сделайте множественное: This woman is a teacher.": "The women are teachers.",
 }
