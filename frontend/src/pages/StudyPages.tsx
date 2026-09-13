@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { ProgressBar } from "../components/ProgressBar";
 import { SpeakButton, VoiceControls } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
 import { percent } from "../lib/percent";
+import { useSearchHighlight } from "../lib/searchHighlight";
 
 type Deck = {
   id: number;
@@ -80,6 +81,7 @@ export function StudyHub({ kind }: { kind: "verbs" | "idioms" | "exceptions" }) 
   useEffect(() => {
     api<Deck[]>(`/study/${kind}`).then(setDecks);
   }, [kind]);
+  useSearchHighlight(decks.length > 0);
 
   return (
     <div className="grid gap-6">
@@ -90,7 +92,7 @@ export function StudyHub({ kind }: { kind: "verbs" | "idioms" | "exceptions" }) 
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {decks.map((deck) => (
-          <Link key={deck.slug} to={`/app/${kind}/${deck.slug}`} className="card card-lift p-5">
+          <Link key={deck.slug} to={`/app/${kind}/${deck.slug}`} data-search-id={deck.slug} className="card card-lift p-5">
             <h2 className="font-display text-2xl">{deck.title}</h2>
             <p className="mt-2 text-sm text-ink-soft">{deck.description}</p>
             <div className="mt-4">
@@ -109,6 +111,9 @@ export function StudyHub({ kind }: { kind: "verbs" | "idioms" | "exceptions" }) 
 
 export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions" }) {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
+  const batchFromUrl = searchParams.get("batch");
+  const highlightFromUrl = searchParams.get("highlight");
   const { refresh } = useAuth();
   const [deck, setDeck] = useState<DeckDetail | null>(null);
   const [batch, setBatch] = useState<number | null>(null);
@@ -129,9 +134,12 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
   };
 
   useEffect(() => {
-    load();
+    const initial = batchFromUrl ? Number(batchFromUrl) : undefined;
+    if (highlightFromUrl) setMode("cards");
+    load(Number.isFinite(initial) && initial && initial > 0 ? initial : undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kind, slug]);
+  }, [kind, slug, batchFromUrl, highlightFromUrl]);
+  useSearchHighlight(!!deck && mode === "cards" && deck.slug === slug);
 
   const startPractice = async () => {
     if (!slug) return;
@@ -211,6 +219,7 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
           {deck.cards.map((c) => (
             <article
               key={c.id}
+              data-search-id={String(c.id)}
               className="card cursor-pointer p-5"
               onClick={() => {
                 setFlipped((f) => !f);

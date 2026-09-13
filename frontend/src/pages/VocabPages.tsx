@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type MutableRefObject } from "react";
 import { CheckCircle2, CircleAlert } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { ProgressBar } from "../components/ProgressBar";
 import { SpeakButton, VoiceControls } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
 import { percent } from "../lib/percent";
 import { looksEnglish } from "../lib/speech";
+import { useSearchHighlight } from "../lib/searchHighlight";
 
 type Topic = {
   id: number;
@@ -94,6 +95,7 @@ export function VocabPage() {
   useEffect(() => {
     api<Topic[]>("/vocab/topics").then(setTopics);
   }, []);
+  useSearchHighlight(topics.length > 0);
 
   return (
     <div className="grid gap-6">
@@ -112,7 +114,7 @@ export function VocabPage() {
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {topics.map((topic) => (
-          <Link key={topic.slug} to={`/app/vocab/${topic.slug}`} className="card card-lift p-5">
+          <Link key={topic.slug} to={`/app/vocab/${topic.slug}`} data-search-id={topic.slug} className="card card-lift p-5">
             <p className="text-sm font-semibold text-terra">{topic.level_code}</p>
             <h2 className="font-display text-2xl">{topic.title}</h2>
             <p className="mt-2 text-sm text-ink-soft">{topic.description}</p>
@@ -131,6 +133,9 @@ export function VocabPage() {
 
 export function VocabTopicPage() {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
+  const batchFromUrl = searchParams.get("batch");
+  const highlightFromUrl = searchParams.get("highlight");
   const { refresh } = useAuth();
   const [topic, setTopic] = useState<TopicDetail | null>(null);
   const [batch, setBatch] = useState<number | null>(null);
@@ -148,9 +153,15 @@ export function VocabTopicPage() {
   };
 
   useEffect(() => {
-    loadTopic(batch ?? undefined);
+    const initial = batchFromUrl ? Number(batchFromUrl) : undefined;
+    if (highlightFromUrl) {
+      setMode("cards");
+      setPractice(null);
+    }
+    loadTopic(Number.isFinite(initial) && initial && initial > 0 ? initial : undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug]);
+  }, [slug, batchFromUrl, highlightFromUrl]);
+  useSearchHighlight(!!topic && mode === "cards" && topic.slug === slug);
 
   const startPractice = async () => {
     if (!slug) return;
@@ -266,7 +277,7 @@ function StudyCard({ word }: { word: Word }) {
   const [open, setOpen] = useState(false);
   const mastered = word.mastery_count ?? word.strength ?? 0;
   return (
-    <article className="card cursor-pointer p-5" onClick={() => setOpen((value) => !value)}>
+    <article data-search-id={String(word.id)} className="card cursor-pointer p-5" onClick={() => setOpen((value) => !value)}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">

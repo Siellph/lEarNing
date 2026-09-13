@@ -19,6 +19,7 @@ router = APIRouter(prefix="/search", tags=["search"])
 
 RESULT_CAP = 25
 PER_SOURCE_CAP = 8
+HIGHLIGHT_BATCH = 10
 
 STUDY_SECTIONS = {
     "verbs": "Глаголы",
@@ -143,7 +144,7 @@ def _search_grammar(db: Session, q: str, pattern: str) -> list[dict]:
             _hit(
                 "Грамматика",
                 level.title,
-                f"/app/grammar/{level.code}",
+                f"/app/grammar?highlight={level.code}",
                 level.subtitle or level.code,
                 rank=_rank(q, level.title, level.code, level.subtitle, level.description),
             )
@@ -165,11 +166,17 @@ def _search_grammar(db: Session, q: str, pattern: str) -> list[dict]:
     )
     for module in modules:
         level_title = module.level.title if module.level else None
+        level_code = module.level.code if module.level else None
+        href = (
+            f"/app/grammar/{level_code}?highlight={module.slug}"
+            if level_code
+            else f"/app/module/{module.slug}"
+        )
         hits.append(
             _hit(
                 "Грамматика",
                 module.title,
-                f"/app/module/{module.slug}",
+                href,
                 level_title,
                 rank=_rank(q, module.title, module.description) + 2,
             )
@@ -212,7 +219,7 @@ def _search_phonetics(q: str) -> list[dict]:
                 _hit(
                     "Звуки",
                     topic["title"],
-                    f"/app/sounds/{topic['slug']}",
+                    f"/app/sounds?highlight={topic['slug']}",
                     topic.get("description"),
                     rank=rank,
                 )
@@ -242,7 +249,7 @@ def _search_vocab(db: Session, q: str, pattern: str) -> list[dict]:
             _hit(
                 "Словарь",
                 topic.title,
-                f"/app/vocab/{topic.slug}",
+                f"/app/vocab?highlight={topic.slug}",
                 topic.description or topic.level_code,
                 rank=_rank(q, topic.title, topic.description),
             )
@@ -265,11 +272,22 @@ def _search_vocab(db: Session, q: str, pattern: str) -> list[dict]:
         if not topic:
             continue
         matched = word.word if q.casefold() in word.word.casefold() else word.translation
+        siblings = (
+            db.query(VocabWord.id)
+            .filter(VocabWord.topic_id == topic.id)
+            .order_by(VocabWord.id)
+            .all()
+        )
+        ids = [row[0] for row in siblings]
+        try:
+            batch = ids.index(word.id) // HIGHLIGHT_BATCH + 1
+        except ValueError:
+            batch = 1
         hits.append(
             _hit(
                 "Словарь",
                 topic.title,
-                f"/app/vocab/{topic.slug}",
+                f"/app/vocab/{topic.slug}?batch={batch}&highlight={word.id}",
                 matched,
                 rank=_rank(q, word.word, word.translation) + 8,
             )
@@ -301,7 +319,7 @@ def _search_study(db: Session, q: str, pattern: str) -> list[dict]:
             _hit(
                 section,
                 deck.title,
-                f"/app/{path}/{deck.slug}",
+                f"/app/{path}?highlight={deck.slug}",
                 deck.description or None,
                 rank=_rank(q, deck.title, deck.description),
             )
@@ -332,11 +350,22 @@ def _search_study(db: Session, q: str, pattern: str) -> list[dict]:
             if candidate and q.casefold() in candidate.casefold():
                 term = candidate
                 break
+        siblings = (
+            db.query(StudyCard.id)
+            .filter(StudyCard.deck_id == deck.id)
+            .order_by(StudyCard.sort_order, StudyCard.id)
+            .all()
+        )
+        ids = [row[0] for row in siblings]
+        try:
+            batch = ids.index(card.id) // HIGHLIGHT_BATCH + 1
+        except ValueError:
+            batch = 1
         hits.append(
             _hit(
                 section,
                 deck.title,
-                f"/app/{path}/{deck.slug}",
+                f"/app/{path}/{deck.slug}?batch={batch}&highlight={card.id}",
                 term,
                 rank=_rank(q, card.primary_text, card.translation, card.secondary_text) + 8,
             )
@@ -367,7 +396,7 @@ def _search_skills(db: Session, q: str, pattern: str) -> list[dict]:
             _hit(
                 section,
                 item.title,
-                f"/app/{path}/{item.slug}",
+                f"/app/{path}?highlight={item.slug}",
                 item.description or item.level_code,
                 rank=_rank(q, item.title, item.description),
             )
@@ -395,7 +424,7 @@ def _search_exams(db: Session, q: str, pattern: str) -> list[dict]:
             _hit(
                 "Экзамены",
                 exam.title,
-                f"/app/exams/{exam.id}",
+                f"/app/exams?highlight={exam.id}",
                 level_title or exam.description or None,
                 rank=_rank(q, exam.title, exam.description),
             )

@@ -117,6 +117,106 @@ body {
   color: #9a8f80;
 }
 
+/* Global search — own padding so `.field` shorthand cannot crush icon/text spacing */
+.search-field-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-field-wrap .search-field-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--color-ink-soft);
+  opacity: 0.72;
+}
+
+.search-field-wrap .search-field-clear {
+  position: absolute;
+  right: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.search-field {
+  width: 100%;
+  height: 2.5rem;
+  box-sizing: border-box;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--color-line) 88%, var(--color-sage) 12%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-card) 92%, #fff);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 1px 2px rgba(18, 32, 51, 0.04);
+  padding: 0 2.35rem 0 2.55rem;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  color: var(--color-ink);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.search-field::placeholder {
+  color: #9a8f80;
+  opacity: 1;
+}
+
+.search-field:hover {
+  border-color: color-mix(in srgb, var(--color-line) 70%, var(--color-terra) 30%);
+  background: var(--color-card);
+}
+
+.search-field:focus {
+  outline: none;
+  border-color: var(--color-terra);
+  background: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 0 0 3px color-mix(in srgb, var(--color-terra) 22%, transparent);
+}
+
+.search-field::-webkit-search-decoration,
+.search-field::-webkit-search-cancel-button,
+.search-field::-webkit-search-results-button,
+.search-field::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+@keyframes search-highlight-pulse {
+  0% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--color-terra) 45%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--color-terra) 70%, var(--color-sage) 30%),
+      0 16px 40px -24px rgba(18, 32, 51, 0.25);
+  }
+  40% {
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--color-sage) 28%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--color-terra) 55%, var(--color-sage) 45%),
+      0 18px 44px -20px rgba(63, 111, 91, 0.35);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 0 1px var(--color-line),
+      0 16px 40px -24px rgba(18, 32, 51, 0.25);
+  }
+}
+
+.search-highlight-pulse {
+  border-color: color-mix(in srgb, var(--color-terra) 55%, var(--color-sage) 45%) !important;
+  animation: search-highlight-pulse 2.6s var(--motion-ease-out, ease) 1;
+  z-index: 1;
+}
+
 .gap-blank {
   display: inline-block;
   min-width: 3.25rem;

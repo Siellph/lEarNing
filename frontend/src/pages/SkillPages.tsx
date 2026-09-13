@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { ProgressBar } from "../components/ProgressBar";
 import { SpeakButton, VoiceControls } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
 import { percent } from "../lib/percent";
 import { speakEnglish } from "../lib/speech";
+import { SEARCH_HIGHLIGHT_PARAM, useSearchHighlight } from "../lib/searchHighlight";
 
 type SkillKind = "reading" | "listening" | "dialogue";
 
@@ -141,11 +142,16 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
 export function SkillHub({ kind }: { kind: SkillKind }) {
   const [items, setItems] = useState<SkillSummary[]>([]);
   const [levelFilter, setLevelFilter] = useState<string>("all");
+  const [searchParams] = useSearchParams();
   const meta = META[kind];
   useEffect(() => {
     setLevelFilter("all");
     api<SkillSummary[]>(`/skills/${KIND_API[kind]}`).then(setItems);
   }, [kind]);
+  useEffect(() => {
+    if (searchParams.get(SEARCH_HIGHLIGHT_PARAM)) setLevelFilter("all");
+  }, [searchParams]);
+  useSearchHighlight(items.length > 0 && levelFilter === "all");
 
   const levelOptions = useMemo(() => {
     const present = new Set(items.map((i) => i.level_code));
@@ -219,6 +225,7 @@ export function SkillHub({ kind }: { kind: SkillKind }) {
           <Link
             key={item.slug}
             to={`/app/${meta.path}/${item.slug}`}
+            data-search-id={item.slug}
             className="card card-lift p-5"
           >
             <div className="flex items-start justify-between gap-3">

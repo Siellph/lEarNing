@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useSearchHighlight } from "../lib/searchHighlight";
 import { api } from "../api/client";
 import { ProgressBar } from "../components/ProgressBar";
 import { percent } from "../lib/percent";
@@ -19,6 +20,7 @@ export function GrammarLevels() {
   useEffect(() => {
     api<Level[]>("/grammar/levels").then(setLevels);
   }, []);
+  useSearchHighlight(levels.length > 0);
 
   return (
     <div className="grid gap-6">
@@ -31,7 +33,7 @@ export function GrammarLevels() {
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         {levels.map((level) => (
-          <Link key={level.code} to={`/app/grammar/${level.code}`} className="card card-lift p-6">
+          <Link key={level.code} to={`/app/grammar/${level.code}`} data-search-id={level.code} className="card card-lift p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-terra">{level.code}</p>
@@ -74,6 +76,7 @@ export function ModuleList() {
   useEffect(() => {
     if (code) api(`/grammar/levels/${code}/modules`).then(setPack);
   }, [code]);
+  useSearchHighlight(!!pack?.modules?.length);
 
   if (!pack) return <p className="text-ink-soft">Загружаем модули…</p>;
 
@@ -88,7 +91,7 @@ export function ModuleList() {
       </div>
       <div className="grid gap-3">
         {pack.modules.map((module, i) => (
-          <Link key={module.slug} to={`/app/module/${module.slug}`} className="card card-lift flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
+          <Link key={module.slug} to={`/app/module/${module.slug}`} data-search-id={module.slug} className="card card-lift flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
             <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-paper-2 font-display text-lg">
               {i + 1}
             </div>

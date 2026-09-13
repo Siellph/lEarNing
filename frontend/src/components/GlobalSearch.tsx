@@ -136,11 +136,11 @@ function SearchField({
   expanded: boolean;
 }) {
   return (
-    <div className="relative">
-      <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
+    <div className="search-field-wrap">
+      <Search size={16} className="search-field-icon" aria-hidden />
       <input
         ref={inputRef}
-        className="field h-10 py-0 pl-9 pr-9 text-sm"
+        className="search-field"
         type="search"
         value={query}
         placeholder="Поиск по курсу…"
@@ -155,7 +155,7 @@ function SearchField({
       {query ? (
         <button
           type="button"
-          className="absolute right-2 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-ink-soft hover:bg-paper-2 hover:text-ink"
+          className="search-field-clear inline-flex size-7 items-center justify-center rounded-full text-ink-soft hover:bg-paper-2 hover:text-ink"
           aria-label="Очистить"
           onClick={() => {
             setQuery("");
