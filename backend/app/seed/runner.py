@@ -40,6 +40,7 @@ from app.seed.expand import (
     expand_skills,
     expand_vocabulary,
     fix_known_article_answers,
+    fix_match_answer_leaks,
     remove_legacy_demo_accounts,
     repair_match_options,
     rewrite_known_prompts,
@@ -144,6 +145,7 @@ def _run_expanders(db) -> dict:
         "study": expand_study_decks(db),
         "skills": expand_skills(db),
         "article_fixes": fix_known_article_answers(db),
+        "match_leak_fixes": fix_match_answer_leaks(db),
         "prompt_rewrites": rewrite_known_prompts(db),
         "match_repairs": repair_match_options(db),
     }
@@ -180,6 +182,7 @@ def main() -> None:
                 f"practice +{stats['practice']}, "
                 f"tests +{stats['tests']}, exams +{stats['exams']}, words +{stats['words']}, "
                 f"study +{stats['study']}, skills +{stats['skills']}, article_fixes={stats['article_fixes']}, "
+                f"match_leak_fixes={stats['match_leak_fixes']}, "
                 f"prompt_rewrites={stats['prompt_rewrites']}, "
                 f"match_repairs={stats['match_repairs']}; "
                 f"demo_removed={removed_demo}; admin={'created' if created_admin else 'unchanged'}"

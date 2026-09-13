@@ -410,6 +410,86 @@ def fix_known_article_answers(db) -> int:
     return fixed
 
 
+
+def fix_match_answer_leaks(db) -> int:
+    """Rewrite match items whose left slots already contained the right-side chip.
+
+    Identifies legacy rows by left options (not prompt alone), so duplicate prompts
+    like «Patterns» do not collide. Idempotent; safe with repair_match_options.
+    """
+    from app.services.match_format import normalize_match_payload
+
+    repairs = [
+        {
+            "old_left": {"a book", "an hour", "the moon"},
+            "prompt": "Соотнесите: a / an / the",
+            "options": ["___ book", "___ hour", "___ moon"],
+            "answer": "___ book=a; ___ hour=an; ___ moon=the",
+            "explanation": "Звук и уникальность.",
+        },
+        {
+            "old_left": {"explain sth to sb", "accuse of", "congratulate on"},
+            "prompt": "Соотнесите глагол и предлог",
+            "options": ["explain sth ___ sb", "accuse ___", "congratulate ___"],
+            "answer": "explain sth ___ sb=to; accuse ___=of; congratulate ___=on",
+            "explanation": "Reporting verbs.",
+        },
+        {
+            "old_left": {"verb + -ing", "verb + to-inf", "adj + to"},
+            "prompt": "Соотнесите конструкцию и форму",
+            "options": ["enjoy / avoid / finish", "decide / hope / want", "happy / ready / easy"],
+            "answer": "enjoy / avoid / finish=-ing; decide / hope / want=to-inf; happy / ready / easy=adj + to",
+            "explanation": "C2.",
+        },
+        {
+            "old_left": {"accuse of", "prevent from", "thank for"},
+            "prompt": "Соотнесите глагол и предлог (тест)",
+            "options": ["accuse ___", "prevent ___", "thank ___"],
+            "answer": "accuse ___=of; prevent ___=from; thank ___=for",
+            "explanation": "Patterns.",
+        },
+        {
+            "old_left": {"keep + -ing", "manage + to", "stop + sb + from"},
+            "prompt": "Соотнесите глагол и продолжение",
+            "options": ["keep", "manage", "stop + sb"],
+            "answer": "keep=-ing; manage=to-inf; stop + sb=from + -ing",
+            "explanation": "Patterns.",
+        },
+    ]
+
+    def row_left(row) -> set[str]:
+        opts = row.options
+        if isinstance(opts, dict):
+            return {str(x) for x in (opts.get("left") or [])}
+        if isinstance(opts, list):
+            return {str(x) for x in opts}
+        return set()
+
+    fixed = 0
+    for model in (Exercise, TestQuestion, ExamQuestion):
+        rows = db.query(model).filter(model.kind == "match").all()
+        for row in rows:
+            left = row_left(row)
+            for repair in repairs:
+                if not repair["old_left"].issubset(left):
+                    continue
+                sides, aligned = normalize_match_payload(repair["options"], repair["answer"])
+                if (
+                    row.prompt == repair["prompt"]
+                    and row.options == sides
+                    and row.answer == aligned
+                    and (row.explanation or "") == repair["explanation"]
+                ):
+                    break
+                row.prompt = repair["prompt"]
+                row.options = sides
+                row.answer = aligned
+                row.explanation = repair["explanation"]
+                fixed += 1
+                break
+    return fixed
+
+
 def rewrite_known_prompts(db) -> int:
     """Update terse transform prompts in live DB (old exact prompt → clearer wording).
 

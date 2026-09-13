@@ -577,6 +577,14 @@ EXPLANATION_REWRITES: dict[str, str] = {
     ),
 }
 
+# Match exercises: rename prompts when left slots previously leaked the right-side answer.
+# ("Patterns" reporting-verb item is migrated by fix_match_answer_leaks — duplicate prompt.)
+PROMPT_REWRITES.update({
+    "Complementation": "Соотнесите конструкцию и форму",
+    "Verbs": "Соотнесите глагол и предлог (тест)",
+    "Frames": "Соотнесите глагол и продолжение",
+})
+
 # When prompt is rewritten, also patch answer if the expected string changed.
 ANSWER_REWRITES: dict[str, str] = {
     "Сделайте множественное: This woman is a teacher.": "The women are teachers.",

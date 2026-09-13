@@ -18,7 +18,12 @@ EXTRA_PRACTICE: dict[str, list] = {
         order("Соберите: door / the / close", "Close the door.", "Повелительное + the."),
         fill("She is ___ teacher.", "a", "Профессия в ед.ч. — a/an."),
         xf("Вставьте: ___ Alps are high.", "The Alps are high.", "Горные цепи — the."),
-        match("Соотнесите: a / an / the", ["a book", "an hour", "the moon"], "a book=a; an hour=an; the moon=the", "Звук и уникальность."),
+        match(
+            "Соотнесите: a / an / the",
+            ["___ book", "___ hour", "___ moon"],
+            "___ book=a; ___ hour=an; ___ moon=the",
+            "Звук и уникальность.",
+        ),
         fill("Pass me ___ pen on the desk.", "the", "Конкретная ручка."),
         err("I saw a interesting film.", "I saw an interesting film.", "Interesting — гласный звук."),
         fill("___ water is cold. (эта, в стакане)", "The", "Конкретная порция."),
