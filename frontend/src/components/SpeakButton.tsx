@@ -1,17 +1,21 @@
-import { Volume2 } from "lucide-react";
+import { Pause, Play, Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { onConsentChange } from "../lib/consent";
 import {
-  speakEnglish,
+  toggleSpeakEnglish,
   speakableEnglish,
   primeSpeech,
   type Accent,
   type SpeechRate,
+  type SpeakPlaybackState,
   getAccent,
   setAccent,
   getRate,
   getRatePreset,
   setRatePreset,
+  getSpeakPlaybackState,
+  getActiveSpokenText,
+  onSpeakPlaybackChange,
 } from "../lib/speech";
 
 export function SpeakButton({
@@ -28,6 +32,7 @@ export function SpeakButton({
   className?: string;
 }) {
   const [ready, setReady] = useState(false);
+  const [playback, setPlayback] = useState<SpeakPlaybackState>("idle");
   const spoken = (speak ?? speakableEnglish(text)).trim();
 
   useEffect(() => {
@@ -38,23 +43,40 @@ export function SpeakButton({
     return () => window.speechSynthesis.removeEventListener("voiceschanged", unlock);
   }, []);
 
+  useEffect(() => {
+    const sync = () => {
+      const active = getActiveSpokenText() === spoken;
+      setPlayback(active ? getSpeakPlaybackState() : "idle");
+    };
+    sync();
+    return onSpeakPlaybackChange(sync);
+  }, [spoken]);
+
   if (!spoken) return null;
+
+  const isSpeaking = playback === "speaking";
+  const isPaused = playback === "paused";
+  const aria =
+    isSpeaking ? `Пауза: ${spoken}` : isPaused ? `Продолжить: ${spoken}` : label || `Прослушать: ${spoken}`;
+  const title = isSpeaking ? "Пауза" : isPaused ? "Продолжить" : label || "Прослушать";
+  const Icon = isSpeaking ? Pause : isPaused ? Play : Volume2;
 
   return (
     <button
       type="button"
-      className={`speak-btn ${className}`}
-      aria-label={label || `Прослушать: ${spoken}`}
-      title={label || "Прослушать"}
+      className={`speak-btn ${isSpeaking ? "speak-btn--speaking" : ""} ${isPaused ? "speak-btn--paused" : ""} ${className}`}
+      aria-label={aria}
+      aria-pressed={isSpeaking || isPaused}
+      title={title}
       disabled={!ready}
       onPointerDown={() => primeSpeech()}
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
-        speakEnglish(spoken, { rate: rate ?? getRate() });
+        toggleSpeakEnglish(spoken, { rate: rate ?? getRate() });
       }}
     >
-      <Volume2 size={16} />
+      <Icon size={16} />
       {label ? <span>{label}</span> : null}
     </button>
   );

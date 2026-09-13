@@ -368,6 +368,13 @@ input.gap-blank-input:disabled {
   background: #fff1eb;
 }
 
+.speak-btn--speaking,
+.speak-btn--paused {
+  border-color: var(--color-terra);
+  color: var(--color-terra);
+  background: #fff1eb;
+}
+
 .donate-bar {
   position: fixed;
   top: 0;

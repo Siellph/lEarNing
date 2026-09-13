@@ -86,6 +86,112 @@ let speakGeneration = 0;
 let primed = false;
 let priming = false;
 
+export type SpeakPlaybackState = "idle" | "speaking" | "paused";
+
+let playbackState: SpeakPlaybackState = "idle";
+let activeSpokenText: string | null = null;
+const playbackListeners = new Set<() => void>();
+
+function notifyPlayback() {
+  playbackListeners.forEach((listener) => listener());
+}
+
+function setPlayback(state: SpeakPlaybackState, spoken: string | null = activeSpokenText) {
+  playbackState = state;
+  activeSpokenText = state === "idle" ? null : spoken;
+  notifyPlayback();
+}
+
+export function getSpeakPlaybackState(): SpeakPlaybackState {
+  return playbackState;
+}
+
+export function getActiveSpokenText(): string | null {
+  return activeSpokenText;
+}
+
+export function onSpeakPlaybackChange(listener: () => void): () => void {
+  playbackListeners.add(listener);
+  return () => playbackListeners.delete(listener);
+}
+
+/**
+ * Safari / iOS WebKit: pause()/resume() often no-op while speaking stays true.
+ * Prefer cancel so a second click can interrupt; third click plays from the start.
+ */
+function speechPauseUnreliable(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  return /iP(ad|hone|od)/.test(ua) || (/Safari/.test(ua) && !/Chrome|CriOS|Chromium|Edg|Android/.test(ua));
+}
+
+function flushSynth() {
+  const synth = window.speechSynthesis;
+  synth.cancel();
+  // Chromium can stick in paused after cancel; clear it so the next speak() runs.
+  if (synth.paused) synth.resume();
+}
+
+export function stopSpeech() {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  speakGeneration += 1;
+  flushSynth();
+  setPlayback("idle");
+}
+
+export function pauseSpeech() {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  const synth = window.speechSynthesis;
+
+  // Pending kick/start: speaking flag may still be false — cancel the queued utterance.
+  if (playbackState === "speaking" && !synth.speaking) {
+    stopSpeech();
+    return;
+  }
+  if (!synth.speaking || synth.paused) return;
+
+  if (speechPauseUnreliable()) {
+    stopSpeech();
+    return;
+  }
+
+  synth.pause();
+  if (synth.paused) {
+    setPlayback("paused");
+    return;
+  }
+  // Pause did not take (some WebKit builds) — interrupt via cancel instead.
+  stopSpeech();
+}
+
+export function resumeSpeech() {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  const synth = window.speechSynthesis;
+  if (!synth.paused && playbackState !== "paused") return;
+  synth.resume();
+  setPlayback("speaking");
+}
+
+/** Speak, or pause/resume the same active phrase (SpeakButton toggle). */
+export function toggleSpeakEnglish(text: string, options?: { rate?: number; accent?: Accent }) {
+  const spoken = speakableEnglish(text);
+  if (!spoken || typeof window === "undefined" || !window.speechSynthesis) return;
+
+  const synth = window.speechSynthesis;
+  const same = activeSpokenText === spoken;
+
+  if (same && (playbackState === "speaking" || (synth.speaking && !synth.paused))) {
+    pauseSpeech();
+    return;
+  }
+  if (same && (playbackState === "paused" || synth.paused)) {
+    resumeSpeech();
+    return;
+  }
+
+  speakEnglish(text, options);
+}
+
 function whenVoicesReady(): Promise<void> {
   if (typeof window === "undefined" || !window.speechSynthesis) return Promise.resolve();
   if (!voicesReady) {
@@ -105,12 +211,6 @@ function whenVoicesReady(): Promise<void> {
     });
   }
   return voicesReady;
-}
-
-function flushSynth() {
-  const synth = window.speechSynthesis;
-  synth.cancel();
-  if (synth.paused) synth.resume();
 }
 
 /** One-time silent warmup. Never chained onto a real speak() — cancel() will drop it. */
@@ -453,11 +553,19 @@ export function speakEnglish(text: string, options?: { rate?: number; accent?: A
   const generation = ++speakGeneration;
   const synth = window.speechSynthesis;
   flushSynth();
+  setPlayback("speaking", spoken);
 
   const utterance = new SpeechSynthesisUtterance(spoken);
   const accent = options?.accent || getAccent();
   utterance.lang = accent;
   utterance.rate = options?.rate ?? getRate();
+
+  const clearIfCurrent = () => {
+    if (generation !== speakGeneration) return;
+    setPlayback("idle");
+  };
+  utterance.onend = clearIfCurrent;
+  utterance.onerror = clearIfCurrent;
 
   const start = () => {
     if (generation !== speakGeneration) return;
