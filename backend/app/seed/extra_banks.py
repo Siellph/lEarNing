@@ -115,163 +115,21 @@ EXTRA_TEST: dict[str, list] = {
     ],
 }
 
-# Generic pads used when a module still has a thin bank (keyed by CEFR code).
-GENERIC_PRACTICE_PAD: dict[str, list] = {
-    "A1": [
-        mc("I ___ a student.", ["am", "is", "are"], "am", "I + am."),
-        fill("She ___ my sister. (be)", "is", "She + is."),
-        err("He don't like tea.", "He doesn't like tea.", "He/she + doesn't."),
-        order("Соберите: name / is / my / Anna", "My name is Anna.", "Притяжательное + N + be."),
-        fill("They ___ from Spain. (be)", "are", "They + are."),
-        mc("___ you ready?", ["Is", "Are", "Am"], "Are", "You + are."),
-        xf("Сделайте вопрос: You speak English.", "Do you speak English?", "Do + S + V1."),
-        fill("There ___ a book on the table.", "is", "There is + ед.ч."),
-        err("She can sings.", "She can sing.", "После can — V1."),
-        match("Местоимения", ["I", "he", "they"], "I=я; he=он; they=они", "Базовые forms."),
-        fill("We ___ breakfast at 8. (have)", "have", "We + have."),
-        order("Слова: the / park / in / play / children", "Children play in the park.", "S + V + place."),
-        mc("This is ___ bag.", ["me", "my", "mine"], "my", "my + N."),
-        fill("___ is cold today.", "It", "Погода — It."),
-        err("I am agree.", "I agree.", "Agree без am."),
-    ],
-    "A2": [
-        mc("She ___ TV when I called.", ["watched", "was watching", "watches"], "was watching", "Past Continuous фон."),
-        fill("I ___ already finished. (have)", "have", "Present Perfect."),
-        err("He go to school every day.", "He goes to school every day.", "3sg -s."),
-        order("Соберите: than / bigger / is / this / that", "This is bigger than that.", "Сравнение."),
-        fill("If it rains, we ___ stay home. (will)", "will", "First conditional."),
-        mc("There isn't ___ milk.", ["some", "any", "many"], "any", "Отрицание + any."),
-        xf("Сделайте отрицание: She can drive.", "She can't drive.", "can't + V1.", ["She cannot drive."]),
-        fill("He used ___ live here.", "to", "used to + V1."),
-        err("She is knowing the answer.", "She knows the answer.", "Know — Simple."),
-        match("Сравните", ["good", "better", "best"], "good=base; better=comp; best=super", "Неправильные формы."),
-    ],
-    "B1": [
-        mc("I wish I ___ taller.", ["am", "was", "were"], "were", "Wish + were."),
-        fill("By 2019 they ___ left. (have)", "had", "Past Perfect."),
-        err("If I will see him, I will call.", "If I see him, I will call.", "If + Present."),
-        order("Соберите: been / have / waiting / I / for hours", "I have been waiting for hours.", "Perfect Continuous."),
-        fill("You ___ be tired after that trip. (must)", "must", "Сильный вывод."),
-        mc("She asked where I ___.", ["live", "lived", "lives"], "lived", "Sequence of tenses."),
-        xf("Passive: They built the bridge.", "The bridge was built.", "Past Passive."),
-        fill("I'd rather you ___ now. (leave)", "left", "Would rather + Past."),
-        err("He suggested to go.", "He suggested going.", "Suggest + -ing."),
-        match("Wish", ["I wish", "I knew", "the code"], "I wish=frame; I knew=Past; the code=object", "Wish + Past."),
-    ],
-    "B2": [
-        mc("Not only ___ late, he forgot the key.", ["he was", "was he", "he is"], "was he", "Инверсия после Not only."),
-        fill("I'd sooner ___ at home. (stay)", "stay", "Would sooner + V1."),
-        err("Despite of the rain, we went.", "Despite the rain, we went.", "Despite без of."),
-        order("Соберите: had / I / known / I / would have called", "Had I known, I would have called.", "Инверсия условия."),
-        fill("She is thought ___ be abroad. (to)", "to", "Passive reporting."),
-        mc("It's time we ___.", ["go", "went", "going"], "went", "It's time + Past."),
-        xf("Causative: Someone cleaned my car.", "I had my car cleaned.", "Have + object + V3."),
-        fill("Little ___ she know the truth. (do, past)", "did", "Little did + S."),
-        err("I look forward to meet you.", "I look forward to meeting you.", "to + -ing."),
-        match("Инверсия", ["Seldom", "do", "we meet"], "Seldom=front; do=aux; we meet=clause", "Negative adverb + inversion."),
-    ],
-    "C1": [
-        mc("Were it not ___ the delay, we would start.", ["for", "to", "that"], "for", "Were it not for."),
-        fill("It is essential that he ___ on time. (be)", "be", "Subjunctive."),
-        err("I regret to tell you this earlier.", "I regret telling you this earlier.", "Regret + -ing о прошлом."),
-        order("Соберите: so / complex / was / the / plan / that / we / paused", "So complex was the plan that we paused.", "So + adj + be + S."),
-        fill("Far ___ it from me to insist. (be)", "be", "Far be it."),
-        mc("On no account ___ you open that.", ["should", "you should", "should not"], "should", "On no account + should."),
-        xf("Nominalise: They refused → their ___", "refusal", "refuse → refusal."),
-        fill("Such ___ the noise that we left. (be)", "was", "Such was + N."),
-        err("She explained me the rule.", "She explained the rule to me.", "Explain sth to sb."),
-        match("Fronting", ["Into the bay", "sailed", "the yacht"], "Into the bay=front; sailed=V; the yacht=S", "Полная инверсия."),
-    ],
-    "C2": [
-        mc("___ that as it may, we proceed.", ["Be", "Is", "Were"], "Be", "Be that as it may."),
-        fill("Suffice ___ to say we disagreed.", "it", "Suffice it to say."),
-        err("The data is conflicting each other.", "The data are conflicting with each other.", "Data + are; with."),
-        order("Соберите: hard / as / tried / she / she / failed", "Hard as she tried, she failed.", "Adj + as + S + V."),
-        fill("Come what ___, we finish tonight.", "may", "Come what may."),
-        mc("He is as brilliant a writer ___ she is.", ["than", "as", "like"], "as", "as…as."),
-        xf("Inversion: If she had known → ___ she known", "Had", "Had + S + V3."),
-        fill("Strange ___ it seem, it worked. (as)", "as", "Adj + as + S + V."),
-        err("I can't help to laugh.", "I can't help laughing.", "Can't help + -ing."),
-        match("Hedges", ["It would appear", "that", "the claim holds"], "It would appear=hedge; that=linker; the claim holds=clause", "Дистанцирование."),
-    ],
-}
+# Deprecated CEFR-wide pads (were injecting off-topic tips into every thin module).
+# On-topic pads live in topic_banks.py / EXTRA_* by slug. Kept empty for import compat.
+GENERIC_PRACTICE_PAD: dict[str, list] = {}
+GENERIC_TEST_PAD: dict[str, list] = {}
 
-GENERIC_TEST_PAD: dict[str, list] = {
-    "A1": [
-        fill("___ name is Tom. (he)", "His", "His + N."),
-        mc("There ___ two chairs.", ["is", "are", "be"], "are", "There are + мн."),
-        err("She haven't a car.", "She hasn't a car.", "She + hasn't.", ["She doesn't have a car."]),
-        order("Соберите: like / I / apples", "I like apples.", "S + V + O."),
-        fill("Can you ___ me? (help)", "help", "can + V1."),
-        mc("___ is your phone?", ["Who", "Where", "What"], "Where", "Место."),
-        xf("Отрицание: I can swim.", "I can't swim.", "can't.", ["I cannot swim."]),
-        fill("The keys are ___ the table.", "on", "on + surface."),
-        err("He living in Rome.", "He lives in Rome.", "Present Simple."),
-        match("Be", ["I", "she", "we"], "I=am; she=is; we=are", "Согласование be."),
-        fill("___ you got a pen?", "Have", "Have you got…?"),
-        order("Слова: bus / the / takes / she", "She takes the bus.", "S + V + O."),
-        mc("These ___ my books.", ["is", "are", "am"], "are", "These + are."),
-        fill("Please ___ the door. (close)", "close", "Imperative."),
-        err("I no understand.", "I don't understand.", "don't + V1."),
-    ],
-    "A2": [
-        fill("She ___ just left. (have)", "has", "has just + V3."),
-        mc("While I ___, the phone rang.", ["cooked", "was cooking", "cook"], "was cooking", "Interrupted action."),
-        err("I am going to the gym every Monday.", "I go to the gym every Monday.", "Привычка — Simple."),
-        order("Соберите: will / if / you / ask / I / help", "If you ask, I will help.", "First conditional."),
-        fill("This bag is ___ than that one. (light)", "lighter", "сравнительная степень."),
-        mc("How ___ sugar do you need?", ["many", "much", "few"], "much", "Неисчисляемое."),
-        xf("Passive: They clean the room.", "The room is cleaned.", "Present Passive."),
-        fill("You ___ park here. (mustn't)", "mustn't", "Запрет.", ["must not"]),
-        err("She didn't went.", "She didn't go.", "Didn't + V1."),
-        match("Quantifiers", ["much", "many", "a few"], "much=uncount; many=count; a few=count+", "Исчисляемость."),
-    ],
-    "B1": [
-        fill("She said she ___ tired. (be, past)", "was", "Sequence of tenses."),
-        mc("If I ___ rich, I would travel.", ["am", "was", "were"], "were", "2nd conditional."),
-        err("He has went home.", "He has gone home.", "have + V3."),
-        order("Соберите: been / she / has / working / all day", "She has been working all day.", "Perfect Continuous."),
-        fill("The letter ___ sent yesterday. (be)", "was", "Past Passive."),
-        mc("I wish it ___ raining.", ["isn't", "wasn't", "weren't"], "weren't", "Wish + weren't.", ["wasn't"]),
-        xf("'I am busy' → He said he ___ busy.", "was", "am → was."),
-        fill("You look tired. You ___ have slept badly. (must)", "must", "must have + V3."),
-        err("She avoid to talk.", "She avoids talking.", "avoid + -ing."),
-        match("Relative", ["who", "which", "where"], "who=people; which=things; where=place", "Defining clauses."),
-    ],
-    "B2": [
-        fill("No sooner ___ we arrived than it rained. (have)", "had", "No sooner had + S."),
-        mc("I'd prefer ___ alone.", ["stay", "to stay", "staying"], "to stay", "Prefer + to."),
-        err("He is used to wake up early.", "He is used to waking up early.", "be used to + -ing."),
-        order("Соберите: should / under / no / circumstances / you / lie", "Under no circumstances should you lie.", "Инверсия."),
-        fill("She had the report ___ . (write, causative)", "written", "have + O + V3."),
-        mc("It's high time you ___.", ["leave", "left", "leaving"], "left", "High time + Past."),
-        xf("Reporting: 'Don't go' → He told me ___ go.", "not to", "tell + not to."),
-        fill("Hardly ___ the film started when the lights failed. (have)", "had", "Hardly had + S."),
-        err("I suggested her to wait.", "I suggested that she wait.", "Suggest + that + subjunctive.", ["I suggested waiting."]),
-        match("Causative", ["have", "my hair", "cut"], "have=caus; my hair=O; cut=V3", "Have sth done."),
-    ],
-    "C1": [
-        fill("Be that as it ___, we continue.", "may", "Be that as it may."),
-        mc("___ the cost, the project went ahead.", ["However", "Whatever", "Whichever"], "Whatever", "Whatever + N."),
-        err("I demand that he leaves now.", "I demand that he leave now.", "Subjunctive leave."),
-        order("Соберите: known / had / we / we / would have waited", "Had we known, we would have waited.", "Third conditional inversion."),
-        fill("It was suggested that the plan ___ revised. (be)", "be", "Mandative subjunctive."),
-        mc("Only then ___ the mistake.", ["I realised", "did I realise", "I did realise"], "did I realise", "Only then + inversion."),
-        xf("Noun: decide → ___", "decision", "decide → decision."),
-        fill("Such ___ his anger that he left. (be)", "was", "Such was."),
-        err("She congratulated me to win.", "She congratulated me on winning.", "congratulate on."),
-        match("Emphasis", ["What", "I need", "is rest"], "What=cleft; I need=clause; is rest=focus", "Wh-cleft."),
-    ],
-    "C2": [
-        fill("Try as she ___, she couldn't open it.", "might", "Try as S might."),
-        mc("___ it rain, the event moves indoors.", ["Should", "Would", "Might"], "Should", "Should it + V."),
-        err("The committee have not yet reached its decision.", "The committee has not yet reached its decision.", "Committee + has (BrE often has for unit)."),
-        order("Соберите: though / brilliant / the / idea / was / it / failed", "Brilliant though the idea was, it failed.", "Adj + though + S + be."),
-        fill("Suffice ___ to say the talks stalled.", "it", "Suffice it to say."),
-        mc("He spoke as if he ___ the owner.", ["is", "were", "was"], "were", "as if + were."),
-        xf("Front: The yacht sailed into the bay. → Into the bay ___ the yacht.", "sailed", "Full inversion."),
-        fill("Come what ___, keep the channel open.", "may", "Come what may."),
-        err("I resent to be ignored.", "I resent being ignored.", "resent + -ing."),
-        match("Concession", ["Much as", "I admire", "her work"], "Much as=front; I admire=clause; her work=O", "Much as + clause."),
-    ],
-}
+
+def practice_bank_for(slug: str) -> list:
+    """Module-specific extras + on-topic topic pads (never CEFR-wide)."""
+    from app.seed.topic_banks import TOPIC_PRACTICE
+
+    return list(EXTRA_PRACTICE.get(slug, [])) + list(TOPIC_PRACTICE.get(slug, []))
+
+
+def test_bank_for(slug: str) -> list:
+    from app.seed.topic_banks import TOPIC_TEST
+
+    return list(EXTRA_TEST.get(slug, [])) + list(TOPIC_TEST.get(slug, []))
+

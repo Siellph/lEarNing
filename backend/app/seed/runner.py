@@ -38,6 +38,7 @@ from app.seed.expand import (
     expand_vocabulary,
     fix_known_article_answers,
     remove_legacy_demo_accounts,
+    scrub_off_topic_pad_items,
 )
 from app.seed.vocab import TOPICS
 
@@ -123,7 +124,10 @@ def seed_modules(db, levels_by_code: dict[str, GrammarLevel]) -> tuple[int, int,
 
 
 def _run_expanders(db) -> dict:
+    scrubbed = scrub_off_topic_pad_items(db)
     return {
+        "scrub_practice": scrubbed["practice"],
+        "scrub_tests": scrubbed["tests"],
         "word_order": ensure_word_order_modules(db),
         "practice": expand_practice_banks(db),
         "tests": expand_module_tests(db),
@@ -149,6 +153,7 @@ def main() -> None:
             db.commit()
             print(
                 "already seeded; "
+                f"scrub_practice=-{stats['scrub_practice']}, scrub_tests=-{stats['scrub_tests']}, "
                 f"word_order +{stats['word_order']}, practice +{stats['practice']}, "
                 f"tests +{stats['tests']}, exams +{stats['exams']}, words +{stats['words']}, "
                 f"study +{stats['study']}, article_fixes={stats['article_fixes']}; "
@@ -216,7 +221,8 @@ def main() -> None:
             f"levels={len(LEVELS)} modules={n_modules + stats['word_order']} lessons={n_lessons} "
             f"exercises={n_exercises + stats['practice']} test_questions={n_test_q + stats['tests']} "
             f"topics={n_topics} words={n_words + stats['words']} exams={n_exams} "
-            f"exam_questions={n_exam_q + stats['exams']} study_cards=+{stats['study']}"
+            f"exam_questions={n_exam_q + stats['exams']} study_cards=+{stats['study']} "
+            f"scrub_practice=-{stats['scrub_practice']} scrub_tests=-{stats['scrub_tests']}"
         )
     finally:
         db.close()

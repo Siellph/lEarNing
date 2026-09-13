@@ -9,12 +9,17 @@ from app.models.settings import SiteSetting
 from app.models.study import StudyCard, StudyDeck
 from app.models.user import User
 from app.models.vocabulary import VocabTopic, VocabWord
-from app.seed.extra_banks import EXTRA_PRACTICE, EXTRA_TEST, GENERIC_PRACTICE_PAD, GENERIC_TEST_PAD
+from app.seed.extra_banks import practice_bank_for, test_bank_for
 from app.seed.extra_exams import EXTRA_EXAMS
 from app.seed.extra_vocab import EXTRA_WORDS_BY_SLUG, NEW_TOPICS
 from app.seed.more_vocab import MORE_TOPICS, MORE_WORDS_BY_SLUG
 from app.seed.plus_vocab import PLUS_TOPICS, PLUS_WORDS_BY_SLUG
 from app.seed.study_seed import STUDY_DECKS
+from app.seed.topic_banks import (
+    BANNED_PROMPTS,
+    LEGACY_GENERIC_PRACTICE_PROMPTS,
+    LEGACY_GENERIC_TEST_PROMPTS,
+)
 from app.seed.word_order import WORD_ORDER_MODULES
 
 
@@ -52,17 +57,92 @@ def _add_unique_items(db, *, existing_prompts: set[str], items: list, factory, o
     return added, order
 
 
+def _allowed_practice_prompts(slug: str) -> set[str]:
+    """Prompts that may remain for this module: seed core + slug banks."""
+    from app.seed.a1 import A1
+    from app.seed.a2 import A2
+    from app.seed.b1 import B1
+    from app.seed.b2 import B2
+    from app.seed.c1 import C1
+    from app.seed.c2 import C2
+
+    allowed: set[str] = set()
+    for pack in (A1, A2, B1, B2, C1, C2, WORD_ORDER_MODULES):
+        for data in pack:
+            if data["slug"] != slug:
+                continue
+            for item in data.get("exercises", []):
+                allowed.add(item["prompt"])
+    for item in practice_bank_for(slug):
+        allowed.add(item["prompt"])
+    return allowed
+
+
+def _allowed_test_prompts(slug: str) -> set[str]:
+    from app.seed.a1 import A1
+    from app.seed.a2 import A2
+    from app.seed.b1 import B1
+    from app.seed.b2 import B2
+    from app.seed.c1 import C1
+    from app.seed.c2 import C2
+
+    allowed: set[str] = set()
+    for pack in (A1, A2, B1, B2, C1, C2, WORD_ORDER_MODULES):
+        for data in pack:
+            if data["slug"] != slug:
+                continue
+            for item in data.get("test", []):
+                allowed.add(item["prompt"])
+    for item in test_bank_for(slug):
+        allowed.add(item["prompt"])
+    return allowed
+
+
+def scrub_off_topic_pad_items(db) -> dict[str, int]:
+    """Remove banned tips and legacy CEFR-wide pad items from the wrong modules.
+
+    Existing Docker volumes keep rows from GENERIC_*_PAD; this deletes them unless
+    the prompt is explicitly allowed for that module's seed/topic bank. Then
+    expand_practice_banks / expand_module_tests refill with on-topic items.
+    """
+    removed_practice = 0
+    removed_tests = 0
+    modules = db.query(GrammarModule).all()
+    for module in modules:
+        allow_p = _allowed_practice_prompts(module.slug)
+        for ex in list(module.exercises):
+            prompt = ex.prompt or ""
+            if prompt in BANNED_PROMPTS:
+                db.delete(ex)
+                removed_practice += 1
+                continue
+            if prompt in LEGACY_GENERIC_PRACTICE_PROMPTS and prompt not in allow_p:
+                db.delete(ex)
+                removed_practice += 1
+        if not module.test:
+            continue
+        allow_t = _allowed_test_prompts(module.slug)
+        for q in list(module.test.questions):
+            prompt = q.prompt or ""
+            if prompt in BANNED_PROMPTS:
+                db.delete(q)
+                removed_tests += 1
+                continue
+            if prompt in LEGACY_GENERIC_TEST_PROMPTS and prompt not in allow_t:
+                db.delete(q)
+                removed_tests += 1
+    return {"practice": removed_practice, "tests": removed_tests}
+
+
 def expand_practice_banks(db, minimum: int = 16) -> int:
-    """Grow practice banks from EXTRA_PRACTICE + generic pads. Never touch test banks."""
+    """Grow practice banks from slug-keyed EXTRA + TOPIC pads. Never CEFR-wide pads."""
     added = 0
     modules = db.query(GrammarModule).all()
     for module in modules:
         prompts = {ex.prompt for ex in module.exercises}
         order = max((ex.sort_order for ex in module.exercises), default=0)
         lesson_id = module.lessons[0].id if module.lessons else None
-        extras = list(EXTRA_PRACTICE.get(module.slug, []))
-        if len(prompts) + len([e for e in extras if e["prompt"] not in prompts]) < minimum:
-            extras = extras + list(GENERIC_PRACTICE_PAD.get(module.level.code, []))
+        extras = practice_bank_for(module.slug)
 
         def factory(ord_, item):
             return Exercise(
@@ -75,11 +155,10 @@ def expand_practice_banks(db, minimum: int = 16) -> int:
 
         n, order = _add_unique_items(db, existing_prompts=prompts, items=extras, factory=factory, order_start=order)
         added += n
-        # Pad further from generic if still short
+        # If still short, only cycle the same on-topic bank (no cross-module padding).
         while len(prompts) < minimum:
-            pad = GENERIC_PRACTICE_PAD.get(module.level.code, [])
             before = len(prompts)
-            n, order = _add_unique_items(db, existing_prompts=prompts, items=pad, factory=factory, order_start=order)
+            n, order = _add_unique_items(db, existing_prompts=prompts, items=extras, factory=factory, order_start=order)
             added += n
             if len(prompts) == before:
                 break
@@ -87,26 +166,19 @@ def expand_practice_banks(db, minimum: int = 16) -> int:
 
 
 def expand_module_tests(db, minimum: int = 16) -> int:
-    """Grow test banks from EXTRA_TEST + generic pads. Do NOT copy practice exercises."""
+    """Grow test banks from slug-keyed EXTRA + TOPIC pads. Do NOT copy practice exercises."""
     added = 0
     tests = db.query(ModuleTest).all()
     for test in tests:
         module = test.module
         practice_prompts = {ex.prompt for ex in module.exercises}
         prompts = {q.prompt for q in test.questions}
-        # Drop legacy copies that are identical to practice (optional soft cleanup: leave them but prefer new)
         order = max((q.sort_order for q in test.questions), default=0)
         extras = [
             item
-            for item in EXTRA_TEST.get(module.slug, [])
+            for item in test_bank_for(module.slug)
             if item["prompt"] not in practice_prompts
         ]
-        if len([p for p in prompts if p not in practice_prompts]) + len(extras) < minimum:
-            extras = extras + [
-                item
-                for item in GENERIC_TEST_PAD.get(module.level.code, [])
-                if item["prompt"] not in practice_prompts and item["prompt"] not in prompts
-            ]
 
         def factory(ord_, item):
             return TestQuestion(test_id=test.id, sort_order=ord_, **_fields(item))
@@ -114,11 +186,7 @@ def expand_module_tests(db, minimum: int = 16) -> int:
         n, order = _add_unique_items(db, existing_prompts=prompts, items=extras, factory=factory, order_start=order)
         added += n
         while len(prompts) < minimum:
-            pad = [
-                item
-                for item in GENERIC_TEST_PAD.get(module.level.code, [])
-                if item["prompt"] not in practice_prompts
-            ]
+            pad = [item for item in extras if item["prompt"] not in practice_prompts]
             before = len(prompts)
             n, order = _add_unique_items(db, existing_prompts=prompts, items=pad, factory=factory, order_start=order)
             added += n
