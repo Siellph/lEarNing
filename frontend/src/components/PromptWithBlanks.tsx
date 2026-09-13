@@ -23,7 +23,10 @@ type PromptWithBlanksProps = {
   onChange?: (values: string[]) => void;
   onSubmit?: () => void;
   disabled?: boolean;
-  /** Hover RU gloss on speakable English only (default on). */
+  /**
+   * Word hover RU gloss. Default **off** — hover translate is for lesson examples
+   * (`LessonView`) only, not quiz / assessment prompts.
+   */
   translate?: boolean;
 };
 
@@ -35,7 +38,7 @@ export function PromptWithBlanks({
   onChange,
   onSubmit,
   disabled = false,
-  translate = true,
+  translate = false,
 }: PromptWithBlanksProps) {
   const editable = Array.isArray(values) && typeof onChange === "function";
   // Gloss only the same English span TTS speaks (not RU instructions / (be) hints).

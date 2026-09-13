@@ -2,8 +2,9 @@ import type { ReactNode } from "react";
 import { lookupGloss } from "../lib/glossary";
 import { isMetaParenHint } from "../lib/speech";
 
-const TOKEN_RE = /([A-Za-z]+(?:'[A-Za-z]+)?|[^A-Za-z]+)/g;
-const LATIN_WORD = /^[A-Za-z]+(?:'[A-Za-z]+)?$/;
+/** Latin words incl. accented letters (café → cafe after NFD in lookupGloss). */
+const TOKEN_RE = /([A-Za-zÀ-ÿ]+(?:'[A-Za-z]+)?|[^A-Za-zÀ-ÿ]+)/g;
+const LATIN_WORD = /^[A-Za-zÀ-ÿ]+(?:'[A-Za-z]+)?$/;
 const PAREN_CHUNK = /(\([^)]+\))/;
 
 function WordTip({ word }: { word: string }) {
@@ -31,7 +32,10 @@ function wrapTokens(text: string, keyPrefix: string): ReactNode[] {
   );
 }
 
-/** Wrap English words so hover/focus shows a Russian gloss when known. */
+/**
+ * Wrap English words with RU hover glosses when known in the offline glossary.
+ * Intended for **lesson example** lines only — not quiz prompts or UI chrome.
+ */
 export function withHoverTranslate(text: string): ReactNode[] {
   if (!text) return [];
   // Keep grammar hints like `(be)` plain — same scope as TTS stripMetaParentheticals.
@@ -51,7 +55,7 @@ export function withHoverTranslate(text: string): ReactNode[] {
   return nodes;
 }
 
-/** Full-line English (lesson examples): every known word gets a tip. */
+/** Lesson example / compare English: hover gloss per known word (examples only). */
 export function HoverTranslateText({
   text,
   className = "",

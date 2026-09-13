@@ -39,6 +39,7 @@ export function LessonView({ content }: { content: LessonContent }) {
             {rule.examples?.map((ex) => (
               <div key={ex.en} className="flex items-start justify-between gap-3 rounded-xl bg-paper px-4 py-3">
                 <div>
+                  {/* Hover RU glosses: lesson examples only (offline glossary). */}
                   <p className="font-medium">
                     <HoverTranslateText text={ex.en} />
                   </p>
