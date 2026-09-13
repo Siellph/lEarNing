@@ -649,6 +649,29 @@ input.gap-blank-input:disabled {
   padding: 0.95rem 1rem;
 }
 
+/* Match question — drag-and-drop affordances */
+.match-chip.is-draggable {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.match-chip.is-draggable:active {
+  cursor: grabbing;
+}
+
+.match-chip.is-dragging {
+  opacity: 0.4;
+}
+
+.match-slot.match-drop-target,
+.match-pool.is-drop-target {
+  border-color: var(--color-terra) !important;
+  border-style: solid !important;
+  background: #fff1eb !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-terra) 35%, transparent);
+}
+
 .quiz-card-shake {
   animation: quiz-shake 0.42s ease;
 }
