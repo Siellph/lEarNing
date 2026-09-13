@@ -213,11 +213,13 @@ function QuizCard({
           />
         )}
 
-        <div className="flex flex-wrap items-center gap-3 pt-1">
-          <button className="btn btn-primary" disabled={busy || !canSubmit || locked} onClick={submit}>
-            {busy ? "Проверяем…" : locked ? "Готово" : submitLabel}
-          </button>
-        </div>
+        {!locked && (
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <button className="btn btn-primary" disabled={busy || !canSubmit} onClick={submit}>
+              {busy ? "Проверяем…" : submitLabel}
+            </button>
+          </div>
+        )}
 
         {result && !result.correct && (result.expected || result.explanation) && (
           <div className="quiz-feedback is-bad" aria-live="polite">
