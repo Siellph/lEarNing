@@ -72,6 +72,70 @@ const KIND_API: Record<SkillKind, string> = {
   dialogue: "dialogue",
 };
 
+function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }) {
+  const firstSpeaker = useMemo(() => {
+    for (const line of lines) {
+      const name = line.speaker.trim();
+      if (name) return name;
+    }
+    return lines[0]?.speaker ?? "";
+  }, [lines]);
+
+  const fullScript = useMemo(
+    () => lines.map((line) => line.text).filter(Boolean).join(". "),
+    [lines],
+  );
+
+  return (
+    <article className="card grid gap-4 p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs uppercase tracking-wide text-ink-soft">{body || "Сцена"}</p>
+        {fullScript ? <SpeakButton text={fullScript} label="Весь диалог" /> : null}
+      </div>
+      <div className="grid gap-3.5" role="log" aria-label="Диалог">
+        {lines.map((line, i) => {
+          const isLeft = line.speaker.trim() === firstSpeaker || (!firstSpeaker && i % 2 === 0);
+          return (
+            <div
+              key={`${line.speaker}-${i}`}
+              className={`flex ${isLeft ? "justify-start" : "justify-end"}`}
+            >
+              <div className={`flex w-[min(100%,22rem)] flex-col ${isLeft ? "items-start" : "items-end"}`}>
+                <div
+                  className={`mb-1 flex items-center gap-1.5 ${isLeft ? "flex-row" : "flex-row-reverse"}`}
+                >
+                  <p className="text-[11px] font-semibold tracking-wide text-ink-soft/80">
+                    {line.speaker}
+                  </p>
+                  <SpeakButton text={line.text} label="реплика" />
+                </div>
+                <div
+                  className={`px-3.5 py-2.5 ${
+                    isLeft
+                      ? "rounded-2xl rounded-tl-md border border-line/70 bg-paper-2 text-ink"
+                      : "rounded-2xl rounded-tr-md border border-sage/25 bg-sage-soft text-ink"
+                  }`}
+                >
+                  <p className="text-lg leading-snug">{line.text}</p>
+                </div>
+                {line.ru ? (
+                  <p
+                    className={`mt-1 max-w-full text-sm leading-snug text-ink-soft/70 ${
+                      isLeft ? "text-left" : "text-right"
+                    }`}
+                  >
+                    {line.ru}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </article>
+  );
+}
+
 export function SkillHub({ kind }: { kind: SkillKind }) {
   const [items, setItems] = useState<SkillSummary[]>([]);
   const [levelFilter, setLevelFilter] = useState<string>("all");
@@ -287,21 +351,7 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
       {mode === "study" ? (
         <div className="grid gap-4">
           {kind === "dialogue" ? (
-            <article className="card grid gap-3 p-5">
-              <p className="text-xs uppercase tracking-wide text-ink-soft">{item.body || "Сцена"}</p>
-              {item.lines.map((line, i) => (
-                <div key={`${line.speaker}-${i}`} className="rounded-xl bg-paper px-4 py-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold text-terra">{line.speaker}</p>
-                      <p className="mt-1 text-lg">{line.text}</p>
-                      {line.ru && <p className="mt-1 text-sm text-ink-soft">{line.ru}</p>}
-                    </div>
-                    <SpeakButton text={line.text} label="реплика" />
-                  </div>
-                </div>
-              ))}
-            </article>
+            <DialogueThread body={item.body} lines={item.lines} />
           ) : (
             <article className="card grid gap-3 p-5">
               <div className="flex items-center justify-between gap-3">
