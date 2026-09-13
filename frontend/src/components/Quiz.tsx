@@ -50,7 +50,13 @@ function initialResult(item: QuizItem): Result | null {
 }
 
 function initialAnswer(item: QuizItem): string {
-  return item.last_result?.answer?.trim() || "";
+  const saved = item.last_result?.answer?.trim() || "";
+  if (saved) return saved;
+  // Correct restore without a stored attempt string: show canonical pairs.
+  if (item.kind === "match" && (item.last_result?.correct || item.solved)) {
+    return item.last_result?.expected?.trim() || "";
+  }
+  return "";
 }
 
 export function Quiz({

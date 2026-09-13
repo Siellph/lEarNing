@@ -1,9 +1,11 @@
 import { useMemo, useRef, useState, type DragEvent } from "react";
 import { looksEnglish } from "../lib/speech";
 import {
+  alignMatchPairs,
   formatMatchAnswer,
   parseMatchAnswer,
   parseMatchSides,
+  resolveMatchPairs,
   shuffleList,
   type QuizOptions,
 } from "../lib/match";
@@ -46,13 +48,23 @@ export function MatchQuestion({
   const skipClickRef = useRef(false);
   const skipClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const pairs = useMemo(() => parseMatchAnswer(value), [value]);
-  const expectedPairs = useMemo(() => (checked ? parseMatchAnswer(expected || "") : {}), [checked, expected]);
+  const pairs = useMemo(() => {
+    // When correct (incl. restore) and value is empty / mis-keyed, use expected.
+    if (correct) return resolveMatchPairs(left, value, expected);
+    return alignMatchPairs(left, parseMatchAnswer(value));
+  }, [left, value, expected, correct]);
+  const expectedPairs = useMemo(
+    () => (checked ? alignMatchPairs(left, parseMatchAnswer(expected || "")) : {}),
+    [checked, expected, left],
+  );
 
   const chipInSlot = useMemo(() => {
     const used = new Set<string>();
     const map: Record<string, Chip> = {};
-    for (const [slot, label] of Object.entries(pairs)) {
+    // Only bind chips to real left slots — stray keys must not empty the pool.
+    for (const slot of left) {
+      const label = pairs[slot];
+      if (!label) continue;
       const chip = chips.find((c) => c.label === label && !used.has(c.id));
       if (chip) {
         used.add(chip.id);
@@ -60,7 +72,7 @@ export function MatchQuestion({
       }
     }
     return map;
-  }, [chips, pairs]);
+  }, [chips, pairs, left]);
 
   const poolChips = chips.filter((c) => !Object.values(chipInSlot).some((x) => x.id === c.id));
 
@@ -346,6 +358,6 @@ export function MatchQuestion({
 export function matchAnswerComplete(options: QuizOptions, value: string): boolean {
   const sides = parseMatchSides(options);
   if (!sides) return false;
-  const paired = parseMatchAnswer(value);
+  const paired = alignMatchPairs(sides.left, parseMatchAnswer(value));
   return sides.left.every((item) => Boolean(paired[item]));
 }

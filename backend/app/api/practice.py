@@ -86,6 +86,7 @@ def check_exercise(
     return {
         "correct": correct,
         "explanation": explanation,
-        "expected": exercise.answer if not correct else None,
+        # Match keeps expected on success so the client can render pairs if needed.
+        "expected": exercise.answer if (not correct or exercise.kind == "match") else None,
         "xp_awarded": awarded,
     }

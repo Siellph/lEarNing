@@ -199,10 +199,13 @@ def get_practice(slug: str, db: Session = Depends(get_db), user: User = Depends(
         last = last_by_exercise.get(item.id)
         last_result = None
         if last:
+            # Match needs `expected` even when correct so the UI can refill slots
+            # if the stored attempt string is empty or uses shortened left keys.
+            show_expected = (not last.is_correct) or item.kind == "match"
             last_result = {
                 "correct": last.is_correct,
                 "explanation": item.explanation or "",
-                "expected": None if last.is_correct else item.answer,
+                "expected": item.answer if show_expected else None,
                 "answer": last.answer,
             }
         payload_exercises.append(
