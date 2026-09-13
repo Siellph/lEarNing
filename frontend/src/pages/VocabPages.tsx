@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type MutableRefObject } from "react";
 import { CheckCircle2, CircleAlert } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
@@ -485,7 +485,7 @@ const KIND_LABEL: Record<string, string> = {
   type_word: "Набор EN",
 };
 
-const WRONG_ADVANCE_MS = 700;
+const FEEDBACK_ADVANCE_MS = 1500;
 
 function ExerciseCard({
   item,
@@ -511,6 +511,35 @@ function KindBadge({ kind }: { kind: string }) {
   );
 }
 
+function CardResultIcon({ correct }: { correct: boolean }) {
+  return correct ? (
+    <span className="quiz-status-ok quiz-status-icon" aria-label="Верно" role="status">
+      <CheckCircle2 size={20} aria-hidden />
+    </span>
+  ) : (
+    <span className="quiz-status-bad quiz-status-icon" aria-label="Неверно" role="status">
+      <CircleAlert size={20} aria-hidden />
+    </span>
+  );
+}
+
+function useAutoAdvance(
+  result: CheckResult | null,
+  item: ExerciseItem,
+  resolvedRef: MutableRefObject<boolean>,
+  onResolvedRef: MutableRefObject<(res: CheckResult, item: ExerciseItem) => void>,
+) {
+  useEffect(() => {
+    if (!result) return;
+    const timer = window.setTimeout(() => {
+      if (resolvedRef.current) return;
+      resolvedRef.current = true;
+      onResolvedRef.current(result, item);
+    }, FEEDBACK_ADVANCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [result, item, resolvedRef, onResolvedRef]);
+}
+
 function ChoiceExercise({
   item,
   index,
@@ -531,15 +560,7 @@ function ChoiceExercise({
   onResolvedRef.current = onResolved;
   const locked = !!result;
 
-  useEffect(() => {
-    if (!result || result.correct) return;
-    const timer = window.setTimeout(() => {
-      if (resolvedRef.current) return;
-      resolvedRef.current = true;
-      onResolvedRef.current(result, item);
-    }, WRONG_ADVANCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [result, item]);
+  useAutoAdvance(result, item, resolvedRef, onResolvedRef);
 
   const submit = async (answer: string) => {
     if (!answer || locked || busy || resolvedRef.current) return;
@@ -560,16 +581,7 @@ function ChoiceExercise({
     >
       <header className="quiz-card-head">
         <KindBadge kind={item.kind} />
-        {result?.correct && (
-          <span className="quiz-status-ok">
-            <CheckCircle2 size={14} /> Верно
-          </span>
-        )}
-        {result && !result.correct && (
-          <span className="quiz-status-bad">
-            <CircleAlert size={14} /> Неверно
-          </span>
-        )}
+        {result && <CardResultIcon correct={result.correct} />}
       </header>
       <div className="grid gap-4 p-5 sm:p-6">
         <div className="flex items-start justify-between gap-3">
@@ -591,23 +603,6 @@ function ChoiceExercise({
             </div>
           ))}
         </div>
-        {result?.correct && (
-          <>
-            <SoftFeedback result={result} />
-            <button
-              type="button"
-              className="btn btn-primary w-full sm:w-auto sm:justify-self-start"
-              onClick={() => {
-                if (resolvedRef.current) return;
-                resolvedRef.current = true;
-                onResolved(result, item);
-              }}
-            >
-              Дальше
-            </button>
-          </>
-        )}
-        {result && !result.correct && <BriefWrongFeedback />}
       </div>
     </article>
   );
@@ -635,15 +630,7 @@ function TypeExercise({
   const placeholder = toRussian ? "Введите перевод по-русски" : "Введите английское слово";
   const locked = !!result;
 
-  useEffect(() => {
-    if (!result || result.correct) return;
-    const timer = window.setTimeout(() => {
-      if (resolvedRef.current) return;
-      resolvedRef.current = true;
-      onResolvedRef.current(result, item);
-    }, WRONG_ADVANCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [result, item]);
+  useAutoAdvance(result, item, resolvedRef, onResolvedRef);
 
   const submit = async () => {
     if (!value.trim() || locked || busy || resolvedRef.current) return;
@@ -664,16 +651,7 @@ function TypeExercise({
     >
       <header className="quiz-card-head">
         <KindBadge kind={item.kind} />
-        {result?.correct && (
-          <span className="quiz-status-ok">
-            <CheckCircle2 size={14} /> Верно
-          </span>
-        )}
-        {result && !result.correct && (
-          <span className="quiz-status-bad">
-            <CircleAlert size={14} /> Неверно
-          </span>
-        )}
+        {result && <CardResultIcon correct={result.correct} />}
       </header>
       <div className="grid gap-4 p-5 sm:p-6">
         <div className="flex items-start justify-between gap-3">
@@ -704,54 +682,12 @@ function TypeExercise({
             disabled={locked}
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {!result && (
-            <button type="button" className="btn btn-primary w-full sm:w-auto" disabled={busy || !value.trim()} onClick={() => void submit()}>
-              {busy ? "Проверяем…" : "Готово"}
-            </button>
-          )}
-          {result?.correct && (
-            <button
-              type="button"
-              className="btn btn-primary w-full sm:w-auto"
-              onClick={() => {
-                if (resolvedRef.current) return;
-                resolvedRef.current = true;
-                inputRef.current?.blur();
-                onResolved(result, item);
-              }}
-            >
-              Дальше
-            </button>
-          )}
-        </div>
-        {result?.correct && <SoftFeedback result={result} />}
-        {result && !result.correct && <BriefWrongFeedback />}
+        {!result && (
+          <button type="button" className="btn btn-primary w-full sm:w-auto sm:justify-self-start" disabled={busy || !value.trim()} onClick={() => void submit()}>
+            {busy ? "Проверяем…" : "Проверить"}
+          </button>
+        )}
       </div>
     </article>
-  );
-}
-
-function BriefWrongFeedback() {
-  return (
-    <div className="quiz-feedback is-bad" aria-live="polite">
-      <div className="quiz-feedback-title">
-        <CircleAlert size={18} /> Неверно
-      </div>
-    </div>
-  );
-}
-
-function SoftFeedback({ result }: { result: CheckResult }) {
-  return (
-    <div className="quiz-feedback is-ok" aria-live="polite">
-      <div className="quiz-feedback-title">
-        <CheckCircle2 size={18} /> Отлично
-      </div>
-      <p className="quiz-feedback-note">
-        {result.word} — {result.translation}
-        {result.learned ? " · слово выучено" : result.mastery_count != null ? ` · ${result.mastery_count}/4` : ""}
-      </p>
-    </div>
   );
 }
