@@ -186,8 +186,8 @@ def _make_items(
 ) -> list[dict]:
     """One pending task per missing mastery bit for words not yet fully learned.
 
-    Choice (MCQ) tasks run first, then typing — reduces keyboard open/close thrash on mobile.
-    Within each group, tasks are interleaved so the same word rarely appears twice in a row.
+    All four task kinds are fully mixed (no choice-then-type partitioning).
+    Soft interleave prefers not stacking the same word twice in a row when possible.
     """
     pending: list[dict] = []
     pool = batch_words if len(batch_words) >= 4 else topic_words
@@ -199,9 +199,7 @@ def _make_items(
         random.shuffle(missing)
         for kind in missing:
             pending.append(_build_task(word, kind, pool, topic_words))
-    choice = [item for item in pending if str(item.get("kind", "")).startswith("choice_")]
-    typing = [item for item in pending if not str(item.get("kind", "")).startswith("choice_")]
-    return _interleave_shuffle(choice) + _interleave_shuffle(typing)
+    return _interleave_shuffle(pending)
 
 
 @router.get("/topics")

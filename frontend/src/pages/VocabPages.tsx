@@ -608,6 +608,15 @@ function ChoiceExercise({
   );
 }
 
+/** Keep only letters for the expected script; allow space, hyphen, ASCII/curly apostrophe. */
+function filterTypedAnswer(raw: string, script: "cyrillic" | "latin"): string {
+  const allowed =
+    script === "cyrillic"
+      ? /[^а-яА-ЯёЁ\s'\u2019-]/g
+      : /[^a-zA-Z\s'\u2019-]/g;
+  return raw.replace(allowed, "");
+}
+
 function TypeExercise({
   item,
   index,
@@ -627,6 +636,7 @@ function TypeExercise({
   const onResolvedRef = useRef(onResolved);
   onResolvedRef.current = onResolved;
   const toRussian = item.kind === "type_en_ru";
+  const script = toRussian ? "cyrillic" : "latin";
   const placeholder = toRussian ? "Введите перевод по-русски" : "Введите английское слово";
   const locked = !!result;
 
@@ -672,7 +682,7 @@ function TypeExercise({
             inputMode="text"
             enterKeyHint="done"
             placeholder={placeholder}
-            onChange={(event) => setValue(event.target.value)}
+            onChange={(event) => setValue(filterTypedAnswer(event.target.value, script))}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
