@@ -177,3 +177,66 @@ class StudyCardUpdateIn(BaseModel):
     example_translation: str | None = None
     category: str | None = None
     sort_order: int | None = None
+
+
+class StudyDeckIn(BaseModel):
+    slug: str
+    title: str
+    description: str = ""
+    kind: str  # verbs | idioms | exceptions
+    sort_order: int = 99
+
+
+class StudyDeckUpdateIn(BaseModel):
+    slug: str | None = None
+    title: str | None = None
+    description: str | None = None
+    kind: str | None = None
+    sort_order: int | None = None
+
+
+class SkillItemIn(BaseModel):
+    slug: str
+    title: str
+    description: str = ""
+    kind: str  # reading | listening | dialogue
+    level_code: str = "A1"
+    body: str = ""
+    lines: list = []
+    keywords: list = []
+    sort_order: int = 99
+
+
+class SkillItemUpdateIn(BaseModel):
+    slug: str | None = None
+    title: str | None = None
+    description: str | None = None
+    kind: str | None = None
+    level_code: str | None = None
+    body: str | None = None
+    lines: list | None = None
+    keywords: list | None = None
+    sort_order: int | None = None
+
+
+class SkillQuestionIn(BaseModel):
+    item_id: int
+    kind: str  # choice | dictation | fill_gap
+    prompt: str
+    options: list[str] | None = None
+    answer: str
+    accepted: list[str] | None = None
+    speak: str = ""
+    explanation: str = ""
+    sort_order: int = 1
+
+
+class SkillQuestionUpdateIn(BaseModel):
+    kind: str | None = None
+    prompt: str | None = None
+    options: list[str] | None = None
+    answer: str | None = None
+    accepted: list[str] | None = None
+    speak: str | None = None
+    explanation: str | None = None
+    sort_order: int | None = None

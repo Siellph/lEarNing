@@ -29,6 +29,10 @@ import {
   AdminLayout,
   AdminModuleContent,
   AdminModules,
+  AdminSkillItem,
+  AdminSkills,
+  AdminStudy,
+  AdminStudyDeck,
   AdminUsers,
   AdminVocab,
   AdminVocabTopic,
@@ -118,6 +122,10 @@ export function App() {
             <Route path="modules/:moduleId" element={<AdminModuleContent />} />
             <Route path="vocab" element={<AdminVocab />} />
             <Route path="vocab/:topicId" element={<AdminVocabTopic />} />
+            <Route path="study" element={<AdminStudy />} />
+            <Route path="study/:deckId" element={<AdminStudyDeck />} />
+            <Route path="skills" element={<AdminSkills />} />
+            <Route path="skills/:itemId" element={<AdminSkillItem />} />
             <Route path="exams" element={<AdminExams />} />
             <Route path="exams/:examId" element={<AdminExamDetail />} />
             <Route path="donation" element={<AdminDonation />} />

@@ -18,6 +18,8 @@ from app.models.grammar import (
 from app.models.settings import SiteSetting
 from app.models.progress import ExamAttempt, ExerciseAttempt, TestAttempt
 from app.models.user import User
+from app.models.skills import SkillItem, SkillQuestion
+from app.models.study import StudyCard, StudyDeck
 from app.models.vocabulary import VocabTopic, VocabWord
 from app.schemas.auth import UserUpdateIn
 from app.schemas.content import (
@@ -30,14 +32,19 @@ from app.schemas.content import (
     QuestionIn,
     QuestionUpdateIn,
     RegistrationSettingsIn,
+    SkillItemIn,
+    SkillItemUpdateIn,
+    SkillQuestionIn,
+    SkillQuestionUpdateIn,
     StudyCardIn,
     StudyCardUpdateIn,
+    StudyDeckIn,
+    StudyDeckUpdateIn,
     VocabTopicIn,
     VocabTopicUpdateIn,
     VocabWordIn,
     VocabWordUpdateIn,
 )
-from app.models.study import StudyCard, StudyDeck
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -52,6 +59,8 @@ def stats(_: User = Depends(get_admin_user), db: Session = Depends(get_db)):
         "exercises": db.query(func.count(Exercise.id)).scalar() or 0,
         "exams": db.query(func.count(Exam.id)).scalar() or 0,
         "vocab_words": db.query(func.count(VocabWord.id)).scalar() or 0,
+        "study_cards": db.query(func.count(StudyCard.id)).scalar() or 0,
+        "skill_items": db.query(func.count(SkillItem.id)).scalar() or 0,
         "practice_attempts": db.query(func.count(ExerciseAttempt.id)).scalar() or 0,
         "test_attempts": db.query(func.count(TestAttempt.id)).scalar() or 0,
         "exam_attempts": db.query(func.count(ExamAttempt.id)).scalar() or 0,
@@ -733,20 +742,164 @@ def _study_card_out(card: StudyCard) -> dict:
     }
 
 
+STUDY_KINDS = {"verbs", "idioms", "exceptions"}
+SKILL_KINDS = {"reading", "listening", "dialogue"}
+SKILL_QUESTION_KINDS = {"choice", "dictation", "fill_gap"}
+
+
+def _require_study_kind(kind: str) -> str:
+    value = kind.strip().lower()
+    if value not in STUDY_KINDS:
+        raise HTTPException(status_code=400, detail="Тип колоды: verbs, idioms или exceptions")
+    return value
+
+
+def _require_skill_kind(kind: str) -> str:
+    value = kind.strip().lower()
+    if value not in SKILL_KINDS:
+        raise HTTPException(status_code=400, detail="Тип навыка: reading, listening или dialogue")
+    return value
+
+
+def _require_skill_question_kind(kind: str) -> str:
+    value = kind.strip().lower()
+    if value not in SKILL_QUESTION_KINDS:
+        raise HTTPException(status_code=400, detail="Тип вопроса: choice, dictation или fill_gap")
+    return value
+
+
+def _study_deck_slug_taken(db: Session, slug: str, exclude_id: int | None = None) -> bool:
+    query = db.query(StudyDeck).filter(StudyDeck.slug == slug)
+    if exclude_id is not None:
+        query = query.filter(StudyDeck.id != exclude_id)
+    return query.first() is not None
+
+
+def _skill_item_slug_taken(db: Session, slug: str, exclude_id: int | None = None) -> bool:
+    query = db.query(SkillItem).filter(SkillItem.slug == slug)
+    if exclude_id is not None:
+        query = query.filter(SkillItem.id != exclude_id)
+    return query.first() is not None
+
+
+def _normalize_keywords(raw) -> list:
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise HTTPException(status_code=400, detail="keywords должен быть списком")
+    out = []
+    for row in raw:
+        if not isinstance(row, dict):
+            raise HTTPException(status_code=400, detail="Каждое ключевое слово — объект {en, ru}")
+        en = str(row.get("en", "")).strip()
+        ru = str(row.get("ru", "")).strip()
+        if en or ru:
+            out.append({"en": en, "ru": ru})
+    return out
+
+
+def _normalize_lines(raw) -> list:
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise HTTPException(status_code=400, detail="lines должен быть списком")
+    out = []
+    for row in raw:
+        if not isinstance(row, dict):
+            raise HTTPException(status_code=400, detail="Каждая реплика — объект {speaker, text, ru}")
+        speaker = str(row.get("speaker", "")).strip()
+        text = str(row.get("text", "")).strip()
+        ru = str(row.get("ru", "")).strip()
+        if speaker or text or ru:
+            out.append({"speaker": speaker, "text": text, "ru": ru})
+    return out
+
+
+def _normalize_str_list(raw, field: str) -> list[str] | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, list):
+        raise HTTPException(status_code=400, detail=f"{field} должен быть списком строк")
+    values = [str(item).strip() for item in raw if str(item).strip()]
+    return values or None
+
+
+def _study_deck_out(deck: StudyDeck, *, with_cards: bool = False) -> dict:
+    payload = {
+        "id": deck.id,
+        "slug": deck.slug,
+        "title": deck.title,
+        "description": deck.description,
+        "kind": deck.kind,
+        "sort_order": deck.sort_order,
+        "card_count": len(deck.cards),
+    }
+    if with_cards:
+        payload["cards"] = [_study_card_out(c) for c in sorted(deck.cards, key=lambda x: (x.sort_order, x.id))]
+    return payload
+
+
+def _skill_question_out(question: SkillQuestion) -> dict:
+    return {
+        "id": question.id,
+        "item_id": question.item_id,
+        "kind": question.kind,
+        "prompt": question.prompt,
+        "options": question.options,
+        "answer": question.answer,
+        "accepted": question.accepted,
+        "speak": question.speak,
+        "explanation": question.explanation,
+        "sort_order": question.sort_order,
+    }
+
+
+def _skill_item_out(item: SkillItem, *, with_detail: bool = False) -> dict:
+    payload = {
+        "id": item.id,
+        "slug": item.slug,
+        "title": item.title,
+        "description": item.description,
+        "kind": item.kind,
+        "level_code": item.level_code,
+        "sort_order": item.sort_order,
+        "question_count": len(item.questions),
+        "keyword_count": len(item.keywords or []),
+    }
+    if with_detail:
+        payload["body"] = item.body or ""
+        payload["lines"] = item.lines or []
+        payload["keywords"] = item.keywords or []
+        payload["questions"] = [
+            _skill_question_out(q) for q in sorted(item.questions, key=lambda x: (x.sort_order, x.id))
+        ]
+    return payload
+
+
 @router.get("/study/decks")
 def admin_study_decks(_: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     decks = db.query(StudyDeck).order_by(StudyDeck.sort_order, StudyDeck.id).all()
-    return [
-        {
-            "id": deck.id,
-            "slug": deck.slug,
-            "title": deck.title,
-            "description": deck.description,
-            "kind": deck.kind,
-            "card_count": len(deck.cards),
-        }
-        for deck in decks
-    ]
+    return [_study_deck_out(deck) for deck in decks]
+
+
+@router.post("/study/decks")
+def create_study_deck(payload: StudyDeckIn, _: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    slug = _norm_slug(payload.slug)
+    if not slug:
+        raise HTTPException(status_code=400, detail="Укажите slug")
+    if _study_deck_slug_taken(db, slug):
+        raise HTTPException(status_code=400, detail="Slug уже занят")
+    deck = StudyDeck(
+        slug=slug,
+        title=payload.title.strip(),
+        description=payload.description.strip(),
+        kind=_require_study_kind(payload.kind),
+        sort_order=payload.sort_order,
+    )
+    db.add(deck)
+    db.commit()
+    db.refresh(deck)
+    return _study_deck_out(deck)
 
 
 @router.get("/study/decks/{deck_id}")
@@ -754,21 +907,62 @@ def admin_study_deck(deck_id: int, _: User = Depends(get_admin_user), db: Sessio
     deck = db.get(StudyDeck, deck_id)
     if not deck:
         raise HTTPException(status_code=404, detail="Колода не найдена")
-    return {
-        "id": deck.id,
-        "slug": deck.slug,
-        "title": deck.title,
-        "description": deck.description,
-        "kind": deck.kind,
-        "cards": [_study_card_out(c) for c in sorted(deck.cards, key=lambda x: x.sort_order)],
-    }
+    return _study_deck_out(deck, with_cards=True)
+
+
+@router.patch("/study/decks/{deck_id}")
+def update_study_deck(
+    deck_id: int,
+    payload: StudyDeckUpdateIn,
+    _: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    deck = db.get(StudyDeck, deck_id)
+    if not deck:
+        raise HTTPException(status_code=404, detail="Колода не найдена")
+    data = payload.model_dump(exclude_unset=True)
+    if "slug" in data:
+        slug = _norm_slug(data["slug"] or "")
+        if not slug:
+            raise HTTPException(status_code=400, detail="Укажите slug")
+        if _study_deck_slug_taken(db, slug, exclude_id=deck.id):
+            raise HTTPException(status_code=400, detail="Slug уже занят")
+        deck.slug = slug
+    if "title" in data and data["title"] is not None:
+        deck.title = data["title"].strip()
+    if "description" in data and data["description"] is not None:
+        deck.description = data["description"].strip()
+    if "kind" in data and data["kind"] is not None:
+        deck.kind = _require_study_kind(data["kind"])
+    if "sort_order" in data and data["sort_order"] is not None:
+        deck.sort_order = data["sort_order"]
+    db.add(deck)
+    db.commit()
+    db.refresh(deck)
+    return _study_deck_out(deck, with_cards=True)
+
+
+@router.delete("/study/decks/{deck_id}")
+def delete_study_deck(deck_id: int, _: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    deck = db.get(StudyDeck, deck_id)
+    if not deck:
+        raise HTTPException(status_code=404, detail="Колода не найдена")
+    db.delete(deck)
+    db.commit()
+    return {"ok": True}
 
 
 @router.post("/study/cards")
 def create_study_card(payload: StudyCardIn, _: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     if not db.get(StudyDeck, payload.deck_id):
         raise HTTPException(status_code=404, detail="Колода не найдена")
-    card = StudyCard(**payload.model_dump())
+    data = payload.model_dump()
+    for key in ("primary_text", "secondary_text", "tertiary_text", "translation", "example", "example_translation", "category"):
+        if isinstance(data.get(key), str):
+            data[key] = data[key].strip()
+    if not data["primary_text"] or not data["translation"]:
+        raise HTTPException(status_code=400, detail="Нужны основной текст и перевод")
+    card = StudyCard(**data)
     db.add(card)
     db.commit()
     db.refresh(card)
@@ -787,6 +981,8 @@ def update_study_card(
         raise HTTPException(status_code=404, detail="Карточка не найдена")
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(card, key, value.strip() if isinstance(value, str) else value)
+    if not card.primary_text or not card.translation:
+        raise HTTPException(status_code=400, detail="Нужны основной текст и перевод")
     db.add(card)
     db.commit()
     db.refresh(card)
@@ -799,5 +995,168 @@ def delete_study_card(card_id: int, _: User = Depends(get_admin_user), db: Sessi
     if not card:
         raise HTTPException(status_code=404, detail="Карточка не найдена")
     db.delete(card)
+    db.commit()
+    return {"ok": True}
+
+
+@router.get("/skills")
+def admin_skills(_: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    items = db.query(SkillItem).order_by(SkillItem.kind, SkillItem.sort_order, SkillItem.id).all()
+    return [_skill_item_out(item) for item in items]
+
+
+@router.post("/skills")
+def create_skill_item(payload: SkillItemIn, _: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    slug = _norm_slug(payload.slug)
+    if not slug:
+        raise HTTPException(status_code=400, detail="Укажите slug")
+    if _skill_item_slug_taken(db, slug):
+        raise HTTPException(status_code=400, detail="Slug уже занят")
+    item = SkillItem(
+        slug=slug,
+        title=payload.title.strip(),
+        description=payload.description.strip(),
+        kind=_require_skill_kind(payload.kind),
+        level_code=_require_level(payload.level_code),
+        body=payload.body.strip() if payload.body else "",
+        lines=_normalize_lines(payload.lines),
+        keywords=_normalize_keywords(payload.keywords),
+        sort_order=payload.sort_order,
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return _skill_item_out(item, with_detail=True)
+
+
+@router.post("/skills/questions")
+def create_skill_question(
+    payload: SkillQuestionIn,
+    _: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    if not db.get(SkillItem, payload.item_id):
+        raise HTTPException(status_code=404, detail="Материал не найден")
+    kind = _require_skill_question_kind(payload.kind)
+    prompt = payload.prompt.strip()
+    answer = payload.answer.strip()
+    if not prompt or not answer:
+        raise HTTPException(status_code=400, detail="Нужны вопрос и ответ")
+    question = SkillQuestion(
+        item_id=payload.item_id,
+        kind=kind,
+        prompt=prompt,
+        options=_normalize_str_list(payload.options, "options"),
+        answer=answer,
+        accepted=_normalize_str_list(payload.accepted, "accepted"),
+        speak=(payload.speak or "").strip(),
+        explanation=(payload.explanation or "").strip(),
+        sort_order=payload.sort_order,
+    )
+    db.add(question)
+    db.commit()
+    db.refresh(question)
+    return _skill_question_out(question)
+
+
+@router.patch("/skills/questions/{question_id}")
+def update_skill_question(
+    question_id: int,
+    payload: SkillQuestionUpdateIn,
+    _: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    question = db.get(SkillQuestion, question_id)
+    if not question:
+        raise HTTPException(status_code=404, detail="Вопрос не найден")
+    data = payload.model_dump(exclude_unset=True)
+    if "kind" in data and data["kind"] is not None:
+        question.kind = _require_skill_question_kind(data["kind"])
+    if "prompt" in data and data["prompt"] is not None:
+        question.prompt = data["prompt"].strip()
+    if "answer" in data and data["answer"] is not None:
+        question.answer = data["answer"].strip()
+    if "speak" in data and data["speak"] is not None:
+        question.speak = data["speak"].strip()
+    if "explanation" in data and data["explanation"] is not None:
+        question.explanation = data["explanation"].strip()
+    if "options" in data:
+        question.options = _normalize_str_list(data["options"], "options")
+    if "accepted" in data:
+        question.accepted = _normalize_str_list(data["accepted"], "accepted")
+    if "sort_order" in data and data["sort_order"] is not None:
+        question.sort_order = data["sort_order"]
+    if not question.prompt or not question.answer:
+        raise HTTPException(status_code=400, detail="Нужны вопрос и ответ")
+    db.add(question)
+    db.commit()
+    db.refresh(question)
+    return _skill_question_out(question)
+
+
+@router.delete("/skills/questions/{question_id}")
+def delete_skill_question(question_id: int, _: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    question = db.get(SkillQuestion, question_id)
+    if not question:
+        raise HTTPException(status_code=404, detail="Вопрос не найден")
+    db.delete(question)
+    db.commit()
+    return {"ok": True}
+
+
+@router.get("/skills/{item_id}")
+def admin_skill_item(item_id: int, _: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    item = db.get(SkillItem, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Материал не найден")
+    return _skill_item_out(item, with_detail=True)
+
+
+@router.patch("/skills/{item_id}")
+def update_skill_item(
+    item_id: int,
+    payload: SkillItemUpdateIn,
+    _: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    item = db.get(SkillItem, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Материал не найден")
+    data = payload.model_dump(exclude_unset=True)
+    if "slug" in data:
+        slug = _norm_slug(data["slug"] or "")
+        if not slug:
+            raise HTTPException(status_code=400, detail="Укажите slug")
+        if _skill_item_slug_taken(db, slug, exclude_id=item.id):
+            raise HTTPException(status_code=400, detail="Slug уже занят")
+        item.slug = slug
+    if "title" in data and data["title"] is not None:
+        item.title = data["title"].strip()
+    if "description" in data and data["description"] is not None:
+        item.description = data["description"].strip()
+    if "kind" in data and data["kind"] is not None:
+        item.kind = _require_skill_kind(data["kind"])
+    if "level_code" in data and data["level_code"] is not None:
+        item.level_code = _require_level(data["level_code"])
+    if "body" in data and data["body"] is not None:
+        item.body = data["body"].strip()
+    if "lines" in data:
+        item.lines = _normalize_lines(data["lines"])
+    if "keywords" in data:
+        item.keywords = _normalize_keywords(data["keywords"])
+    if "sort_order" in data and data["sort_order"] is not None:
+        item.sort_order = data["sort_order"]
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return _skill_item_out(item, with_detail=True)
+
+
+@router.delete("/skills/{item_id}")
+def delete_skill_item(item_id: int, _: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    item = db.get(SkillItem, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Материал не найден")
+    db.delete(item)
     db.commit()
     return {"ok": True}

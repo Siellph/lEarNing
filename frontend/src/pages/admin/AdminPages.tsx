@@ -11,6 +11,8 @@ export function AdminLayout() {
     ["/admin/users", "Пользователи", false],
     ["/admin/modules", "Модули", false],
     ["/admin/vocab", "Словарь", false],
+    ["/admin/study", "Колоды", false],
+    ["/admin/skills", "Навыки", false],
     ["/admin/exams", "Экзамены", false],
     ["/admin/donation", "Настройки", false],
   ] as const;
@@ -67,6 +69,8 @@ export function AdminDashboard() {
     ["Упражнения", stats.exercises],
     ["Экзамены", stats.exams],
     ["Слова", stats.vocab_words],
+    ["Карточки колод", stats.study_cards],
+    ["Материалы навыков", stats.skill_items],
     ["Попытки практики", stats.practice_attempts],
     ["Попытки тестов", stats.test_attempts],
   ];
@@ -1251,3 +1255,934 @@ export function AdminDonation() {
     </div>
   );
 }
+
+const STUDY_KIND_OPTIONS = [
+  { value: "verbs", label: "Глаголы" },
+  { value: "idioms", label: "Идиомы" },
+  { value: "exceptions", label: "Исключения" },
+] as const;
+
+const SKILL_KIND_OPTIONS = [
+  { value: "reading", label: "Чтение" },
+  { value: "listening", label: "Аудирование" },
+  { value: "dialogue", label: "Диалоги" },
+] as const;
+
+const SKILL_QUESTION_KIND_OPTIONS = [
+  { value: "choice", label: "Выбор" },
+  { value: "dictation", label: "Диктант" },
+  { value: "fill_gap", label: "Пропуск" },
+] as const;
+
+type StudyDeckRow = {
+  id: number;
+  slug: string;
+  title: string;
+  description: string;
+  kind: string;
+  sort_order: number;
+  card_count: number;
+};
+
+type StudyCardRow = {
+  id: number;
+  deck_id: number;
+  primary_text: string;
+  secondary_text: string;
+  tertiary_text: string;
+  translation: string;
+  example: string;
+  example_translation: string;
+  category: string;
+  sort_order: number;
+};
+
+type SkillItemRow = {
+  id: number;
+  slug: string;
+  title: string;
+  description: string;
+  kind: string;
+  level_code: string;
+  sort_order: number;
+  question_count: number;
+  keyword_count: number;
+  body?: string;
+  lines?: { speaker: string; text: string; ru: string }[];
+  keywords?: { en: string; ru: string }[];
+  questions?: SkillQuestionRow[];
+};
+
+type SkillQuestionRow = {
+  id: number;
+  item_id: number;
+  kind: string;
+  prompt: string;
+  options: string[] | null;
+  answer: string;
+  accepted: string[] | null;
+  speak: string;
+  explanation: string;
+  sort_order: number;
+};
+
+const emptyCardForm = {
+  primary_text: "",
+  secondary_text: "",
+  tertiary_text: "",
+  translation: "",
+  example: "",
+  example_translation: "",
+  category: "",
+  sort_order: 1,
+};
+
+const emptyQuestionForm = {
+  kind: "choice",
+  prompt: "",
+  optionsText: "",
+  answer: "",
+  acceptedText: "",
+  speak: "",
+  explanation: "",
+  sort_order: 1,
+};
+
+function studyKindLabel(kind: string) {
+  return STUDY_KIND_OPTIONS.find((o) => o.value === kind)?.label ?? kind;
+}
+
+function skillKindLabel(kind: string) {
+  return SKILL_KIND_OPTIONS.find((o) => o.value === kind)?.label ?? kind;
+}
+
+function skillLearnerPath(kind: string, slug: string) {
+  const base = kind === "dialogue" ? "dialogues" : kind;
+  return `/app/${base}/${slug}`;
+}
+
+function keywordsToText(rows: { en: string; ru: string }[] | undefined) {
+  return (rows || []).map((row) => `${row.en} | ${row.ru}`).join("\n");
+}
+
+function textToKeywords(text: string) {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [en = "", ru = ""] = line.split("|").map((part) => part.trim());
+      return { en, ru };
+    })
+    .filter((row) => row.en || row.ru);
+}
+
+function linesToText(rows: { speaker: string; text: string; ru: string }[] | undefined) {
+  return (rows || []).map((row) => `${row.speaker} | ${row.text} | ${row.ru}`).join("\n");
+}
+
+function textToLines(text: string) {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [speaker = "", textPart = "", ru = ""] = line.split("|").map((part) => part.trim());
+      return { speaker, text: textPart, ru };
+    })
+    .filter((row) => row.speaker || row.text || row.ru);
+}
+
+function listToText(rows: string[] | null | undefined) {
+  return (rows || []).join("\n");
+}
+
+function textToList(text: string) {
+  return text
+    .split(/\n|,/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+export function AdminStudy() {
+  const [decks, setDecks] = useState<StudyDeckRow[]>([]);
+  const [form, setForm] = useState({
+    slug: "",
+    title: "",
+    description: "Новая колода",
+    kind: "verbs",
+    sort_order: 99,
+  });
+  const [error, setError] = useState("");
+  const load = () => api<StudyDeckRow[]>("/admin/study/decks").then(setDecks);
+  useEffect(() => {
+    load();
+  }, []);
+
+  return (
+    <div className="grid gap-6">
+      <form
+        className="card grid gap-3 p-5 md:grid-cols-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError("");
+          try {
+            await api("/admin/study/decks", { method: "POST", body: JSON.stringify(form) });
+            setForm({ slug: "", title: "", description: "Новая колода", kind: form.kind, sort_order: 99 });
+            load();
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Не удалось создать колоду");
+          }
+        }}
+      >
+        <h2 className="font-display text-2xl md:col-span-2">Новая колода</h2>
+        <input className="field" placeholder="slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} required />
+        <input className="field" placeholder="Название" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+        <input
+          className="field md:col-span-2"
+          placeholder="Описание"
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+        />
+        <select className="field" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
+          {STUDY_KIND_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <input
+          className="field"
+          type="number"
+          placeholder="Порядок"
+          value={form.sort_order}
+          onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })}
+        />
+        <button className="btn btn-primary justify-self-start">Добавить колоду</button>
+        {error && <p className="text-sm text-rose md:col-span-2">{error}</p>}
+      </form>
+      <div className="grid gap-3">
+        {decks.map((deck) => (
+          <div key={deck.id} className="card flex flex-wrap items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-xs text-terra">{studyKindLabel(deck.kind)}</p>
+              <p className="font-semibold">{deck.title}</p>
+              <p className="text-sm text-ink-soft">
+                {deck.slug} · карточек {deck.card_count} · порядок {deck.sort_order}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Link to={`/admin/study/${deck.id}`} className="btn btn-ghost text-sm">
+                Редактировать
+              </Link>
+              <button
+                className="btn btn-ghost text-sm"
+                onClick={async () => {
+                  if (confirm(`Удалить колоду «${deck.title}» и все её карточки?`)) {
+                    await api(`/admin/study/decks/${deck.id}`, { method: "DELETE" });
+                    load();
+                  }
+                }}
+              >
+                Удалить
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AdminStudyDeck() {
+  const { deckId } = useParams();
+  const id = Number(deckId);
+  const [data, setData] = useState<(StudyDeckRow & { cards: StudyCardRow[] }) | null>(null);
+  const [meta, setMeta] = useState({ slug: "", title: "", description: "", kind: "verbs", sort_order: 99 });
+  const [cardForm, setCardForm] = useState(emptyCardForm);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [draft, setDraft] = useState<StudyCardRow | null>(null);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState("");
+
+  const load = () =>
+    api<StudyDeckRow & { cards: StudyCardRow[] }>(`/admin/study/decks/${id}`).then((row) => {
+      setData(row);
+      setMeta({
+        slug: row.slug,
+        title: row.title,
+        description: row.description,
+        kind: row.kind,
+        sort_order: row.sort_order,
+      });
+    });
+
+  useEffect(() => {
+    load();
+  }, [id]);
+
+  if (!data) return <p>Загружаем колоду…</p>;
+
+  return (
+    <div className="grid gap-6">
+      <div>
+        <Link to="/admin/study" className="text-sm text-terra">
+          ← Колоды
+        </Link>
+        <h1 className="font-display mt-2 text-3xl">{data.title}</h1>
+        <p className="text-sm text-ink-soft">
+          {data.card_count} карточек · ученики: /app/{data.kind}/{data.slug}
+        </p>
+      </div>
+      <form
+        className="card grid gap-3 p-5 md:grid-cols-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError("");
+          setSaved("");
+          try {
+            await api(`/admin/study/decks/${id}`, { method: "PATCH", body: JSON.stringify(meta) });
+            setSaved("Колода сохранена.");
+            load();
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Не удалось сохранить колоду");
+          }
+        }}
+      >
+        <h2 className="font-semibold md:col-span-2">Параметры колоды</h2>
+        <label className="grid gap-1 text-sm">
+          Название
+          <input className="field" value={meta.title} onChange={(e) => setMeta({ ...meta, title: e.target.value })} required />
+        </label>
+        <label className="grid gap-1 text-sm">
+          Slug
+          <input className="field" value={meta.slug} onChange={(e) => setMeta({ ...meta, slug: e.target.value })} required />
+        </label>
+        <label className="grid gap-1 text-sm md:col-span-2">
+          Описание
+          <textarea className="field min-h-24" value={meta.description} onChange={(e) => setMeta({ ...meta, description: e.target.value })} />
+        </label>
+        <label className="grid gap-1 text-sm">
+          Раздел
+          <select className="field" value={meta.kind} onChange={(e) => setMeta({ ...meta, kind: e.target.value })}>
+            {STUDY_KIND_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-1 text-sm">
+          Порядок
+          <input className="field" type="number" value={meta.sort_order} onChange={(e) => setMeta({ ...meta, sort_order: Number(e.target.value) })} />
+        </label>
+        <button className="btn btn-primary justify-self-start">Сохранить колоду</button>
+        {saved && <p className="text-sm text-sage md:col-span-2">{saved}</p>}
+        {error && <p className="text-sm text-rose md:col-span-2">{error}</p>}
+      </form>
+      <form
+        className="card grid gap-3 p-5 md:grid-cols-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError("");
+          try {
+            await api("/admin/study/cards", { method: "POST", body: JSON.stringify({ ...cardForm, deck_id: id }) });
+            setCardForm(emptyCardForm);
+            load();
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Не удалось добавить карточку");
+          }
+        }}
+      >
+        <h2 className="font-semibold md:col-span-2">Добавить карточку</h2>
+        <input
+          className="field"
+          placeholder="Основной текст (V1 / фраза)"
+          value={cardForm.primary_text}
+          onChange={(e) => setCardForm({ ...cardForm, primary_text: e.target.value })}
+          required
+        />
+        <input
+          className="field"
+          placeholder="Перевод"
+          value={cardForm.translation}
+          onChange={(e) => setCardForm({ ...cardForm, translation: e.target.value })}
+          required
+        />
+        <input
+          className="field"
+          placeholder="Второй текст (V2 / заметка)"
+          value={cardForm.secondary_text}
+          onChange={(e) => setCardForm({ ...cardForm, secondary_text: e.target.value })}
+        />
+        <input
+          className="field"
+          placeholder="Третий текст (V3)"
+          value={cardForm.tertiary_text}
+          onChange={(e) => setCardForm({ ...cardForm, tertiary_text: e.target.value })}
+        />
+        <input
+          className="field md:col-span-2"
+          placeholder="Пример"
+          value={cardForm.example}
+          onChange={(e) => setCardForm({ ...cardForm, example: e.target.value })}
+        />
+        <input
+          className="field md:col-span-2"
+          placeholder="Перевод примера"
+          value={cardForm.example_translation}
+          onChange={(e) => setCardForm({ ...cardForm, example_translation: e.target.value })}
+        />
+        <input
+          className="field"
+          placeholder="Категория"
+          value={cardForm.category}
+          onChange={(e) => setCardForm({ ...cardForm, category: e.target.value })}
+        />
+        <input
+          className="field"
+          type="number"
+          placeholder="Порядок"
+          value={cardForm.sort_order}
+          onChange={(e) => setCardForm({ ...cardForm, sort_order: Number(e.target.value) })}
+        />
+        <button className="btn btn-sage justify-self-start">Добавить в колоду</button>
+      </form>
+      <section className="grid gap-2">
+        <h2 className="font-display text-2xl">Карточки</h2>
+        {data.cards.map((item) => (
+          <div key={item.id} className="card grid gap-3 p-4 text-sm">
+            {editingId === item.id && draft ? (
+              <form
+                className="grid gap-2 md:grid-cols-2"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setError("");
+                  try {
+                    await api(`/admin/study/cards/${item.id}`, {
+                      method: "PATCH",
+                      body: JSON.stringify({
+                        primary_text: draft.primary_text,
+                        secondary_text: draft.secondary_text,
+                        tertiary_text: draft.tertiary_text,
+                        translation: draft.translation,
+                        example: draft.example,
+                        example_translation: draft.example_translation,
+                        category: draft.category,
+                        sort_order: draft.sort_order,
+                      }),
+                    });
+                    setEditingId(null);
+                    setDraft(null);
+                    load();
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "Не удалось сохранить карточку");
+                  }
+                }}
+              >
+                <input className="field" value={draft.primary_text} onChange={(e) => setDraft({ ...draft, primary_text: e.target.value })} required />
+                <input className="field" value={draft.translation} onChange={(e) => setDraft({ ...draft, translation: e.target.value })} required />
+                <input className="field" placeholder="V2 / заметка" value={draft.secondary_text} onChange={(e) => setDraft({ ...draft, secondary_text: e.target.value })} />
+                <input className="field" placeholder="V3" value={draft.tertiary_text} onChange={(e) => setDraft({ ...draft, tertiary_text: e.target.value })} />
+                <input className="field md:col-span-2" placeholder="Пример" value={draft.example} onChange={(e) => setDraft({ ...draft, example: e.target.value })} />
+                <input
+                  className="field md:col-span-2"
+                  placeholder="Перевод примера"
+                  value={draft.example_translation}
+                  onChange={(e) => setDraft({ ...draft, example_translation: e.target.value })}
+                />
+                <input className="field" placeholder="Категория" value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} />
+                <input
+                  className="field"
+                  type="number"
+                  value={draft.sort_order}
+                  onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) })}
+                />
+                <div className="flex gap-2 md:col-span-2">
+                  <button className="btn btn-primary text-sm">Сохранить карточку</button>
+                  <button type="button" className="btn btn-ghost text-sm" onClick={() => { setEditingId(null); setDraft(null); }}>
+                    Отмена
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold">
+                    {item.primary_text}
+                    {item.secondary_text ? ` · ${item.secondary_text}` : ""}
+                    {item.tertiary_text ? ` · ${item.tertiary_text}` : ""}
+                  </p>
+                  <p>{item.translation}</p>
+                  {(item.example || item.example_translation) && (
+                    <p className="mt-1 text-ink-soft">
+                      {item.example}
+                      {item.example_translation ? ` — ${item.example_translation}` : ""}
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-ink-soft">
+                    {item.category || "без категории"} · порядок {item.sort_order}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button className="btn btn-ghost text-xs" onClick={() => { setEditingId(item.id); setDraft({ ...item }); }}>
+                    изменить
+                  </button>
+                  <button
+                    className="text-rose"
+                    onClick={async () => {
+                      if (confirm(`Удалить «${item.primary_text}»?`)) {
+                        await api(`/admin/study/cards/${item.id}`, { method: "DELETE" });
+                        load();
+                      }
+                    }}
+                  >
+                    удалить
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+export function AdminSkills() {
+  const [items, setItems] = useState<SkillItemRow[]>([]);
+  const [form, setForm] = useState({
+    slug: "",
+    title: "",
+    description: "Новый материал",
+    kind: "reading",
+    level_code: "A1",
+    sort_order: 99,
+  });
+  const [error, setError] = useState("");
+  const load = () => api<SkillItemRow[]>("/admin/skills").then(setItems);
+  useEffect(() => {
+    load();
+  }, []);
+
+  return (
+    <div className="grid gap-6">
+      <form
+        className="card grid gap-3 p-5 md:grid-cols-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError("");
+          try {
+            await api("/admin/skills", {
+              method: "POST",
+              body: JSON.stringify({ ...form, body: "", lines: [], keywords: [] }),
+            });
+            setForm({
+              slug: "",
+              title: "",
+              description: "Новый материал",
+              kind: form.kind,
+              level_code: form.level_code,
+              sort_order: 99,
+            });
+            load();
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Не удалось создать материал");
+          }
+        }}
+      >
+        <h2 className="font-display text-2xl md:col-span-2">Новый материал навыка</h2>
+        <input className="field" placeholder="slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} required />
+        <input className="field" placeholder="Название" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+        <input
+          className="field md:col-span-2"
+          placeholder="Описание"
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+        />
+        <select className="field" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
+          {SKILL_KIND_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <select className="field" value={form.level_code} onChange={(e) => setForm({ ...form, level_code: e.target.value })}>
+          {["A1", "A2", "B1", "B2", "C1", "C2"].map((code) => (
+            <option key={code}>{code}</option>
+          ))}
+        </select>
+        <input
+          className="field"
+          type="number"
+          placeholder="Порядок"
+          value={form.sort_order}
+          onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })}
+        />
+        <button className="btn btn-primary justify-self-start">Добавить материал</button>
+        {error && <p className="text-sm text-rose md:col-span-2">{error}</p>}
+      </form>
+      <div className="grid gap-3">
+        {items.map((item) => (
+          <div key={item.id} className="card flex flex-wrap items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-xs text-terra">
+                {skillKindLabel(item.kind)} · {item.level_code}
+              </p>
+              <p className="font-semibold">{item.title}</p>
+              <p className="text-sm text-ink-soft">
+                {item.slug} · вопросов {item.question_count} · слов {item.keyword_count} · порядок {item.sort_order}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Link to={`/admin/skills/${item.id}`} className="btn btn-ghost text-sm">
+                Редактировать
+              </Link>
+              <button
+                className="btn btn-ghost text-sm"
+                onClick={async () => {
+                  if (confirm(`Удалить «${item.title}» и все вопросы?`)) {
+                    await api(`/admin/skills/${item.id}`, { method: "DELETE" });
+                    load();
+                  }
+                }}
+              >
+                Удалить
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AdminSkillItem() {
+  const { itemId } = useParams();
+  const id = Number(itemId);
+  const [data, setData] = useState<SkillItemRow | null>(null);
+  const [meta, setMeta] = useState({
+    slug: "",
+    title: "",
+    description: "",
+    kind: "reading",
+    level_code: "A1",
+    sort_order: 99,
+    body: "",
+    keywordsText: "",
+    linesText: "",
+  });
+  const [questionForm, setQuestionForm] = useState(emptyQuestionForm);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [draft, setDraft] = useState<(SkillQuestionRow & { optionsText: string; acceptedText: string }) | null>(null);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState("");
+
+  const load = () =>
+    api<SkillItemRow>(`/admin/skills/${id}`).then((row) => {
+      setData(row);
+      setMeta({
+        slug: row.slug,
+        title: row.title,
+        description: row.description,
+        kind: row.kind,
+        level_code: row.level_code,
+        sort_order: row.sort_order,
+        body: row.body || "",
+        keywordsText: keywordsToText(row.keywords),
+        linesText: linesToText(row.lines),
+      });
+    });
+
+  useEffect(() => {
+    load();
+  }, [id]);
+
+  if (!data) return <p>Загружаем материал…</p>;
+
+  return (
+    <div className="grid gap-6">
+      <div>
+        <Link to="/admin/skills" className="text-sm text-terra">
+          ← Навыки
+        </Link>
+        <h1 className="font-display mt-2 text-3xl">{data.title}</h1>
+        <p className="text-sm text-ink-soft">
+          {data.question_count} вопросов · ученики: {skillLearnerPath(data.kind, data.slug)}
+        </p>
+      </div>
+      <form
+        className="card grid gap-3 p-5 md:grid-cols-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError("");
+          setSaved("");
+          try {
+            await api(`/admin/skills/${id}`, {
+              method: "PATCH",
+              body: JSON.stringify({
+                slug: meta.slug,
+                title: meta.title,
+                description: meta.description,
+                kind: meta.kind,
+                level_code: meta.level_code,
+                sort_order: meta.sort_order,
+                body: meta.body,
+                keywords: textToKeywords(meta.keywordsText),
+                lines: textToLines(meta.linesText),
+              }),
+            });
+            setSaved("Материал сохранён.");
+            load();
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Не удалось сохранить материал");
+          }
+        }}
+      >
+        <h2 className="font-semibold md:col-span-2">Параметры материала</h2>
+        <label className="grid gap-1 text-sm">
+          Название
+          <input className="field" value={meta.title} onChange={(e) => setMeta({ ...meta, title: e.target.value })} required />
+        </label>
+        <label className="grid gap-1 text-sm">
+          Slug
+          <input className="field" value={meta.slug} onChange={(e) => setMeta({ ...meta, slug: e.target.value })} required />
+        </label>
+        <label className="grid gap-1 text-sm md:col-span-2">
+          Описание
+          <textarea className="field min-h-20" value={meta.description} onChange={(e) => setMeta({ ...meta, description: e.target.value })} />
+        </label>
+        <label className="grid gap-1 text-sm">
+          Раздел
+          <select className="field" value={meta.kind} onChange={(e) => setMeta({ ...meta, kind: e.target.value })}>
+            {SKILL_KIND_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-1 text-sm">
+          Уровень
+          <select className="field" value={meta.level_code} onChange={(e) => setMeta({ ...meta, level_code: e.target.value })}>
+            {["A1", "A2", "B1", "B2", "C1", "C2"].map((code) => (
+              <option key={code}>{code}</option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-1 text-sm">
+          Порядок
+          <input className="field" type="number" value={meta.sort_order} onChange={(e) => setMeta({ ...meta, sort_order: Number(e.target.value) })} />
+        </label>
+        <label className="grid gap-1 text-sm md:col-span-2">
+          Текст / транскрипт
+          <textarea className="field min-h-32" value={meta.body} onChange={(e) => setMeta({ ...meta, body: e.target.value })} />
+        </label>
+        <label className="grid gap-1 text-sm md:col-span-2">
+          Реплики диалога (по строке: speaker | english | русский)
+          <textarea className="field min-h-28 font-mono text-xs" value={meta.linesText} onChange={(e) => setMeta({ ...meta, linesText: e.target.value })} />
+        </label>
+        <label className="grid gap-1 text-sm md:col-span-2">
+          Ключевые слова (по строке: english | русский)
+          <textarea className="field min-h-24 font-mono text-xs" value={meta.keywordsText} onChange={(e) => setMeta({ ...meta, keywordsText: e.target.value })} />
+        </label>
+        <button className="btn btn-primary justify-self-start">Сохранить материал</button>
+        {saved && <p className="text-sm text-sage md:col-span-2">{saved}</p>}
+        {error && <p className="text-sm text-rose md:col-span-2">{error}</p>}
+      </form>
+      <form
+        className="card grid gap-3 p-5 md:grid-cols-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError("");
+          try {
+            await api("/admin/skills/questions", {
+              method: "POST",
+              body: JSON.stringify({
+                item_id: id,
+                kind: questionForm.kind,
+                prompt: questionForm.prompt,
+                answer: questionForm.answer,
+                options: textToList(questionForm.optionsText),
+                accepted: textToList(questionForm.acceptedText),
+                speak: questionForm.speak,
+                explanation: questionForm.explanation,
+                sort_order: questionForm.sort_order,
+              }),
+            });
+            setQuestionForm(emptyQuestionForm);
+            load();
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Не удалось добавить вопрос");
+          }
+        }}
+      >
+        <h2 className="font-semibold md:col-span-2">Добавить вопрос</h2>
+        <select className="field" value={questionForm.kind} onChange={(e) => setQuestionForm({ ...questionForm, kind: e.target.value })}>
+          {SKILL_QUESTION_KIND_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <input
+          className="field"
+          type="number"
+          placeholder="Порядок"
+          value={questionForm.sort_order}
+          onChange={(e) => setQuestionForm({ ...questionForm, sort_order: Number(e.target.value) })}
+        />
+        <textarea
+          className="field md:col-span-2 min-h-20"
+          placeholder="Вопрос / задание"
+          value={questionForm.prompt}
+          onChange={(e) => setQuestionForm({ ...questionForm, prompt: e.target.value })}
+          required
+        />
+        <input
+          className="field md:col-span-2"
+          placeholder="Правильный ответ"
+          value={questionForm.answer}
+          onChange={(e) => setQuestionForm({ ...questionForm, answer: e.target.value })}
+          required
+        />
+        <textarea
+          className="field md:col-span-2 min-h-20 font-mono text-xs"
+          placeholder="Варианты выбора (по строке или через запятую)"
+          value={questionForm.optionsText}
+          onChange={(e) => setQuestionForm({ ...questionForm, optionsText: e.target.value })}
+        />
+        <textarea
+          className="field md:col-span-2 min-h-16 font-mono text-xs"
+          placeholder="Допустимые ответы (по строке или через запятую)"
+          value={questionForm.acceptedText}
+          onChange={(e) => setQuestionForm({ ...questionForm, acceptedText: e.target.value })}
+        />
+        <input
+          className="field md:col-span-2"
+          placeholder="Текст для озвучки (диктант)"
+          value={questionForm.speak}
+          onChange={(e) => setQuestionForm({ ...questionForm, speak: e.target.value })}
+        />
+        <input
+          className="field md:col-span-2"
+          placeholder="Пояснение"
+          value={questionForm.explanation}
+          onChange={(e) => setQuestionForm({ ...questionForm, explanation: e.target.value })}
+        />
+        <button className="btn btn-sage justify-self-start">Добавить вопрос</button>
+      </form>
+      <section className="grid gap-2">
+        <h2 className="font-display text-2xl">Вопросы</h2>
+        {(data.questions || []).map((item) => (
+          <div key={item.id} className="card grid gap-3 p-4 text-sm">
+            {editingId === item.id && draft ? (
+              <form
+                className="grid gap-2 md:grid-cols-2"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setError("");
+                  try {
+                    await api(`/admin/skills/questions/${item.id}`, {
+                      method: "PATCH",
+                      body: JSON.stringify({
+                        kind: draft.kind,
+                        prompt: draft.prompt,
+                        answer: draft.answer,
+                        options: textToList(draft.optionsText),
+                        accepted: textToList(draft.acceptedText),
+                        speak: draft.speak,
+                        explanation: draft.explanation,
+                        sort_order: draft.sort_order,
+                      }),
+                    });
+                    setEditingId(null);
+                    setDraft(null);
+                    load();
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "Не удалось сохранить вопрос");
+                  }
+                }}
+              >
+                <select className="field" value={draft.kind} onChange={(e) => setDraft({ ...draft, kind: e.target.value })}>
+                  {SKILL_QUESTION_KIND_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  className="field"
+                  type="number"
+                  value={draft.sort_order}
+                  onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) })}
+                />
+                <textarea className="field md:col-span-2 min-h-20" value={draft.prompt} onChange={(e) => setDraft({ ...draft, prompt: e.target.value })} required />
+                <input className="field md:col-span-2" value={draft.answer} onChange={(e) => setDraft({ ...draft, answer: e.target.value })} required />
+                <textarea
+                  className="field md:col-span-2 min-h-20 font-mono text-xs"
+                  value={draft.optionsText}
+                  onChange={(e) => setDraft({ ...draft, optionsText: e.target.value })}
+                />
+                <textarea
+                  className="field md:col-span-2 min-h-16 font-mono text-xs"
+                  value={draft.acceptedText}
+                  onChange={(e) => setDraft({ ...draft, acceptedText: e.target.value })}
+                />
+                <input className="field md:col-span-2" value={draft.speak} onChange={(e) => setDraft({ ...draft, speak: e.target.value })} />
+                <input className="field md:col-span-2" value={draft.explanation} onChange={(e) => setDraft({ ...draft, explanation: e.target.value })} />
+                <div className="flex gap-2 md:col-span-2">
+                  <button className="btn btn-primary text-sm">Сохранить вопрос</button>
+                  <button type="button" className="btn btn-ghost text-sm" onClick={() => { setEditingId(null); setDraft(null); }}>
+                    Отмена
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs text-terra">
+                    {SKILL_QUESTION_KIND_OPTIONS.find((o) => o.value === item.kind)?.label ?? item.kind} · порядок {item.sort_order}
+                  </p>
+                  <p className="font-semibold">{item.prompt}</p>
+                  <p>Ответ: {item.answer}</p>
+                  {item.options?.length ? <p className="text-ink-soft">Варианты: {item.options.join(" · ")}</p> : null}
+                  {item.accepted?.length ? <p className="text-ink-soft">Допустимо: {item.accepted.join(" · ")}</p> : null}
+                  {item.speak ? <p className="text-ink-soft">Озвучка: {item.speak}</p> : null}
+                  {item.explanation ? <p className="text-ink-soft">{item.explanation}</p> : null}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    className="btn btn-ghost text-xs"
+                    onClick={() => {
+                      setEditingId(item.id);
+                      setDraft({
+                        ...item,
+                        optionsText: listToText(item.options),
+                        acceptedText: listToText(item.accepted),
+                      });
+                    }}
+                  >
+                    изменить
+                  </button>
+                  <button
+                    className="text-rose"
+                    onClick={async () => {
+                      if (confirm("Удалить вопрос?")) {
+                        await api(`/admin/skills/questions/${item.id}`, { method: "DELETE" });
+                        load();
+                      }
+                    }}
+                  >
+                    удалить
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </section>
+    </div>
+  );
+}
+
