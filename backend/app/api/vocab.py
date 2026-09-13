@@ -11,7 +11,7 @@ from app.core.deps import get_current_user
 from app.models.user import User
 from app.models.vocabulary import VocabProgress, VocabTopic, VocabWord
 from app.schemas.content import VocabCheckIn
-from app.services.scoring import is_correct, touch_user
+from app.services.scoring import touch_user, vocab_is_correct
 
 router = APIRouter(prefix="/vocab", tags=["vocab"])
 
@@ -184,9 +184,10 @@ def _make_items(
     topic_words: list[VocabWord],
     mastery: dict[int, int],
 ) -> list[dict]:
-    """One pending task per missing mastery bit for words not yet fully learned.
+    """All four task kinds for every word that is not yet fully learned.
 
-    All four task kinds are fully mixed (no choice-then-type partitioning).
+    Partial mastery does not shrink the queue: after any miss the word is reset to 0,
+    and the next run always regenerates the full set of four until mastery == 15.
     Soft interleave prefers not stacking the same word twice in a row when possible.
     """
     pending: list[dict] = []
@@ -195,9 +196,9 @@ def _make_items(
         flags = mastery.get(word.id, 0)
         if _is_learned(flags):
             continue
-        missing = [kind for kind in TASK_KINDS if not (flags & MASTERY_BITS[kind])]
-        random.shuffle(missing)
-        for kind in missing:
+        kinds = list(TASK_KINDS)
+        random.shuffle(kinds)
+        for kind in kinds:
             pending.append(_build_task(word, kind, pool, topic_words))
     return _interleave_shuffle(pending)
 
@@ -327,7 +328,10 @@ def _touch_progress(
             progress.mastery = before | bit
             touch_user(db, user, 5)
         progress.strength = _mastery_count(progress.mastery)
-    # Wrong answers do not clear mastery bits; the facet stays pending for a later pass.
+    elif not correct:
+        # Any miss wipes the word so the next run regenerates all four task kinds.
+        progress.mastery = 0
+        progress.strength = 0
     progress.last_reviewed = datetime.now(timezone.utc)
     return progress
 
@@ -348,9 +352,11 @@ def check_word(
         "translation" if kind in {"choice_en_ru", "type_en_ru"} else "word"
     )
     expected = word.translation if target == "translation" else word.word
-    correct = is_correct(payload.answer, expected)
+    correct = vocab_is_correct(payload.answer, expected)
     if not correct and not kind:
-        correct = is_correct(payload.answer, word.word, [word.translation])
+        correct = vocab_is_correct(payload.answer, word.word) or vocab_is_correct(
+            payload.answer, word.translation
+        )
 
     progress = _touch_progress(db, user, word, correct, kind)
     db.commit()

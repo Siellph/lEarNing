@@ -417,6 +417,135 @@ _DOUBLE_FIXES = {
 }
 PROMPT_REWRITES.update(_DOUBLE_FIXES)
 
+# Accuracy: wrong tense/role labels that already landed in seed or live DB.
+_ACCURACY_FIXES = {
+    "Вставьте форму Past Simple: We ___ attention, so we missed the stop. (not + pay, Past Continuous)": (
+        "Вставьте форму Past Continuous: We ___ attention, so we missed the stop. (not + pay)"
+    ),
+    "We ___ attention, so we missed the stop. (not + pay, Past Continuous)": (
+        "Вставьте форму Past Continuous: We ___ attention, so we missed the stop. (not + pay)"
+    ),
+    "Вставьте форму Past Simple: If you ___ me the brief, I wouldn't be improvising on stage. (send / past)": (
+        "Вставьте Past Perfect: If you ___ me the brief, I wouldn't be improvising on stage. (send)"
+    ),
+    "If you ___ me the brief, I wouldn't be improvising on stage. (send / past)": (
+        "Вставьте Past Perfect: If you ___ me the brief, I wouldn't be improvising on stage. (send)"
+    ),
+    "Вставьте модальный глагол (will/would): This time next week she ___ in Lisbon. (land, процесс поездки: fly)": (
+        "Вставьте Future Continuous: This time next week she ___ in Lisbon. (fly)"
+    ),
+    "This time next week she ___ in Lisbon. (land, процесс поездки: fly)": (
+        "Вставьте Future Continuous: This time next week she ___ in Lisbon. (fly)"
+    ),
+    "Вставьте модальный глагол (will/would): We ___ emails all morning, so replies may be slow. (answer)": (
+        "Вставьте Future Continuous: We ___ emails all morning, so replies may be slow. (answer)"
+    ),
+    "We ___ emails all morning, so replies may be slow. (answer)": (
+        "Вставьте Future Continuous: We ___ emails all morning, so replies may be slow. (answer)"
+    ),
+    "Вставьте модальный глагол (will/would): If we had booked earlier, we ___ on the waiting list now. (not / be)": (
+        "Вставьте форму результата (wouldn't be): If we had booked earlier, we ___ on the waiting list now."
+    ),
+    "If we had booked earlier, we ___ on the waiting list now. (not / be)": (
+        "Вставьте форму результата (wouldn't be): If we had booked earlier, we ___ on the waiting list now."
+    ),
+    "Вставьте форму to be: They ___ waiting forty minutes when the shuttle arrived. (be)": (
+        "Вставьте Past Perfect Continuous: They ___ waiting forty minutes when the shuttle arrived."
+    ),
+    "They ___ waiting forty minutes when the shuttle arrived. (be)": (
+        "Вставьте Past Perfect Continuous: They ___ waiting forty minutes when the shuttle arrived."
+    ),
+    "Вставьте вспомогательный глагол: We ___ breakfast at 8. (have)": (
+        "Вставьте нужную форму глагола have: We ___ breakfast at 8."
+    ),
+    "We ___ breakfast at 8. (have)": (
+        "Вставьте нужную форму глагола have: We ___ breakfast at 8."
+    ),
+    "Вставьте вспомогательный глагол: If they ___ fewer clients, they could leave at six. (have)": (
+        "Вставьте Past Simple от have: If they ___ fewer clients, they could leave at six."
+    ),
+    "If they ___ fewer clients, they could leave at six. (have)": (
+        "Вставьте Past Simple от have: If they ___ fewer clients, they could leave at six."
+    ),
+    "Вставьте вспомогательный глагол: I ___ a shower after work.": (
+        "Вставьте have (не have got): I ___ a shower after work."
+    ),
+    "I ___ a shower after work.": (
+        "Вставьте have (не have got): I ___ a shower after work."
+    ),
+    "Соберите предложение (one of the + превосходная): Соберите предложение (one of the + превосходная): one of / best / bakeries / the / city / in / the": (
+        "Соберите предложение (one of the + превосходная): one of / best / bakeries / the / city / in / the"
+    ),
+    "Какая форма после enjoy: Какая форма после enjoy: enjoy + ? (-ing / to) (-ing / to)": (
+        "Какая форма после enjoy: enjoy + ? (-ing / to)"
+    ),
+    "Какая форма после finish: Какая форма после finish: finish + ? (-ing / to) (-ing / to)": (
+        "Какая форма после finish: finish + ? (-ing / to)"
+    ),
+    "Добавьте question tag: Добавьте question tag: They were late, ___ they?": (
+        "Добавьте question tag: They were late, ___ they?"
+    ),
+    "Добавьте question tag: Добавьте question tag: They've left, ___ they?": (
+        "Добавьте question tag: They've left, ___ they?"
+    ),
+    "Замените на participle clause: Замените на participle clause: After she finished → ___ finished, she left.": (
+        "Замените на participle clause: After she finished → ___ finished, she left."
+    ),
+    "Mixed Conditional: вставьте would: Mixed Conditional: вставьте would: If we had left earlier → we ___ be there now.": (
+        "Mixed Conditional: вставьте would: If we had left earlier → we ___ be there now."
+    ),
+    "Вставьте форму to be: He would have passed if he ___ more confident now? No — mixed other way: If he ___ more confident, he would have passed.": (
+        "Вставьте форму to be: If he ___ more confident, he would have passed the viva."
+    ),
+    "He would have passed if he ___ more confident now? No — mixed other way: If he ___ more confident, he would have passed.": (
+        "Вставьте форму to be: If he ___ more confident, he would have passed the viva."
+    ),
+    "Выберите вспомогательный глагол: If I ___ your address then, I would email you now.": (
+        "Выберите Past Perfect: If I ___ known your address then, I would email you now."
+    ),
+    "If I ___ your address then, I would email you now.": (
+        "Выберите Past Perfect: If I ___ known your address then, I would email you now."
+    ),
+    "Выберите Past Perfect: If I ___ your address then, I would email you now.": (
+        "Выберите Past Perfect: If I ___ known your address then, I would email you now."
+    ),
+    "They ___ never ___ sushi before that day. (try)": (
+        "They had never ___ sushi before that day. (try)"
+    ),
+    "Выберите may в идиоме Come what ___: Come what ___, we finish tonight.": (
+        "Выберите may в идиоме: Come what ___, we finish tonight."
+    ),
+    "Вставьте форму to be: He is thought ___ negotiating with two publishers. (be)": (
+        "Вставьте инфинитив: He is thought ___ negotiating with two publishers."
+    ),
+    "He is thought ___ negotiating with two publishers. (be)": (
+        "Вставьте инфинитив: He is thought ___ negotiating with two publishers."
+    ),
+    "Вставьте форму to be: The deputy is thought ___ acting chair until June. (be)": (
+        "Вставьте инфинитив: The deputy is thought ___ acting chair until June."
+    ),
+    "The deputy is thought ___ acting chair until June. (be)": (
+        "Вставьте инфинитив: The deputy is thought ___ acting chair until June."
+    ),
+    # --- C1/C2 accuracy (theory follow-up) ---
+    "Вставьте quantifier (some/any/much…): I can't read the log. — ___ can the intern.": (
+        "Вставьте Neither/So: I can't read the log. — ___ can the intern."
+    ),
+    "I can't read the log. — ___ can the intern.": (
+        "Вставьте Neither/So: I can't read the log. — ___ can the intern."
+    ),
+    "So I do need a spare — в значении «я тоже».": (
+        "Исправьте согласие «я тоже»: So I do need a spare."
+    ),
+    "I propose that we ___ not seal the crate yet. (do / subjunctive)": (
+        "I propose that we ___ not seal the crate yet. (отрицание / subjunctive)"
+    ),
+    "Вставьте quantifier (some/any/much…): Sufficient is the formal twin of ___.": (
+        "Вставьте разговорный синоним: Sufficient is the formal twin of ___."
+    ),
+}
+PROMPT_REWRITES.update(_ACCURACY_FIXES)
+
 # Optional explanation overrides when rewriting (old prompt → new explanation).
 EXPLANATION_REWRITES: dict[str, str] = {
     "Past Simple: She has already called the clinic. Add last Tuesday.": (
@@ -428,9 +557,30 @@ EXPLANATION_REWRITES: dict[str, str] = {
     ),
     "Сделайте множественное: This woman is a teacher.": "woman→women, is→are.",
     "Выберите форму to be: These ___ my books.": "They + are.",
+    "Вставьте форму Past Simple: We ___ attention, so we missed the stop. (not + pay, Past Continuous)": (
+        "We + were; отрицание перед V-ing — Past Continuous как фон."
+    ),
+    "Вставьте форму Past Simple: If you ___ me the brief, I wouldn't be improvising on stage. (send / past)": (
+        "Mixed Conditional: прошлое условие — Past Perfect (had + V3)."
+    ),
+    "Выберите вспомогательный глагол: If I ___ your address then, I would email you now.": (
+        "Прошлое условие — If I had known; результат сейчас — would + V."
+    ),
+    "Вставьте форму to be: He would have passed if he ___ more confident now? No — mixed other way: If he ___ more confident, he would have passed.": (
+        "Mixed: устойчивая черта сейчас → прошлый результат; were + would have."
+    ),
+    "So I do need a spare — в значении «я тоже».": (
+        "Для «я тоже» нужна инверсия: So do I — не So I do и не So do I need a spare."
+    ),
+    "The data is conflicting each other.": (
+        "Conflict как глагол: The data conflict. Не are conflicting with each other."
+    ),
 }
 
 # When prompt is rewritten, also patch answer if the expected string changed.
 ANSWER_REWRITES: dict[str, str] = {
     "Сделайте множественное: This woman is a teacher.": "The women are teachers.",
+    "They ___ never ___ sushi before that day. (try)": "tried",
+    "So I do need a spare — в значении «я тоже».": "So do I.",
+    "The data is conflicting each other.": "The data conflict.",
 }

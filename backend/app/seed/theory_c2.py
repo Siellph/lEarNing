@@ -174,7 +174,7 @@ C2_THEORY = {
         ],
         compare=[
             {"left": "We were unable to obtain a spare impeller.", "right": "We couldn't get a spare impeller.", "note": "Одинаковая пропозиция; слева отчёт, справа смена."},
-            {"left": "The stills got leaked.", "right": "The stills were leaked.", "note": "Get-passive разговорнее."},
+            {"left": "The stills got leaked.", "right": "The stills were leaked.", "note": "Слева get-passive (разговорнее); справа be-passive (нейтральнее)."},
         ],
         watch_out=[
             "Hereby + gonna — внутриабзацный слом регистра.",

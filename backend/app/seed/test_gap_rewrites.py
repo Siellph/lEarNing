@@ -695,7 +695,7 @@ TEST_GAP_REWRITES: dict[str, str] = {
         "Выберите пропущенное слово: I can't help ___ concerned."
     ),
     "I can't read the log. — ___ can the intern.": (
-        "Вставьте quantifier (some/any/much…): I can't read the log. — ___ can the intern."
+        "Вставьте Neither/So: I can't read the log. — ___ can the intern."
     ),
     'I could ___ see the sign in the fog.': (
         'Выберите наречие: I could ___ see the sign in the fog.'

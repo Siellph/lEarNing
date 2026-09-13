@@ -232,7 +232,10 @@ EXAM_GAP_REWRITES: dict[str, str] = {
     ),
     # --- EXTRA C2 ---
     "Come what ___, we finish tonight.": (
-        "Выберите may в идиоме Come what ___: Come what ___, we finish tonight."
+        "Выберите may в идиоме: Come what ___, we finish tonight."
+    ),
+    "Выберите may в идиоме Come what ___: Come what ___, we finish tonight.": (
+        "Выберите may в идиоме: Come what ___, we finish tonight."
     ),
     "Suffice it ___ say the plan failed.": (
         "Вставьте to: Suffice it ___ say the plan failed."

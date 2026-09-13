@@ -60,12 +60,26 @@ _CAN_NOT = re.compile(r"\bcan not\b", re.I)
 
 
 def normalize(value: str) -> str:
-    """Lowercase, unify apostrophes, collapse spaces, strip trailing .!? — no contraction expand."""
-    text = value.strip().lower()
+    """Casefold, ё→е, unify apostrophes, collapse spaces, strip trailing .!? — no contraction expand."""
+    text = value.strip().casefold()
+    text = text.replace("ё", "е")
     text = text.replace("\u2019", "'").replace("`", "'")
     text = re.sub(r"\s+", " ", text)
     text = re.sub(r"[.!?]+$", "", text)
     return text
+
+
+# Gloss alternatives in vocab translations: «стакан; стекло», «glass / cup», …
+_ANSWER_ALT_SPLIT = re.compile(r"\s*[;/、,]\s*")
+
+
+def split_answer_alternatives(value: str) -> list[str]:
+    """Split a stored gloss into OR-alternatives; single values return as a one-item list."""
+    text = value.strip()
+    if not text:
+        return []
+    parts = [part.strip() for part in _ANSWER_ALT_SPLIT.split(text) if part.strip()]
+    return parts or [text]
 
 
 def expand_contractions(text: str) -> str:
@@ -197,6 +211,17 @@ def is_correct(
         if " " not in cand_n and len(cand_n) <= 24 and cand_n in given_n.split() and len(given_n.split()) <= 8:
             if given_n == cand_n or given_n.endswith(cand_n) or given_n.startswith(cand_n):
                 return True
+    return False
+
+
+def vocab_is_correct(given: str, expected: str) -> bool:
+    """Vocab check: accept any one alternative; full multi-gloss string still matches."""
+    alts = split_answer_alternatives(expected)
+    if is_correct(given, expected, alts):
+        return True
+    given_parts = split_answer_alternatives(given)
+    if len(given_parts) > 1:
+        return all(any(is_correct(part, alt) for alt in alts) for part in given_parts)
     return False
 
 

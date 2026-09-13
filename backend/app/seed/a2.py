@@ -116,7 +116,7 @@ A2 = [
             mc("She opened the door and ___ the parcel. (факт)", ["was taking", "took", "taken"], "took", "Короткое завершённое действие — Past Simple."),
         ],
         [
-            fill("Вставьте форму Past Simple: We ___ attention, so we missed the stop. (not + pay, Past Continuous)", "weren't paying", "We + were; отрицание перед V-ing.", ["were not paying"]),
+            fill("Вставьте форму Past Continuous: We ___ attention, so we missed the stop. (not + pay)", "weren't paying", "We + were; отрицание перед V-ing — фон, из‑за которого пропустили остановку.", ["were not paying"]),
             mc("Выберите форму to be: ___ you sleeping when I texted?", ["Was", "Were", "Did"], "Were", "You + were в Continuous."),
             err("I was break the glass when I washed up.", "I broke the glass when I was washing up.", "Разбить — точка (Past Simple); мыть посуду — фон (Continuous).", ["I broke the glass while I was washing up"]),
             xf("Отрицание: She was wearing a helmet.", "She wasn't wearing a helmet.", "wasn't + V-ing.", ["She was not wearing a helmet"]),
@@ -359,7 +359,7 @@ A2 = [
             fill("Вставьте нужную форму (tall): Which is ___ building in your city? (tall)", "the tallest", "The + -est."),
             mc("Выберите превосходную степень: This is the ___ of the four endings.", ["sadder", "saddest", "most sadder"], "saddest", "Из четырёх — превосходная; d удваивается."),
             err("She is nicest person in the office.", "She is the nicest person in the office.", "Нужен артикль the."),
-            xf("Соберите предложение (one of the + превосходная): Соберите предложение (one of the + превосходная): one of / best / bakeries / the / city / in / the", "It's one of the best bakeries in the city.", "one of the + множественное.", ["one of the best bakeries in the city"]),
+            xf("Соберите предложение (one of the + превосходная): one of / best / bakeries / the / city / in / the", "It's one of the best bakeries in the city.", "one of the + превосходная + множественное.", ["one of the best bakeries in the city"]),
             fill("Вставьте нужную форму (bad): That joke was ___ of all. (bad)", "the worst", "Bad → the worst."),
             mc("Выберите предлог: He is the fastest runner ___ our club.", ["of", "in", "from"], "in", "Клуб как место/коллектив — in."),
         ],

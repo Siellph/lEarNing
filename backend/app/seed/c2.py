@@ -23,7 +23,7 @@ C2 = [
                     "It is essential to relabel every jar that left aisle C before Thursday's assay — it держит подлежащее-заглушку, пока инфинитив (настоящее подлежащее по смыслу) идёт в конец. There is a sandbar just east of the marker вводит новое существование, не указывая на место как на тему.",
                     [
                         ex("It surprised no one that the foundry withdrew from the tender.", "That-клауза тяжелее it surprised; её выносят вправо."),
-                        ex("There remains a second ledger whose entries were never cross-checked.", "There opens the scene; ledger — новое."),
+                        ex("There remains a second ledger whose entries were never cross-checked.", "There открывает сцену; ledger — новое."),
                     ],
                 ),
                 rule(
@@ -70,7 +70,7 @@ C2 = [
         26,
         "Вид как комментарий, а не как календарь",
         lesson(
-            "На C2 выбор аспекта редко диктуется «правилом учебника» в чистом виде: говорящий комментирует, как он видит ситуацию — как целостную, как развёрнутую, как релевантную к точке отсчёта или как ограниченный отрезок. Progressive может сделать статив временным или нарочито субъективным. Perfect связывает событие с более поздней точкой, а не просто ставит «до». Would и used to расходятся по состоянию vs действию и по нарративной окраски.",
+            "На C2 выбор аспекта редко диктуется «правилом учебника» в чистом виде: говорящий комментирует, как он видит ситуацию — как целостную, как развёрнутую, как релевантную к точке отсчёта или как ограниченный отрезок. Progressive может сделать статив временным или нарочито субъективным. Perfect связывает событие с более поздней точкой, а не просто ставит «до». Would и used to расходятся по состоянию vs действию и по нарративной окраске.",
             [
                 rule(
                     "Simple против Progressive: взгляд на ситуацию",
@@ -159,8 +159,8 @@ C2 = [
                 ),
             ],
             compare=[
-                {"left": "We were unable to obtain a spare impeller.", "right": "We couldn't get a spare impeller.", "note": "Одинаковая пропозици; слева отчёт, справа смена."},
-                {"left": "The stills got leaked.", "right": "The stills were leaked.", "note": "Get-passive разговорнее и часто живее по вине/нечаянности."},
+                {"left": "We were unable to obtain a spare impeller.", "right": "We couldn't get a spare impeller.", "note": "Одинаковая пропозиция; слева отчёт, справа смена."},
+                {"left": "The stills got leaked.", "right": "The stills were leaked.", "note": "Слева get-passive (разговорнее); справа be-passive (нейтральнее)."},
             ],
             watch_out=[
                 "Hereby + gonna, whom + yeah — внутриабзацный слом регистра.",
@@ -181,7 +181,7 @@ C2 = [
             mc("Whom is most at home in…", ["a text to a colleague", "a formal relative after a preposition", "quoted speech with yeah"], "a formal relative after a preposition", "Whom жив после предлога в формальном регистре."),
             xf("Формальнее: Ask the harbour master.", "Enquire of the harbour master.", "Enquire of — высокий регистр.", ["Inquire of the harbour master"]),
             err("A number of several crates went missing.", "A number of crates went missing.", "Не складывайте a number of и several."),
-            fill("Вставьте quantifier (some/any/much…): Sufficient is the formal twin of ___.", "enough", "Пара sufficient / enough."),
+            fill("Вставьте разговорный синоним: Sufficient is the formal twin of ___.", "enough", "Пара sufficient / enough."),
             mc("The argument does not hold. Разговорный близнец:", ["That idea falls apart.", "The contention fails to be sustained.", "One is compelled to reject the thesis."], "That idea falls apart.", "Падение идеи — более устный образ."),
         ],
     ),
@@ -431,7 +431,7 @@ C2 = [
     ),
     module(
         "advanced-complementation",
-        "Продвинутое комплементация",
+        "Продвинутая комплементация",
         "Прилагательные, глаголы и существительные с that / to / -ing / wh; raising и extraposition.",
         28,
         "Какая форма закрывает слот после слова",

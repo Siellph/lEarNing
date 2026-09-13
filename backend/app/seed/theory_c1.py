@@ -11,7 +11,7 @@ C1_THEORY = {
         [
             rule(
                 "So / such и little",
-                "So + adjective + be + subject: So dense was the fog… Such + noun phrase + be: Such was the backlog… Little did we know — «и не подозревали».",
+                "So + adjective + be + subject: So dense was the fog… Such + be + NP (such как предикатив): Such was the backlog… Little did we know — «и не подозревали».",
                 [
                     ex("So brittle was the paper that we stopped using clips.", "Бумага была такой хрупкой, что перестали пользоваться скрепками."),
                     ex("Little did the crew suspect the log had two missing hours.", "Команда и не подозревала, что в журнале не хватает двух часов."),
@@ -22,7 +22,7 @@ C1_THEORY = {
                         ["Схема", "Порядок", "Пример якоря"],
                         [
                             ["so + adj", "so + adj + be + subject", "So dense was the fog…"],
-                            ["such + NP", "such + be + subject", "Such was the backlog…"],
+                            ["such (предикатив)", "such + be + subject", "Such was the backlog…"],
                             ["little", "little + aux + subject", "Little did we know…"],
                             ["условие без if", "Should/Were/Had + subject", "Had we known…"],
                             ["not until / since", "инверсия в главной", "Not until… did we…"],
@@ -190,7 +190,7 @@ C1_THEORY = {
                 "It is widely assumed that the ferry will skip Tuesday. Подлежащее it — синтаксическая заглушка, не «вещь».",
                 [
                     ex("It is rumoured that the foundry will close in March.", "Ходят слухи, что литейный цех закроют в марте."),
-                    ex("It was estimated that the backlog would last six weeks.", "По оценкам, отставание растянулось бы на шесть недель."),
+                    ex("It was estimated that the backlog would last six weeks.", "По оценкам, отставание продлится шесть недель."),
                     ex("It is said that the tide tables were misprinted.", "Говорят, таблицы приливов напечатали с ошибкой."),
                 ],
                 tables=[
@@ -518,7 +518,7 @@ C1_THEORY = {
         ],
         compare=[
             {"left": "the damaged floodlights on the harbour wall", "right": "the harbour-wall floodlights that were damaged", "note": "Разный порядок уточнений — разный фокус."},
-            {"left": "The results of the tests were leaked.", "right": "The results of the tests was leaked.", "note": "Голова results — множественное."},
+            {"left": "The results of the tests was leaked.", "right": "The results of the tests were leaked.", "note": "Голова results — множественное; was — proximity error."},
         ],
         watch_out=[
             "The set of plates were… — нужно was, если голова set.",
@@ -542,7 +542,7 @@ C1_THEORY = {
                         ["Глагол", "Модель", "Нельзя"],
                         [
                             ["accuse", "sb of -ing", "accuse to"],
-                            ["congratulate", "sb on -ing", "congratulate for (часто)"],
+                            ["congratulate", "sb on -ing", "congratulate for — реже"],
                             ["insist", "on -ing / that", "insist to do"],
                             ["threaten / refuse", "to + V1", "threaten -ing"],
                             ["suggest / recommend", "-ing / that", "suggest sb to"],

@@ -12,7 +12,7 @@ C1 = [
             [
                 rule(
                     "So / such и little",
-                    "So + adjective + be + subject: So dense was the fog that the pier vanished. Such + noun phrase + be: Such was the backlog that Friday slipped. Little did we know / Little does she realise — «и не подозревали».",
+                    "So + adjective + be + subject: So dense was the fog that the pier vanished. Such + be + NP (such как предикатив): Such was the backlog that Friday slipped. Little did we know / Little does she realise — «и не подозревали».",
                     [
                         ex("So brittle was the paper that we stopped using clips.", "Бумага была такой хрупкой, что мы перестали пользоваться скрепками."),
                         ex("Little did the crew suspect the log had two missing hours.", "Команда и не подозревала, что в журнале не хватает двух часов."),
@@ -172,7 +172,7 @@ C1 = [
             fill("It is essential that he ___ the unredacted file. (see)", "see", "Базовая форма, не sees."),
             xf("Вставьте should (брит.): They demanded that she rewrite the abstract.", "They demanded that she should rewrite the abstract.", "Should + bare infinitive."),
             err("The chair insisted that the vote is postponed.", "The chair insisted that the vote be postponed.", "Требование, не констатация.", ["The chair insisted that the vote should be postponed"]),
-            fill("I propose that we ___ not seal the crate yet. (do / subjunctive)", "not", "That we not seal — отрицание без don't.", ["do not"]),
+            fill("I propose that we ___ not seal the crate yet. (отрицание / subjunctive)", "not", "That we not seal — отрицание без don't."),
             mc("If I ___ in your place, I would freeze the branch.", ["was", "were", "am"], "were", "Were-subjunctive."),
         ],
         [
@@ -198,7 +198,7 @@ C1 = [
                     "It is widely assumed that the ferry will skip Tuesday. It has been suggested that the beam was underspecified. Подлежащее it не указывает на вещь — это синтаксическая заглушка.",
                     [
                         ex("It is rumoured that the foundry will close in March.", "Ходят слухи, что литейный цех закроют в марте."),
-                        ex("It was estimated that the backlog would last six weeks.", "По оценкам, отставание растянулось бы на шесть недель."),
+                        ex("It was estimated that the backlog would last six weeks.", "По оценкам, отставание продлится шесть недель."),
                     ],
                 ),
                 rule(
@@ -241,7 +241,7 @@ C1 = [
             mc("Выберите пропущенное слово: ___ are believed to have been two unlogged dives.", ["It", "There", "They"], "There", "There are believed to have been."),
             xf("Безлично: The foundry will close. (rumour, present)", "It is rumoured that the foundry will close.", "It is rumoured that…"),
             err("He is said he declined the knighthood.", "He is said to have declined the knighthood.", "To have + V3."),
-            fill("Вставьте форму to be: The deputy is thought ___ acting chair until June. (be)", "to be", "Одновременная роль — простой инфинитив."),
+            fill("Вставьте инфинитив: The deputy is thought ___ acting chair until June.", "to be", "Одновременная роль — простой инфинитив to be + V-ing."),
             mc("Выберите модальный глагол (will/would): It was estimated that the repair ___ six weeks.", ["to last", "would last", "lasting"], "would last", "После that нужна полная клауза, не инфинитив."),
         ],
     ),
@@ -420,10 +420,10 @@ C1 = [
             mc("She photographs the quay more than ___. (сравнить субъектов)", ["the intern", "the intern does", "intern"], "the intern does", "Глагол снимает двусмысленность."),
         ],
         [
-            fill("Вставьте quantifier (some/any/much…): I can't read the log. — ___ can the intern.", "Neither", "Neither can + subject."),
+            fill("Вставьте Neither/So: I can't read the log. — ___ can the intern.", "Neither", "Neither can + subject."),
             mc("Выберите вспомогательный глагол: So ___ I — если исходная фраза They have finished.", ["do", "have", "did"], "have", "Повторяем have."),
             xf("Замените повтор: She sealed the jars, and I sealed the jars too.", "She sealed the jars, and I did too.", "Did too."),
-            err("So I do need a spare — в значении «я тоже».", "So do I need a spare.", "Для «тоже» инверсия: So do I.", ["So do I."]),
+            err("Исправьте согласие «я тоже»: So I do need a spare.", "So do I.", "Для «тоже» инверсия: So do I."),
             fill("Вставьте пропущенное слово: Keep the dry plates; recycle the warped ___.", "ones", "Ones = plates."),
             mc("Выберите пропущенное слово: He said he would override the lock, and he ___.", ["did so", "so did", "did it so"], "did so", "Do so замещает override the lock."),
         ],
@@ -525,7 +525,7 @@ C1 = [
             ],
             compare=[
                 {"left": "the damaged floodlights on the harbour wall", "right": "the harbour-wall floodlights that were damaged", "note": "Слева сначала состояние, потом место; справа класс, потом relative."},
-                {"left": "The results of the tests were leaked.", "right": "The results of the tests was leaked.", "note": "Голова results — множественное; was — ошибка согласования."},
+                {"left": "The results of the tests was leaked.", "right": "The results of the tests were leaked.", "note": "Голова results — множественное; was — ошибка согласования."},
             ],
             watch_out=[
                 "Согласование с ближайшим существительным (proximity error): The set of plates were… — нужно was, если голова set.",

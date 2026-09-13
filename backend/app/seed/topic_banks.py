@@ -214,7 +214,7 @@ TOPIC_PRACTICE: dict[str, list] = {
     "present-simple": [
         err("He don't like tea.", "He doesn't like tea.", "He/she + doesn't."),
         xf("Сделайте вопрос: You speak English.", "Do you speak English?", "Do + S + V1."),
-        fill("Вставьте вспомогательный глагол: We ___ breakfast at 8. (have)", "have", "We + have."),
+        fill("Вставьте нужную форму глагола have: We ___ breakfast at 8.", "have", "Have — смысловой глагол («завтракать»), не вспомогательный; We + have."),
         order("Слова: the / park / in / play / children", "Children play in the park.", "S + V + place."),
         err("She go to work by bus.", "She goes to work by bus.", "3sg + -s."),
         mc("___ he play football?", ["Do", "Does", "Is"], "Does", "He + Does."),
@@ -515,7 +515,7 @@ TOPIC_TEST: dict[str, list] = {
         fill("Вставьте вспомогательный глагол: We ___ got much money.", "haven't", "haven't got."),
         match("Владение", ["have got", "has got", "haven't got"], "have got=I/you/we; has got=he/she; haven't got=отриц.", "Формы."),
         mc("Выберите вспомогательный глагол: ___ he got your email?", ["Have", "Has", "Does"], "Has", "Has he got…"),
-        fill("Вставьте вспомогательный глагол: I ___ a shower after work.", "have", "have a shower."),
+        fill("Вставьте have (не have got): I ___ a shower after work.", "have", "have a shower — действие/привычка, не конструкция have got."),
         order("Соберите: got / hasn't / she / a / ticket", "She hasn't got a ticket.", "hasn't got."),
         err("They hasn't got time.", "They haven't got time.", "They + haven't."),
     ],

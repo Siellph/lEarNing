@@ -62,7 +62,7 @@ EXTRA_EXAMS = {
         fill("Вставьте глагол: Much as I ___ him, I disagree. (like)", "like", "Much as + clause."),
     ],
     "C2": [
-        mc("Выберите may в идиоме Come what ___: Come what ___, we finish tonight.", ["can", "may", "might be"], "may", "Come what may."),
+        mc("Выберите may в идиоме: Come what ___, we finish tonight.", ["can", "may", "might be"], "may", "Come what may = что бы ни случилось."),
         fill("Вставьте to: Suffice it ___ say the plan failed.", "to", "Suffice it to say."),
         xf("Перепишите с инверсией So … that: The speech was so dull that people left.", "So dull was the speech that people left.", "So + adj + inversion."),
         err("If I was to be honest, I would refuse. (formal)", "Were I to be honest, I would refuse.", "Formal inverted conditional."),

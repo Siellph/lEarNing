@@ -237,11 +237,11 @@ B1 = [
             mc("I ___ the document tonight, I promise.", ["will be sending", "will send", "am send"], "will send", "Обещание-пункт — will + V1, не Continuous."),
         ],
         [
-            fill("Вставьте модальный глагол (will/would): This time next week she ___ in Lisbon. (land, процесс поездки: fly)", "will be flying", "This time next week — классический маркер.", ["she'll be flying"]),
+            fill("Вставьте Future Continuous: This time next week she ___ in Lisbon. (fly)", "will be flying", "This time next week — классический маркер Future Continuous.", ["she'll be flying"]),
             mc("Выберите форму Future Continuous: Will you ___ late again on Friday?", ["be working", "working", "to work"], "be working", "Will you be + V-ing."),
             err("They will be stay at a hostel.", "They will be staying at a hostel.", "Нужен V-ing.", ["They'll be staying at a hostel"]),
             xf("Вежливый вопрос: you / pass / the bakery", "Will you be passing the bakery?", "Will you be + V-ing."),
-            fill("Вставьте модальный глагол (will/would): We ___ emails all morning, so replies may be slow. (answer)", "will be answering", "Длительный будущий процесс.", ["we'll be answering"]),
+            fill("Вставьте Future Continuous: We ___ emails all morning, so replies may be slow. (answer)", "will be answering", "Длительный будущий процесс — will be + V-ing.", ["we'll be answering"]),
             mc("Выберите модальный глагол (will/would): I ___ you at the kiosk at 5. (договорённость-факт)", ["will be meeting", "will meet", "meet will"], "will meet", "Простая договорённость — will + V1."),
         ],
     ),
@@ -298,7 +298,7 @@ B1 = [
             mc("If it ___ this weekend, we'd cancel the hike. (маловероятно / гипотеза)", ["rains", "rained", "will rain"], "rained", "Second — Past в if."),
         ],
         [
-            fill("Вставьте вспомогательный глагол: If they ___ fewer clients, they could leave at six. (have)", "had", "If + Past; have → had."),
+            fill("Вставьте Past Simple от have: If they ___ fewer clients, they could leave at six.", "had", "If + Past Simple; have (владение) → had."),
             mc("Выберите модальный глагол (will/would): I ___ join you if I didn't have a rehearsal.", ["will", "would", "would to"], "would", "Would + V1."),
             err("If I were you, I will ignore that email.", "If I were you, I would ignore that email.", "После If I were you — would, не will.", ["If I were you, I'd ignore that email"]),
             xf("С could: The printer is broken. We can't copy this.", "If the printer worked, we could copy this.", "Could в главной части.", ["If the printer weren't broken, we could copy this", "If the printer wasn't broken, we could copy this"]),

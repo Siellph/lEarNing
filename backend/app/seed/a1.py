@@ -262,7 +262,7 @@ A1 = [
             mc("Выберите вспомогательный глагол: ___ she work here?", ["Do", "Does", "Is"], "Does", "She + Does."),
             err("Does he lives nearby?", "Does he live nearby?", "После does глагол без -s."),
             xf("Отрицание: I eat fish.", "I don't eat fish.", "don't + базовая форма.", ["I do not eat fish"]),
-            fill("Вставьте вспомогательный глагол: We ___ breakfast at 8. (have)", "have", "We — без -s."),
+            fill("Вставьте нужную форму глагола have: We ___ breakfast at 8.", "have", "Have здесь смысловой глагол («завтракать»), не вспомогательный; We — без -s."),
             mc("Выберите форму Present Simple: Water ___ at 100°C.", ["boil", "boils", "is boil"], "boils", "Научный факт, it/water + -s."),
         ],
     ),

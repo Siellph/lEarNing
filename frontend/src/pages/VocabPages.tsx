@@ -392,7 +392,7 @@ function VocabSession({
           <div className="grid gap-3">
             <p className="font-semibold">Нужно повторить</p>
             <p className="text-sm text-ink-soft">
-              Эти задания останутся в следующей тренировке партии (биты мастерства не сняты).
+              После ошибки мастерство слова сбрасывается — в следующей тренировке снова все 4 задания.
             </p>
             <ul className="grid gap-2">
               {reviewGroups.map((group) => (
