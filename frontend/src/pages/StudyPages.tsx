@@ -10,8 +10,9 @@ import {
 import { CheckCircle2, CircleAlert } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
+import { BatchPracticeBar } from "../components/BatchPracticeBar";
 import { ProgressBar } from "../components/ProgressBar";
-import { SpeakButton, VoiceControls } from "../components/SpeakButton";
+import { SpeakButton } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
 import { percent } from "../lib/percent";
 import { looksEnglish } from "../lib/speech";
@@ -216,8 +217,6 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
     load(n);
   };
 
-  const batches = useMemo(() => (deck ? Array.from({ length: deck.batch_count }, (_, i) => i + 1) : []), [deck]);
-
   if (!deck) return <p className="text-ink-soft">Загружаем…</p>;
 
   return (
@@ -236,30 +235,14 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {batches.map((n) => (
-          <button
-            key={n}
-            type="button"
-            className={`rounded-full px-3 py-1 text-sm ${batch === n ? "bg-ink text-paper" : "bg-card text-ink-soft"}`}
-            onClick={() => goBatch(n)}
-          >
-            {n}
-          </button>
-        ))}
-        <VoiceControls className="ml-1" />
-        <button
-          type="button"
-          className={`rounded-full px-3 py-1 text-sm ${
-            mode === "practice" ? "bg-terra text-paper" : "border border-line bg-transparent text-ink-soft hover:text-ink"
-          }`}
-          onClick={() => void startPractice()}
-          disabled={busy}
-          title="Тренировать текущую партию"
-        >
-          {busy ? "…" : mode === "practice" ? "Ещё раз" : "Практика"}
-        </button>
-      </div>
+      <BatchPracticeBar
+        batchCount={deck.batch_count}
+        activeBatch={batch}
+        onSelectBatch={goBatch}
+        onPractice={() => void startPractice()}
+        practiceActive={mode === "practice"}
+        busy={busy}
+      />
 
       {mode === "cards" ? (
         <div className="grid gap-3">

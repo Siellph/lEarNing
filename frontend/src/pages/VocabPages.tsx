@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { CheckCircle2, CircleAlert } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
+import { BatchPracticeBar } from "../components/BatchPracticeBar";
 import { ProgressBar } from "../components/ProgressBar";
-import { SpeakButton, VoiceControls } from "../components/SpeakButton";
+import { SpeakButton } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
 import { percent } from "../lib/percent";
 import { looksEnglish } from "../lib/speech";
@@ -189,12 +190,9 @@ export function VocabTopicPage() {
         <Link to="/app/vocab" className="text-sm text-terra">
           ← Все темы
         </Link>
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold text-terra">{topic.level_code}</p>
-            <h1 className="font-display text-4xl">{topic.title}</h1>
-          </div>
-          <VoiceControls />
+        <div className="mt-2">
+          <p className="text-sm font-semibold text-terra">{topic.level_code}</p>
+          <h1 className="font-display text-4xl">{topic.title}</h1>
         </div>
         <p className="mt-2 max-w-2xl text-ink-soft">{topic.description}</p>
         <div className="mt-4">
@@ -203,32 +201,15 @@ export function VocabTopicPage() {
             label={`${topic.learned_count}/${topic.word_count} в теме · партия ${topic.batch_index} из ${topic.batch_count} · ${topic.batch_learned}/${topic.words.length} в этой партии`}
           />
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {Array.from({ length: topic.batch_count }, (_, index) => index + 1).map((index) => (
-            <button
-              key={index}
-              type="button"
-              className={`btn ${batch === index ? "btn-primary" : "btn-ghost"} text-sm`}
-              onClick={() => goBatch(index)}
-            >
-              Партия {index}
-            </button>
-          ))}
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            className={`btn ${mode === "cards" ? "btn-primary" : "btn-ghost"}`}
-            onClick={() => {
-              setMode("cards");
-              setPractice(null);
-            }}
-          >
-            Карточки
-          </button>
-          <button className={`btn ${mode === "practice" ? "btn-primary" : "btn-ghost"}`} onClick={startPractice} disabled={busy}>
-            {busy ? "Собираем партию…" : "Тренировать партию"}
-          </button>
-        </div>
+        <BatchPracticeBar
+          className="mt-4"
+          batchCount={topic.batch_count}
+          activeBatch={batch}
+          onSelectBatch={goBatch}
+          onPractice={() => void startPractice()}
+          practiceActive={mode === "practice"}
+          busy={busy}
+        />
       </div>
       {mode === "cards" ? (
         <div className="grid gap-3 md:grid-cols-2">
