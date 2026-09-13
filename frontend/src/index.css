@@ -666,9 +666,13 @@ input.gap-blank-input:disabled {
 }
 
 .quiz-feedback.is-bad {
-  background: #fff5f3;
+  background: color-mix(in srgb, var(--color-rose) 9%, #fff);
   border-color: rgba(180, 35, 24, 0.22);
   color: var(--color-rose);
+}
+
+.quiz-card-bad .quiz-feedback.is-bad {
+  background: color-mix(in srgb, var(--color-rose) 12%, #fff);
 }
 
 .quiz-feedback-title {
@@ -680,14 +684,20 @@ input.gap-blank-input:disabled {
 }
 
 .quiz-feedback-expected {
-  margin: 0.55rem 0 0;
+  margin: 0;
   color: var(--color-ink);
   font-size: 0.95rem;
   line-height: 1.45;
 }
 
+.quiz-feedback-title + .quiz-feedback-expected,
+.quiz-feedback-title + .quiz-feedback-note,
+.quiz-feedback-expected + .quiz-feedback-note {
+  margin-top: 0.45rem;
+}
+
 .quiz-feedback-note {
-  margin: 0.45rem 0 0;
+  margin: 0;
   color: var(--color-ink-soft);
   font-size: 0.9rem;
   line-height: 1.5;

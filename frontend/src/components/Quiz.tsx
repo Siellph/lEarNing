@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from "react";
-import { CheckCircle2, CircleAlert } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { fullSentenceInstruction, kindLabel } from "../lib/kindLabels";
 import { extractEnglish, looksEnglish, speakableEnglish } from "../lib/speech";
 import { type QuizOptions } from "../lib/match";
@@ -175,30 +175,14 @@ function QuizCard({
           </button>
         </div>
 
-        {result && (
-          <div className={`quiz-feedback ${result.correct ? "is-ok" : "is-bad"}`} aria-live="polite">
-            <div className="quiz-feedback-title">
-              {result.correct ? (
-                <>
-                  <CheckCircle2 size={18} /> Отлично
-                </>
-              ) : (
-                <>
-                  <CircleAlert size={18} /> Нужно иначе
-                </>
-              )}
-            </div>
-            {!result.correct && result.expected && (
+        {result && !result.correct && (result.expected || result.explanation) && (
+          <div className="quiz-feedback is-bad" aria-live="polite">
+            {result.expected && (
               <p className="quiz-feedback-expected">
                 Верный ответ: <strong>{result.expected}</strong>
               </p>
             )}
-            {!result.correct && result.explanation && (
-              <p className="quiz-feedback-note">{result.explanation}</p>
-            )}
-            {result.correct && result.explanation && (
-              <p className="quiz-feedback-note">{result.explanation}</p>
-            )}
+            {result.explanation && <p className="quiz-feedback-note">{result.explanation}</p>}
           </div>
         )}
       </div>
