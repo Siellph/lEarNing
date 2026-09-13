@@ -7,7 +7,13 @@ from app.models.grammar import Exercise
 from app.models.progress import ExerciseAttempt
 from app.models.user import User
 from app.schemas.content import AnswerIn
-from app.services.scoring import get_or_create_progress, is_correct, refresh_module_status, touch_user
+from app.services.scoring import (
+    get_or_create_progress,
+    is_correct,
+    missing_required_marker_hint,
+    refresh_module_status,
+    touch_user,
+)
 
 router = APIRouter(prefix="/practice", tags=["practice"])
 
@@ -23,7 +29,13 @@ def check_exercise(
     if not exercise:
         raise HTTPException(status_code=404, detail="Упражнение не найдено")
 
-    correct = is_correct(payload.answer, exercise.answer, exercise.accepted, prompt=exercise.prompt)
+    correct = is_correct(
+        payload.answer,
+        exercise.answer,
+        exercise.accepted,
+        prompt=exercise.prompt,
+        kind=exercise.kind,
+    )
     already = (
         db.query(ExerciseAttempt)
         .filter(
@@ -65,9 +77,14 @@ def check_exercise(
         refresh_module_status(progress)
 
     db.commit()
+    explanation = exercise.explanation
+    if not correct and exercise.kind == "transform":
+        hint = missing_required_marker_hint(payload.answer, exercise.answer, exercise.prompt)
+        if hint:
+            explanation = f"{hint} {explanation}" if explanation else hint
     return {
         "correct": correct,
-        "explanation": exercise.explanation,
+        "explanation": explanation,
         "expected": exercise.answer if not correct else None,
         "xp_awarded": awarded,
     }

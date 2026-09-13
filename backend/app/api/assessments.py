@@ -9,7 +9,14 @@ from app.models.grammar import Exam, GrammarModule, ModuleTest
 from app.models.progress import ExamAttempt, TestAttempt
 from app.models.user import User
 from app.schemas.content import ExamSubmitIn, TestSubmitIn
-from app.services.scoring import get_or_create_progress, is_correct, percent, refresh_module_status, touch_user
+from app.services.scoring import (
+    get_or_create_progress,
+    is_correct,
+    missing_required_marker_hint,
+    percent,
+    refresh_module_status,
+    touch_user,
+)
 
 router = APIRouter(tags=["assessments"])
 
@@ -19,13 +26,23 @@ EXAM_SAMPLE_MIN = 12
 EXAM_SAMPLE_MAX = 20
 
 
+def _public_options(item):
+    if getattr(item, "kind", None) == "match":
+        from app.services.match_format import public_match_options
+
+        sides = public_match_options(item.options, item.answer)
+        if sides:
+            return sides
+    return item.options
+
+
 def _public_questions(items):
     return [
         {
             "id": item.id,
             "kind": item.kind,
             "prompt": item.prompt,
-            "options": item.options,
+            "options": _public_options(item),
             "sort_order": item.sort_order,
         }
         for item in items
@@ -67,6 +84,16 @@ def _sample_questions(questions, *, lo: int, hi: int):
         picked.extend(rest[: target - len(picked)])
     random.shuffle(picked)
     return picked
+
+
+def _detail_explanation(question, given: str, ok: bool) -> str | None:
+    explanation = question.explanation
+    if ok or question.kind != "transform":
+        return explanation
+    hint = missing_required_marker_hint(given, question.answer, question.prompt)
+    if not hint:
+        return explanation
+    return f"{hint} {explanation}" if explanation else hint
 
 
 @router.get("/tests/{test_id}")
@@ -126,17 +153,24 @@ def submit_test(
     for qid in selected_ids:
         question = by_id[qid]
         given = payload.answers.get(qid, "")
-        ok = is_correct(given, question.answer, question.accepted, prompt=question.prompt)
+        ok = is_correct(
+            given,
+            question.answer,
+            question.accepted,
+            prompt=question.prompt,
+            kind=question.kind,
+        )
         if ok:
             correct_n += 1
         details.append(
             {
                 "id": question.id,
                 "prompt": question.prompt,
+                "kind": question.kind,
                 "given": given,
                 "correct": ok,
                 "expected": question.answer,
-                "explanation": question.explanation,
+                "explanation": _detail_explanation(question, given, ok),
             }
         )
     score = percent(correct_n, len(selected_ids))
@@ -240,17 +274,24 @@ def submit_exam(
     for qid in selected_ids:
         question = by_id[qid]
         given = payload.answers.get(qid, "")
-        ok = is_correct(given, question.answer, question.accepted, prompt=question.prompt)
+        ok = is_correct(
+            given,
+            question.answer,
+            question.accepted,
+            prompt=question.prompt,
+            kind=question.kind,
+        )
         if ok:
             correct_n += 1
         details.append(
             {
                 "id": question.id,
                 "prompt": question.prompt,
+                "kind": question.kind,
                 "given": given,
                 "correct": ok,
                 "expected": question.answer,
-                "explanation": question.explanation,
+                "explanation": _detail_explanation(question, given, ok),
             }
         )
     score = percent(correct_n, len(selected_ids))

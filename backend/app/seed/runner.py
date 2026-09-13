@@ -38,7 +38,10 @@ from app.seed.expand import (
     expand_vocabulary,
     fix_known_article_answers,
     remove_legacy_demo_accounts,
+    repair_match_options,
+    rewrite_known_prompts,
     scrub_off_topic_pad_items,
+    sync_lesson_theory,
 )
 from app.seed.vocab import TOPICS
 
@@ -129,12 +132,15 @@ def _run_expanders(db) -> dict:
         "scrub_practice": scrubbed["practice"],
         "scrub_tests": scrubbed["tests"],
         "word_order": ensure_word_order_modules(db),
+        "theory": sync_lesson_theory(db),
         "practice": expand_practice_banks(db),
         "tests": expand_module_tests(db),
         "exams": expand_exams(db),
         "words": expand_vocabulary(db),
         "study": expand_study_decks(db),
         "article_fixes": fix_known_article_answers(db),
+        "prompt_rewrites": rewrite_known_prompts(db),
+        "match_repairs": repair_match_options(db),
     }
 
 
@@ -154,9 +160,12 @@ def main() -> None:
             print(
                 "already seeded; "
                 f"scrub_practice=-{stats['scrub_practice']}, scrub_tests=-{stats['scrub_tests']}, "
-                f"word_order +{stats['word_order']}, practice +{stats['practice']}, "
+                f"word_order +{stats['word_order']}, theory={stats['theory']}, "
+                f"practice +{stats['practice']}, "
                 f"tests +{stats['tests']}, exams +{stats['exams']}, words +{stats['words']}, "
-                f"study +{stats['study']}, article_fixes={stats['article_fixes']}; "
+                f"study +{stats['study']}, article_fixes={stats['article_fixes']}, "
+                f"prompt_rewrites={stats['prompt_rewrites']}, "
+                f"match_repairs={stats['match_repairs']}; "
                 f"demo_removed={removed_demo}; admin={'created' if created_admin else 'unchanged'}"
             )
             return
@@ -222,7 +231,9 @@ def main() -> None:
             f"exercises={n_exercises + stats['practice']} test_questions={n_test_q + stats['tests']} "
             f"topics={n_topics} words={n_words + stats['words']} exams={n_exams} "
             f"exam_questions={n_exam_q + stats['exams']} study_cards=+{stats['study']} "
-            f"scrub_practice=-{stats['scrub_practice']} scrub_tests=-{stats['scrub_tests']}"
+            f"scrub_practice=-{stats['scrub_practice']} scrub_tests=-{stats['scrub_tests']} "
+            f"theory={stats['theory']} "
+            f"prompt_rewrites={stats['prompt_rewrites']} match_repairs={stats['match_repairs']}"
         )
     finally:
         db.close()

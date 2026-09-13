@@ -64,12 +64,15 @@ def order(prompt: str, answer: str, explanation: str, accepted: list[str] | None
 
 
 def match(prompt: str, options: list[str], answer: str, explanation: str) -> dict:
-    """Match pairs: options are left sides; answer is 'A=1;B=2' style or the correct pairing string."""
+    """Match pairs for UI: always expose {left, right}; answer stays 'A=B; C=D'."""
+    from app.services.match_format import normalize_match_payload
+
+    sides, aligned = normalize_match_payload(list(options), answer)
     return {
         "kind": "match",
         "prompt": prompt,
-        "options": options,
-        "answer": answer,
+        "options": sides,
+        "answer": aligned,
         "accepted": [],
         "explanation": explanation,
     }
@@ -115,13 +118,18 @@ def module(
     exercises: list[dict],
     test: list[dict],
 ) -> dict:
+    # Lazy import avoids circular dependency with theory_* packs.
+    from app.seed.theory_content import THEORY_BY_SLUG
+
+    # A1–B1 / word-order overrides are authored as replacements; always prefer them.
+    lesson_content = THEORY_BY_SLUG.get(slug, content)
     return {
         "slug": slug,
         "title": title,
         "description": description,
         "minutes": minutes,
         "sources": SOURCES,
-        "lesson": {"title": lesson_title, "content": content},
+        "lesson": {"title": lesson_title, "content": lesson_content},
         "exercises": exercises,
         "test": test,
     }

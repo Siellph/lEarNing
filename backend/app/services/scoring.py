@@ -82,6 +82,37 @@ def for_compare(value: str) -> str:
     return expand_contractions(normalize(value))
 
 
+_MARKER_IN_PROMPT = re.compile(r"[«\"]([^»\"]{2,40})[»\"]")
+
+
+def missing_required_marker_hint(given: str, answer: str, prompt: str | None) -> str | None:
+    """If the core clause matches but a quoted time/marker from the prompt is missing."""
+    if not prompt or not answer or not given:
+        return None
+    markers = _MARKER_IN_PROMPT.findall(prompt)
+    if not markers:
+        return None
+    given_n = for_compare(given)
+    answer_n = for_compare(answer)
+    if given_n == answer_n:
+        return None
+    missing = []
+    for marker in markers:
+        marker_n = for_compare(marker)
+        if marker_n in answer_n and marker_n not in given_n:
+            missing.append(marker)
+    if not missing:
+        return None
+    core = answer_n
+    for marker in missing:
+        core = core.replace(for_compare(marker), " ")
+    core = re.sub(r"\s+", " ", core).strip()
+    if not core or (given_n != core and given_n not in answer_n and answer_n.find(given_n) == -1):
+        return None
+    joined = ", ".join(f"«{m}»" for m in missing)
+    return f"Почти верно по времени/форме — добавьте в ответ маркер {joined}."
+
+
 def _infer_blank(prompt: str, completed: str) -> str | None:
     """If prompt has ___ and completed is the filled phrase, return the blank value."""
     if "___" not in prompt:
@@ -114,7 +145,18 @@ def is_correct(
     answer: str,
     accepted: list[str] | None = None,
     prompt: str | None = None,
+    kind: str | None = None,
 ) -> bool:
+    from app.services.match_format import is_match_correct, looks_like_match_answer
+
+    if kind == "match" or looks_like_match_answer(answer):
+        if is_match_correct(given, answer):
+            return True
+        for alt in accepted or []:
+            if is_match_correct(given, alt):
+                return True
+        return False
+
     candidates = [answer, *(accepted or [])]
     given_n = for_compare(given)
     norm_cands = [for_compare(item) for item in candidates]

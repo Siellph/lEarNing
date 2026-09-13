@@ -40,10 +40,18 @@ class TokenOut(BaseModel):
 class RegisterOut(BaseModel):
     message: str
     email: str
+    access_token: str | None = None
+    token_type: str | None = None
 
 
 class MessageOut(BaseModel):
     message: str
+
+
+class VerifyOut(BaseModel):
+    message: str
+    access_token: str
+    token_type: str = "bearer"
 
 
 class EmailIn(BaseModel):

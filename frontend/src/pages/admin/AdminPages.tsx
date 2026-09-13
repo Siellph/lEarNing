@@ -234,10 +234,31 @@ type ContentItem = {
   kind: string;
   prompt: string;
   answer: string;
-  options?: string[] | null;
+  options?: string[] | { left: string[]; right: string[] } | null;
   accepted?: string[] | null;
   explanation?: string;
 };
+
+function optionsEditValue(options: ContentItem["options"]): string {
+  if (!options) return "";
+  if (Array.isArray(options)) return options.join(" | ");
+  const left = options.left || [];
+  const right = options.right || [];
+  return [...left, "=>", ...right].join(" | ");
+}
+
+function parseOptionsEdit(value: string): string[] | { left: string[]; right: string[] } | null {
+  const parts = value
+    .split("|")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!parts.length) return null;
+  const sep = parts.indexOf("=>");
+  if (sep >= 0) {
+    return { left: parts.slice(0, sep), right: parts.slice(sep + 1) };
+  }
+  return parts;
+}
 
 export function AdminModuleContent() {
   const { moduleId } = useParams();
@@ -347,14 +368,12 @@ export function AdminModuleContent() {
                 <input className="field" value={editEx.prompt} onChange={(e) => setEditEx({ ...editEx, prompt: e.target.value })} />
                 <input
                   className="field"
-                  placeholder="Варианты через |"
-                  value={(editEx.options || []).join(" | ")}
+                  placeholder="Варианты через | (для match: left | => | right)"
+                  value={optionsEditValue(editEx.options)}
                   onChange={(e) =>
                     setEditEx({
                       ...editEx,
-                      options: e.target.value
-                        ? e.target.value.split("|").map((s) => s.trim()).filter(Boolean)
-                        : null,
+                      options: parseOptionsEdit(e.target.value),
                     })
                   }
                 />

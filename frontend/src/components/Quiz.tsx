@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
+import { kindLabel } from "../lib/kindLabels";
 import { extractEnglish, looksEnglish } from "../lib/speech";
+import { type QuizOptions } from "../lib/match";
+import { MatchQuestion, matchAnswerComplete } from "./MatchQuestion";
 import { PromptWithBlanks } from "./PromptWithBlanks";
 import { SpeakButton } from "./SpeakButton";
 
@@ -7,7 +10,7 @@ export type QuizItem = {
   id: number;
   kind: string;
   prompt: string;
-  options?: string[] | null;
+  options?: QuizOptions;
   solved?: boolean;
 };
 
@@ -49,13 +52,16 @@ function QuizCard({
   const [value, setValue] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
-  const options = useMemo(() => {
-    if (!item.options) return null;
+  const isMatch = item.kind === "match";
+  const choiceOptions = useMemo(() => {
+    if (isMatch || !item.options || !Array.isArray(item.options)) return null;
     return [...item.options].sort(() => Math.random() - 0.5);
-  }, [item.id, item.prompt]);
+  }, [item.id, item.prompt, item.options, isMatch]);
+
+  const canSubmit = isMatch ? matchAnswerComplete(item.options, value) : !!value.trim();
 
   const submit = async () => {
-    if (!value.trim()) return;
+    if (!canSubmit) return;
     setBusy(true);
     try {
       const res = await onCheck(item.id, value.trim());
@@ -65,20 +71,11 @@ function QuizCard({
     }
   };
 
-  const kindLabel: Record<string, string> = {
-    multiple_choice: "Выбор",
-    fill_blank: "Пропуск",
-    transform: "Преобразование",
-    error_correction: "Исправление",
-    order: "Порядок слов",
-    match: "Соотнесение",
-  };
-
   return (
     <article className="card p-5 sm:p-6">
       <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
         <span className="rounded-full bg-paper-2 px-2.5 py-1 font-semibold text-ink-soft">
-          {index + 1}. {kindLabel[item.kind] || "Задание"}
+          {index + 1}. {kindLabel(item.kind)}
         </span>
         {(item.solved || result?.correct) && (
           <span className="rounded-full bg-sage-soft px-2.5 py-1 font-semibold text-sage">Верно</span>
@@ -90,9 +87,19 @@ function QuizCard({
         </p>
         {extractEnglish(item.prompt) && <SpeakButton text={extractEnglish(item.prompt) || item.prompt} />}
       </div>
-      {options ? (
+      {isMatch ? (
+        <MatchQuestion
+          options={item.options}
+          value={value}
+          onChange={(next) => {
+            setValue(next);
+            setResult(null);
+          }}
+          disabled={!!result?.correct}
+        />
+      ) : choiceOptions ? (
         <div className="grid gap-2">
-          {options.map((opt) => (
+          {choiceOptions.map((opt) => (
             <div key={opt} className="flex items-center gap-2">
               <button
                 type="button"
@@ -123,7 +130,7 @@ function QuizCard({
         />
       )}
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button className="btn btn-primary" disabled={busy || !value.trim()} onClick={submit}>
+        <button className="btn btn-primary" disabled={busy || !canSubmit} onClick={submit}>
           {busy ? "Проверяем…" : submitLabel}
         </button>
         {result && (

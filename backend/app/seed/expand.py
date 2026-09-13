@@ -347,6 +347,78 @@ def fix_known_article_answers(db) -> int:
     return fixed
 
 
+def rewrite_known_prompts(db) -> int:
+    """Update terse transform prompts in live DB (old exact prompt → clearer wording)."""
+    from app.seed.prompt_rewrites import EXPLANATION_REWRITES, PROMPT_REWRITES
+
+    fixed = 0
+    for old_prompt, new_prompt in PROMPT_REWRITES.items():
+        if old_prompt == new_prompt:
+            continue
+        for model in (Exercise, TestQuestion, ExamQuestion):
+            rows = db.query(model).filter(model.prompt == old_prompt).all()
+            for row in rows:
+                row.prompt = new_prompt
+                if old_prompt in EXPLANATION_REWRITES:
+                    row.explanation = EXPLANATION_REWRITES[old_prompt]
+                fixed += 1
+    return fixed
+
+
+def sync_lesson_theory(db) -> int:
+    """Overwrite Lesson.title/content from seed packs by module slug (idempotent).
+
+    Fresh installs already get enriched theory via helpers.module() + THEORY_BY_SLUG.
+    Existing DBs pick up richer theory (and scrubs like «развилкать») on the next
+    ``python -m app.seed.runner`` without wiping data.
+    """
+    from app.seed.a1 import A1
+    from app.seed.a2 import A2
+    from app.seed.b1 import B1
+    from app.seed.b2 import B2
+    from app.seed.c1 import C1
+    from app.seed.c2 import C2
+
+    by_slug: dict[str, dict] = {}
+    for pack in (A1, A2, B1, B2, C1, C2, WORD_ORDER_MODULES):
+        for data in pack:
+            by_slug[data["slug"]] = data["lesson"]
+
+    updated = 0
+    modules = db.query(GrammarModule).all()
+    for gm in modules:
+        seed = by_slug.get(gm.slug)
+        if not seed or not gm.lessons:
+            continue
+        lesson = gm.lessons[0]
+        new_title = seed["title"]
+        new_content = seed["content"]
+        if lesson.title != new_title or lesson.content != new_content:
+            lesson.title = new_title
+            lesson.content = new_content
+            updated += 1
+    return updated
+
+
+
+def repair_match_options(db) -> int:
+    """Ensure match items store {left, right} and aligned a=b answer keys."""
+    from app.services.match_format import normalize_match_payload
+
+    fixed = 0
+    for model in (Exercise, TestQuestion, ExamQuestion):
+        rows = db.query(model).filter(model.kind == "match").all()
+        for row in rows:
+            sides, aligned = normalize_match_payload(row.options, row.answer)
+            if not sides["left"] or not sides["right"]:
+                continue
+            if row.options != sides or row.answer != aligned:
+                row.options = sides
+                row.answer = aligned
+                fixed += 1
+    return fixed
+
+
 DONATION_MESSAGE = (
     "Если lEarNing помогает учить EN, можно оставить чаевые — это поддерживает развитие курса."
 )

@@ -91,7 +91,7 @@ WORD_ORDER_MODULES = [
             ),
             [
                 order("Соберите: yesterday / in / park / the / walked / we", "We walked in the park yesterday.", "place before time."),
-                fill("___ you listening?", "Are", "Are + S + V-ing."),
+                fill("Выберите форму to be: ___ you listening?", "Are", "Are + S + V-ing."),
                 mc("Give ___ the keys.", ["to me", "me", "I"], "me", "Give + me + N."),
                 err("She is cook dinner now.", "She is cooking dinner now.", "be + V-ing."),
                 order("Слова: to / me / send / it", "Send it to me.", "it перед to-фразе."),
@@ -149,7 +149,7 @@ WORD_ORDER_MODULES = [
                 err("She asked where did I go.", "She asked where I went.", "Без инверсии."),
                 order("Слова: yesterday / early / left / we", "Yesterday we left early.", "Fronted time."),
                 fill("I gave the keys ___ Lena.", "to", "sth to sb."),
-                xf("Косвенно: 'Where do you work?' → He asked where I ___.", "worked", "Present → Past."),
+                xf("Косвенный вопрос: вставьте порядок слов: 'Where do you work?' → He asked where I ___.", "worked", "Present → Past."),
                 match("Reported", ["asked", "if", "we were free"], "asked=verb; if=linker; we were free=clause", "if + statement order."),
             ],
             [
@@ -159,7 +159,7 @@ WORD_ORDER_MODULES = [
                 err("He asked what did she want.", "He asked what she wanted.", "Statement order."),
                 order("Слова: in June / open / the / cafe / will", "In June the cafe will open.", "Fronted time + S + will + V."),
                 fill("She made ___ a coffee.", "me", "make + sb + sth."),
-                xf("'Are you ready?' → She asked if I ___ ready.", "was", "are → was."),
+                xf("Косвенный вопрос: вставьте форму: 'Are you ready?' → She asked if I ___ ready.", "was", "are → was."),
                 fill("Pass the message ___ the desk.", "to", "to + recipient."),
             ],
         ),

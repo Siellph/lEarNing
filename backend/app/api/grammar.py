@@ -10,6 +10,16 @@ from app.models.user import User
 router = APIRouter(prefix="/grammar", tags=["grammar"])
 
 
+def _practice_options(item):
+    if item.kind == "match":
+        from app.services.match_format import public_match_options
+
+        sides = public_match_options(item.options, item.answer)
+        if sides:
+            return sides
+    return item.options
+
+
 def _progress_map(db: Session, user_id: int) -> dict[int, ModuleProgress]:
     rows = db.query(ModuleProgress).filter(ModuleProgress.user_id == user_id).all()
     return {row.module_id: row for row in rows}
@@ -183,7 +193,7 @@ def get_practice(slug: str, db: Session = Depends(get_db), user: User = Depends(
                 "id": item.id,
                 "kind": item.kind,
                 "prompt": item.prompt,
-                "options": item.options,
+                "options": _practice_options(item),
                 "sort_order": item.sort_order,
                 "xp": item.xp,
                 "solved": item.id in solved,

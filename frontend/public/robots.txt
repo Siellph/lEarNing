@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /terms
+Allow: /privacy
+Disallow: /app/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /verify
+Disallow: /check-email
+
+Sitemap: https://learning-en.ru/sitemap.xml

@@ -8,7 +8,7 @@ B2 = [
         24,
         "Два времени — одна конструкция",
         lesson(
-            "Классические второй и третий типы условных держат причину и следствие в одном временном плане. Смешанные условные разводят эти планы: прошлое решение продолжает влиять на настоящее, или устойчивая черта характера объясняет вчерашнюю ошибку. Это не «ещё один тип ради списка», а точный выбор двух якорей: когда случилось условие и когда проявляется следствие.",
+            "Классические второй и третий типы условных держат причину и следствие в одном временном плане. Смешанные условные разводят эти планы: прошлое решение продолжает влиять на настоящее, или устойчивая черта характера объясняет вчерашнюю ошибку. Это не «ещё один тип ради списка», а точный выбор двух точек опоры: когда случилось условие и когда проявляется следствие. Перед сборкой формы ответьте на оба вопроса отдельно.",
             [
                 rule(
                     "Прошлое условие → нынешний результат",
@@ -41,24 +41,25 @@ B2 = [
             watch_out=[
                 "Не ставьте would в if-части: If I would have known — ошибка.",
                 "Were остаётся естественным в гипотезах о настоящем: If I were richer, not If I was richer в аккуратной письменной речи.",
+                "Не смешивайте времена ради разнообразия: смесь нужна только при разных временных планах условия и следствия.",
             ],
-            remember="Смешивайте времена только если условие и результат живут в разных эпохах. Сначала якорь условия, затем якорь следствия.",
+            remember="Смешивайте времена только если условие и результат живут в разных эпохах. Сначала время условия, затем время следствия.",
         ),
         [
             mc("If she ___ the grant, she would be leading the lab now.", ["won", "had won", "would win"], "had won", "Прошлое условие при нынешнем результате требует Past Perfect."),
             fill("If I were tidier, I ___ lost the keys yesterday. (not / would)", "wouldn't have", "Устойчивая черта → прошлый результат: wouldn't have + V3.", ["would not have"]),
-            xf("Смешайте: прошлый отказ от курса → сейчас нет сертификата. If I / take / the course → I / have / a certificate now.", "If I had taken the course, I would have a certificate now.", "Past Perfect в условии, would + инфинитив в результате."),
+            xf("Составьте Mixed Conditional (прошлое условие → нынешний результат). Факт: прошлый отказ от курса → сейчас нет сертификата. Слова: If I / take / the course ; I / have / a certificate now.", "If I had taken the course, I would have a certificate now.", "Past Perfect в условии, would + инфинитив в результате."),
             err("If he would have slept more, he wouldn't be exhausted today.", "If he had slept more, he wouldn't be exhausted today.", "В if-части нужен Past Perfect, не would have."),
             fill("If they ___ so stubborn, they would have signed the deal last week. (not / be)", "weren't", "Текущая черта — Past Simple.", ["were not"]),
             mc("Какая пара времён для «тогда не уехал → сейчас всё ещё здесь»?", ["If + Past Simple, would have + V3", "If + Past Perfect, would + infinitive", "If + Present Simple, will + infinitive"], "If + Past Perfect, would + infinitive", "Прошлое условие, нынешний результат."),
         ],
         [
-            mc("If I ___ allergic to cats, I would have kept the kitten.", ["hadn't been", "weren't", "wouldn't be"], "weren't", "Аллергия — устойчивое настоящее условие."),
-            fill("If we had booked earlier, we ___ on the waiting list now. (not / be)", "wouldn't be", "Прошлое условие, нынешнее состояние.", ["would not be"]),
-            xf("Смешайте: он не бережлив (сейчас) → вчера истратил всю премию.", "If he were more frugal, he wouldn't have spent the whole bonus yesterday.", "Were + wouldn't have + V3."),
+            mc("Выберите форму to be: If I ___ allergic to cats, I would have kept the kitten.", ["hadn't been", "weren't", "wouldn't be"], "weren't", "Аллергия — устойчивое настоящее условие."),
+            fill("Вставьте модальный глагол (will/would): If we had booked earlier, we ___ on the waiting list now. (not / be)", "wouldn't be", "Прошлое условие, нынешнее состояние.", ["would not be"]),
+            xf("Составьте Mixed Conditional (устойчивая черта сейчас → прошлый результат): он не бережлив (сейчас) → вчера истратил всю премию.", "If he were more frugal, he wouldn't have spent the whole bonus yesterday.", "Were + wouldn't have + V3."),
             err("If she studied medicine, she would have been a surgeon now.", "If she had studied medicine, she would be a surgeon now.", "Учёба в прошлом, профессия сейчас."),
-            fill("If you ___ me the brief, I wouldn't be improvising on stage. (send / past)", "had sent", "Пропущенный бриф — прошлое условие."),
-            mc("If I didn't trust her, I ___ her the draft last night.", ["wouldn't send", "wouldn't have sent", "hadn't sent"], "wouldn't have sent", "Текущее доверие объясняет уже совершённое действие."),
+            fill("Вставьте форму Past Simple: If you ___ me the brief, I wouldn't be improvising on stage. (send / past)", "had sent", "Пропущенный бриф — прошлое условие."),
+            mc("Выберите модальный глагол (will/would): If I didn't trust her, I ___ her the draft last night.", ["wouldn't send", "wouldn't have sent", "hadn't sent"], "wouldn't have sent", "Текущее доверие объясняет уже совершённое действие."),
         ],
     ),
     module(
@@ -114,12 +115,12 @@ B2 = [
             mc("If only we ___ a table earlier.", ["book", "booked", "had booked"], "had booked", "Упущенный шанс в прошлом."),
         ],
         [
-            fill("I wish this corridor ___ so dark. (not / be)", "weren't", "Нынешний факт.", ["were not", "wasn't", "was not"]),
-            mc("He wishes he ___ louder during the pitch.", ["speaks", "spoke", "had spoken"], "had spoken", "Питч уже закончился."),
+            fill("Вставьте форму to be: I wish this corridor ___ so dark. (not / be)", "weren't", "Нынешний факт.", ["were not", "wasn't", "was not"]),
+            mc("Выберите пропущенное слово: He wishes he ___ louder during the pitch.", ["speaks", "spoke", "had spoken"], "had spoken", "Питч уже закончился."),
             xf("Сильнее, чем I wish: I wish I had asked for feedback.", "If only I had asked for feedback.", "If only усиливает то же Past Perfect."),
             err("I wish you will stop humming.", "I wish you would stop humming.", "Раздражение кодируется would, не will."),
-            fill("They wish they ___ the later train. (catch)", "had caught", "Пропущенный поезд — Past Perfect."),
-            mc("I wish I ___ ski, then I'd join you this weekend.", ["can", "could", "had been able"], "could", "Нынешнее умение: wish + could."),
+            fill("Вставьте нужную форму (catch): They wish they ___ the later train. (catch)", "had caught", "Пропущенный поезд — Past Perfect."),
+            mc("Выберите модальный глагол: I wish I ___ ski, then I'd join you this weekend.", ["can", "could", "had been able"], "could", "Нынешнее умение: wish + could."),
         ],
     ),
     module(
@@ -175,12 +176,12 @@ B2 = [
             mc("Choose the most tentative option.", ["She must be joking.", "She may be joking.", "She can't be joking."], "She may be joking.", "May оставляет возможность открытой."),
         ],
         [
-            fill("You've been on your feet all day; you ___ be exhausted. (must)", "must", "Логичный вывод о состоянии."),
-            mc("It ___ be the original file; the metadata looks generated.", ["must", "can't", "mustn't"], "can't", "Метаданные опровергают подлинность."),
+            fill("Вставьте модальный глагол must: You've been on your feet all day; you ___ be exhausted. (must)", "must", "Логичный вывод о состоянии."),
+            mc("Выберите модальный глагол can: It ___ be the original file; the metadata looks generated.", ["must", "can't", "mustn't"], "can't", "Метаданные опровергают подлинность."),
             xf("Сделайте осторожный вывод: The café is closed.", "The café might be closed.", "Might / may / could допустимы; канонический ответ — might.", ["The café may be closed", "The café could be closed"]),
             err("She can be at the dentist, I'm not sure.", "She could be at the dentist, I'm not sure.", "Для гипотезы в утверждении нужен could/might/may, не can."),
-            fill("They ___ not have the latest patch yet. (may)", "may", "Возможно, патча нет."),
-            mc("The kettle has boiled, so the water ___ be ready.", ["should", "can't", "mustn't"], "should", "По нормальному ходу вещей вода готова."),
+            fill("Вставьте модальный глагол: They ___ not have the latest patch yet. (may)", "may", "Возможно, патча нет."),
+            mc("Выберите модальный глагол should: The kettle has boiled, so the water ___ be ready.", ["should", "can't", "mustn't"], "should", "По нормальному ходу вещей вода готова."),
         ],
     ),
     module(
@@ -236,12 +237,12 @@ B2 = [
             mc("We ___ book a taxi — a colleague offered a lift, so we walked to her car.", ["needn't have", "didn't need to", "mustn't have"], "didn't need to", "Необходимости не было, такси не заказывали."),
         ],
         [
-            fill("They ___ have taken the coastal road; they arrived salt-stained. (must)", "must", "Следы соли — сильный довод."),
-            mc("I baked three cakes, but only six people came. I ___ baked so many.", ["didn't need to", "needn't have", "mustn't have"], "needn't have", "Выпечка уже сделана и оказалась лишней."),
+            fill("Вставьте модальный глагол must: They ___ have taken the coastal road; they arrived salt-stained. (must)", "must", "Следы соли — сильный довод."),
+            mc("Выберите модальный глагол: I baked three cakes, but only six people came. I ___ baked so many.", ["didn't need to", "needn't have", "mustn't have"], "needn't have", "Выпечка уже сделана и оказалась лишней."),
             xf("Невозможность: She didn't write this — the tone is wrong.", "She can't have written this.", "Can't have + V3."),
             err("You should have to warn me yesterday.", "You should have warned me yesterday.", "Should have + V3, без to."),
-            fill("We ___ have caught the earlier ferry, but we lingered over coffee. (could)", "could", "Неиспользованная возможность."),
-            mc("The lab was empty at eight, so the team ___ finished early.", ["must have", "must", "should"], "must have", "Пустая лаборатория объясняет ранний уход."),
+            fill("Вставьте модальный глагол: We ___ have caught the earlier ferry, but we lingered over coffee. (could)", "could", "Неиспользованная возможность."),
+            mc("Выберите модальный глагол must: The lab was empty at eight, so the team ___ finished early.", ["must have", "must", "should"], "must have", "Пустая лаборатория объясняет ранний уход."),
         ],
     ),
     module(
@@ -297,12 +298,12 @@ B2 = [
             mc("I'm glad ___ invited before the list closed.", ["to be", "to have been", "being"], "to have been", "Приглашение предшествует Glad."),
         ],
         [
-            fill("He is thought ___ negotiating with two publishers. (be)", "to be", "Одновременный процесс — простой инфинитив."),
-            mc("The windows ought ___ before the storm.", ["to have boarded", "to be boarded", "board"], "to be boarded", "Ещё не сделано, объект — окна."),
+            fill("Вставьте форму to be: He is thought ___ negotiating with two publishers. (be)", "to be", "Одновременный процесс — простой инфинитив."),
+            mc("Выберите пропущенное слово: The windows ought ___ before the storm.", ["to have boarded", "to be boarded", "board"], "to be boarded", "Ещё не сделано, объект — окна."),
             xf("Сверните: People say she won a fellowship.", "She is said to have won a fellowship.", "Is said + to have + V3."),
             err("The letter seems to be stolen yesterday.", "The letter seems to have been stolen yesterday.", "Yesterday требует перфектного пассива."),
-            fill("We were sorry ___ caused a delay. (have)", "to have", "Sorry + перфектный инфинитив."),
-            mc("The data is reported ___ independently verified.", ["to have been", "to have", "being"], "to have been", "Пассив уже совершён."),
+            fill("Вставьте нужную форму (have): We were sorry ___ caused a delay. (have)", "to have", "Sorry + перфектный инфинитив."),
+            mc("Выберите форму пассива: The data is reported ___ independently verified.", ["to have been", "to have", "being"], "to have been", "Пассив уже совершён."),
         ],
     ),
     module(
@@ -358,12 +359,12 @@ B2 = [
             mc("I'll ___ the intern photocopy the signatures.", ["get", "have", "make to"], "have", "Have + person + bare infinitive."),
         ],
         [
-            fill("She is ___ her portrait painted by a local artist. (have)", "having", "Процесс: is having + объект + V3."),
-            mc("We ___ the neighbours to move their skip.", ["had", "got", "made"], "got", "Get + person + to."),
-            xf("Принуждение: The coach insisted we rerun the scene. → The coach ___ us rerun the scene.", "The coach made us rerun the scene.", "Make + person + bare infinitive."),
+            fill("Вставьте нужную форму (have): She is ___ her portrait painted by a local artist. (have)", "having", "Процесс: is having + объект + V3."),
+            mc("Выберите пропущенное слово: We ___ the neighbours to move their skip.", ["had", "got", "made"], "got", "Get + person + to."),
+            xf("Перепишите с make + person + bare infinitive: The coach insisted we rerun the scene. → The coach ___ us rerun the scene.", "The coach made us rerun the scene.", "Make + person + bare infinitive."),
             err("I have cutting my keys yesterday.", "I had my keys cut yesterday.", "Have + объект + V3 в нужном времени."),
-            fill("Did you get the essay ___ before midnight? (proofread)", "proofread", "Get + объект + V3."),
-            mc("He ___ his application rejected on a technicality.", ["had", "made", "did"], "had", "Нежелательный опыт: had + объект + V3.")
+            fill("Вставьте нужную форму (proofread): Did you get the essay ___ before midnight? (proofread)", "proofread", "Get + объект + V3."),
+            mc("Выберите вспомогательный глагол: He ___ his application rejected on a technicality.", ["had", "made", "did"], "had", "Нежелательный опыт: had + объект + V3.")
         ],
     ),
     module(
@@ -419,12 +420,12 @@ B2 = [
             mc("___ the samples, they left the lab.", ["Having labelled", "Labelling having", "Labelled having"], "Having labelled", "Сначала маркировка, потом уход."),
         ],
         [
-            fill("___ wanting a scene, she answered in a whisper. (not)", "Not", "Отрицание перед V-ing."),
-            mc("___ repaired twice, the hinge still sagged.", ["Having been", "Having", "Being have"], "Having been", "Пассив предшествует главному глаголу."),
+            fill("Вставьте нужную форму (not): ___ wanting a scene, she answered in a whisper. (not)", "Not", "Отрицание перед V-ing."),
+            mc("Выберите форму пассива: ___ repaired twice, the hinge still sagged.", ["Having been", "Having", "Being have"], "Having been", "Пассив предшествует главному глаголу."),
             xf("Сожмите: When I opened the crate, I found rust.", "Opening the crate, I found rust.", "V-ing оборота."),
             err("Having ate, we stacked the trays.", "Having eaten, we stacked the trays.", "Having + V3: eaten."),
-            fill("The fog ___, the ferry stayed in harbour. (lift / not; absolute)", "not lifting", "Абсолютная конструкция: свой субъект the fog."),
-            mc("___ by lightning, the oak split along the trunk.", ["Striking", "Struck", "Having striking"], "Struck", "Дерево претерпело удар — V3."),
+            fill("Вставьте нужную форму (lift / not; absolute): The fog ___, the ferry stayed in harbour. (lift / not; absolute)", "not lifting", "Абсолютная конструкция: свой субъект the fog."),
+            mc("Выберите пропущенное слово: ___ by lightning, the oak split along the trunk.", ["Striking", "Struck", "Having striking"], "Struck", "Дерево претерпело удар — V3."),
         ],
     ),
     module(
@@ -480,12 +481,12 @@ B2 = [
             mc("Hardly had the meeting started ___ the projector died.", ["than", "when", "that"], "when", "Hardly… when."),
         ],
         [
-            fill("Rarely ___ the river freeze this far south. (do)", "does", "Does + подлежащее the river."),
-            mc("Only then ___ we understand the missing page.", ["we did", "did", "have we did"], "did", "Only then + did + we."),
+            fill("Вставьте вспомогательный глагол: Rarely ___ the river freeze this far south. (do)", "does", "Does + подлежащее the river."),
+            mc("Выберите вспомогательный глагол: Only then ___ we understand the missing page.", ["we did", "did", "have we did"], "did", "Only then + did + we."),
             xf("Инверсия: She not only cut the scene, she recast the lead.", "Not only did she cut the scene, she recast the lead.", "Not only + did + she."),
             err("Never I have agreed to such a clause.", "Never have I agreed to such a clause.", "Have встаёт перед I."),
-            fill("Scarcely had he sat down ___ his phone buzzed. (when)", "when", "Scarcely… when."),
-            mc("Under no circumstances ___ the originals leave the building.", ["the originals must", "must", "must not"], "must", "On/under no circumstances + must + подлежащее. Отрицание уже в under no circumstances.")
+            fill("Вставьте вопросительное / относительное слово: Scarcely had he sat down ___ his phone buzzed. (when)", "when", "Scarcely… when."),
+            mc("Выберите модальный глагол must: Under no circumstances ___ the originals leave the building.", ["the originals must", "must", "must not"], "must", "On/under no circumstances + must + подлежащее. Отрицание уже в under no circumstances.")
         ],
     ),
     module(
@@ -541,12 +542,12 @@ B2 = [
             mc("___ delayed us was the unscheduled inspection.", ["It", "What", "All that it"], "What", "Wh-cleft открывается What."),
         ],
         [
-            fill("It ___ because the cable frayed that the lights flickered. (be / past)", "was", "It-cleft причины."),
-            mc("All they did ___ forward the complaint.", ["was", "were", "have"], "was", "All they did was + bare infinitive."),
-            xf("Wh-cleft: The humidity damaged the prints.", "What damaged the prints was the humidity.", "What + глагол + be + фокус."),
+            fill("Вставьте форму to be: It ___ because the cable frayed that the lights flickered. (be / past)", "was", "It-cleft причины."),
+            mc("Выберите форму to be: All they did ___ forward the complaint.", ["was", "were", "have"], "was", "All they did was + bare infinitive."),
+            xf("Перепишите как wh-cleft (What … was …): The humidity damaged the prints.", "What damaged the prints was the humidity.", "What + глагол + be + фокус."),
             err("It is last Monday that we froze the branch.", "It was last Monday that we froze the branch.", "Прошлое требует was."),
-            fill("It was Lena ___ rewrote the abstract.", "who", "Фокус-человек.", ["that"]),
-            mc("What we lack ___ a second pair of eyes.", ["are", "is", "be"], "is", "Учебная норма: is + идея/вещь."),
+            fill("Вставьте вопросительное / относительное слово: It was Lena ___ rewrote the abstract.", "who", "Фокус-человек.", ["that"]),
+            mc("Выберите форму to be: What we lack ___ a second pair of eyes.", ["are", "is", "be"], "is", "Учебная норма: is + идея/вещь."),
         ],
     ),
     module(
@@ -602,12 +603,12 @@ B2 = [
             mc("When we opened the crate, the fruit ___ already.", ["ripened", "had ripened", "was ripen"], "had ripened", "Созревание раньше открытия."),
         ],
         [
-            fill("While I ___ labels, she sealed the jars. (write)", "was writing", "Параллельный фон."),
-            mc("She ___ the keys and walked out — сюжетный шаг.", ["was finding", "found", "had been found"], "found", "Скелет рассказа — Past Simple."),
+            fill("Вставьте нужную форму (write): While I ___ labels, she sealed the jars. (write)", "was writing", "Параллельный фон."),
+            mc("Выберите форму Past Simple: She ___ the keys and walked out — сюжетный шаг.", ["was finding", "found", "had been found"], "found", "Скелет рассказа — Past Simple."),
             xf("Состояние в прошлом, которого нет: He lived by the canal then.", "He used to live by the canal.", "Used to + live."),
             err("I would know the harbour master quite well in those days.", "I used to know the harbour master quite well in those days.", "Know как состояние — used to, не would."),
-            fill("They ___ waiting forty minutes when the shuttle arrived. (be)", "had been", "Past Perfect Continuous."),
-            mc("The lights failed while we ___ the final chorus.", ["rehearsed", "were rehearsing", "had rehearsed"], "were rehearsing", "Фон в момент сбоя."),
+            fill("Вставьте форму to be: They ___ waiting forty minutes when the shuttle arrived. (be)", "had been", "Past Perfect Continuous."),
+            mc("Выберите пропущенное слово: The lights failed while we ___ the final chorus.", ["rehearsed", "were rehearsing", "had rehearsed"], "were rehearsing", "Фон в момент сбоя."),
         ],
     ),
     module(
@@ -663,12 +664,12 @@ B2 = [
             mc("I'd rather ___ the coastal path.", ["to take", "take", "took"], "take", "Своё предпочтение — bare infinitive."),
         ],
         [
-            fill("It's time you ___ the permissions. (check)", "checked", "It's time + Past Simple."),
-            mc("He spends as if he ___ unlimited credit.", ["has", "had", "would have"], "had", "Заведомо ложное настоящее — Past."),
+            fill("Вставьте нужную форму (check): It's time you ___ the permissions. (check)", "checked", "It's time + Past Simple."),
+            mc("Выберите вспомогательный глагол: He spends as if he ___ unlimited credit.", ["has", "had", "would have"], "had", "Заведомо ложное настоящее — Past."),
             xf("Предпочтение о другом: Don't publish the stills.", "I'd rather you didn't publish the stills.", "I'd rather + Past negative."),
             err("It's time we to renegotiate the lease.", "It's time we renegotiated the lease.", "Past, не to-infinitive после we."),
-            fill("What if the server ___ overnight? (fail / unreal past)", "failed", "Гипотеза: what if + Past."),
-            mc("They behaved as though nothing ___.", ["happens", "had happened", "has happen"], "had happened", "Предшествующее «как будто не случилось» — Past Perfect."),
+            fill("Вставьте форму Past Simple: What if the server ___ overnight? (fail / unreal past)", "failed", "Гипотеза: what if + Past."),
+            mc("Выберите пропущенное слово: They behaved as though nothing ___.", ["happens", "had happened", "has happen"], "had happened", "Предшествующее «как будто не случилось» — Past Perfect."),
         ],
     ),
     module(
@@ -724,12 +725,12 @@ B2 = [
             mc("She offered four dates, none ___ suited the choir.", ["that", "of which", "which of"], "of which", "None of which."),
         ],
         [
-            fill("The loft ___ we store the negatives is dry. (where)", "where", "Where = in which."),
-            mc("Dr Chen, ___ paper you cited, is speaking on Friday.", ["that", "whose", "who's"], "whose", "Whose paper."),
-            xf("Формально: the stool she perched on → the stool ___ she perched.", "the stool on which she perched", "Предлог + which."),
+            fill("Вставьте вопросительное / относительное слово: The loft ___ we store the negatives is dry. (where)", "where", "Where = in which."),
+            mc("Выберите вопросительное / относительное слово: Dr Chen, ___ paper you cited, is speaking on Friday.", ["that", "whose", "who's"], "whose", "Whose paper."),
+            xf("Перепишите формально (предлог + which): the stool she perched on → the stool ___ she perched.", "the stool on which she perched", "Предлог + which."),
             err("The intern, that spotted the mismatch, was praised.", "The intern, who spotted the mismatch, was praised.", "После запятой who/which, не that."),
-            fill("Anyone ___ waiting by lift B should take the stairs. (be / reduced)", "waiting", "Сокращение who is waiting."),
-            mc("The harbour ___ we sheltered was unmarked on the tourist map.", ["in that", "in which", "which in"], "in which", "Предлог + which."),
+            fill("Вставьте нужную форму (be / reduced): Anyone ___ waiting by lift B should take the stairs. (be / reduced)", "waiting", "Сокращение who is waiting."),
+            mc("Выберите пропущенное слово: The harbour ___ we sheltered was unmarked on the tourist map.", ["in that", "in which", "which in"], "in which", "Предлог + which."),
         ],
     ),
 ]

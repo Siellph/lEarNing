@@ -19,6 +19,7 @@ from app.schemas.auth import (
     UserOut,
     UserUpdateIn,
     VerifyIn,
+    VerifyOut,
 )
 from app.services.email import hash_token, issue_verification
 
@@ -59,9 +60,12 @@ def register(payload: RegisterIn, db: Session = Depends(get_db)):
             message="Проверьте почту — мы отправили ссылку для подтверждения.",
             email=user.email,
         )
+    token = create_access_token(str(user.id), {"role": user.role})
     return RegisterOut(
-        message="Регистрация завершена. Можно войти без подтверждения почты.",
+        message="Регистрация завершена.",
         email=user.email,
+        access_token=token,
+        token_type="bearer",
     )
 
 
@@ -80,7 +84,7 @@ def login(payload: LoginIn, db: Session = Depends(get_db)):
     return TokenOut(access_token=create_access_token(str(user.id), {"role": user.role}))
 
 
-def _confirm_token(raw: str, db: Session) -> MessageOut:
+def _confirm_token(raw: str, db: Session) -> VerifyOut:
     token_hash = hash_token(raw.strip())
     row = db.query(EmailVerificationToken).filter(EmailVerificationToken.token_hash == token_hash).first()
     if not row:
@@ -99,15 +103,16 @@ def _confirm_token(raw: str, db: Session) -> MessageOut:
     db.delete(row)
     db.add(user)
     db.commit()
-    return MessageOut(message="Email подтверждён. Теперь можно войти.")
+    access = create_access_token(str(user.id), {"role": user.role})
+    return VerifyOut(message="Email подтверждён.", access_token=access)
 
 
-@router.get("/verify", response_model=MessageOut)
+@router.get("/verify", response_model=VerifyOut)
 def verify_get(token: str = Query(min_length=8, max_length=256), db: Session = Depends(get_db)):
     return _confirm_token(token, db)
 
 
-@router.post("/verify", response_model=MessageOut)
+@router.post("/verify", response_model=VerifyOut)
 def verify_post(payload: VerifyIn, db: Session = Depends(get_db)):
     return _confirm_token(payload.token, db)
 
