@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { ProgressBar } from "../components/ProgressBar";
+import { percent } from "../lib/percent";
 
 type Level = {
   id: number;
@@ -43,7 +44,7 @@ export function GrammarLevels() {
             </div>
             <p className="mt-4 text-sm leading-6 text-ink-soft">{level.description}</p>
             <div className="mt-4">
-              <ProgressBar value={level.module_count ? (level.completed_count / level.module_count) * 100 : 0} />
+              <ProgressBar value={percent(level.completed_count, level.module_count)} />
             </div>
           </Link>
         ))}

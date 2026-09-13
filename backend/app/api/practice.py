@@ -11,6 +11,7 @@ from app.services.scoring import (
     get_or_create_progress,
     is_correct,
     missing_required_marker_hint,
+    percent,
     refresh_module_status,
     touch_user,
 )
@@ -73,7 +74,7 @@ def check_exercise(
             .distinct()
             .count()
         )
-        progress.practice_score = round(solved * 100 / total) if total else 0
+        progress.practice_score = percent(solved, total)
         refresh_module_status(progress)
 
     db.commit()

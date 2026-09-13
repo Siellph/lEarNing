@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import { ProgressBar } from "../components/ProgressBar";
 import { SpeakButton, VoiceControls } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
+import { percent } from "../lib/percent";
 
 type Deck = {
   id: number;
@@ -94,7 +95,7 @@ export function StudyHub({ kind }: { kind: "verbs" | "idioms" | "exceptions" }) 
             <p className="mt-2 text-sm text-ink-soft">{deck.description}</p>
             <div className="mt-4">
               <ProgressBar
-                value={deck.card_count ? (deck.learned_count / deck.card_count) * 100 : 0}
+                value={percent(deck.learned_count, deck.card_count)}
                 label={`${deck.learned_count}/${deck.card_count} · партия ${deck.suggested_batch}/${deck.batch_count}`}
               />
             </div>

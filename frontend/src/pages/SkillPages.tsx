@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import { ProgressBar } from "../components/ProgressBar";
 import { SpeakButton, VoiceControls } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
+import { percent } from "../lib/percent";
 import { speakEnglish } from "../lib/speech";
 
 type SkillKind = "reading" | "listening" | "dialogue";
@@ -170,7 +171,7 @@ export function SkillHub({ kind }: { kind: SkillKind }) {
         {items.length > 0 && (
           <div className="mt-4 max-w-md">
             <ProgressBar
-              value={filtered.length ? (learned / filtered.length) * 100 : 0}
+              value={percent(learned, filtered.length)}
               label={`${learned}/${filtered.length} освоено${levelFilter !== "all" ? ` · ${levelFilter}` : ""}`}
             />
           </div>

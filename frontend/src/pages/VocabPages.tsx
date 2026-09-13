@@ -5,6 +5,7 @@ import { api } from "../api/client";
 import { ProgressBar } from "../components/ProgressBar";
 import { SpeakButton, VoiceControls } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
+import { percent } from "../lib/percent";
 import { looksEnglish } from "../lib/speech";
 
 type Topic = {
@@ -117,7 +118,7 @@ export function VocabPage() {
             <p className="mt-2 text-sm text-ink-soft">{topic.description}</p>
             <div className="mt-4">
               <ProgressBar
-                value={topic.word_count ? (topic.learned_count / topic.word_count) * 100 : 0}
+                value={percent(topic.learned_count, topic.word_count)}
                 label={`${topic.learned_count}/${topic.word_count} выучено · партия ${topic.suggested_batch} из ${topic.batch_count}`}
               />
             </div>
@@ -187,7 +188,7 @@ export function VocabTopicPage() {
         <p className="mt-2 max-w-2xl text-ink-soft">{topic.description}</p>
         <div className="mt-4">
           <ProgressBar
-            value={topic.word_count ? (topic.learned_count / topic.word_count) * 100 : 0}
+            value={percent(topic.learned_count, topic.word_count)}
             label={`${topic.learned_count}/${topic.word_count} в теме · партия ${topic.batch_index} из ${topic.batch_count} · ${topic.batch_learned}/${topic.words.length} в этой партии`}
           />
         </div>
@@ -443,7 +444,7 @@ function VocabSession({
             {answeredCount + 1} / {total}
           </p>
         </div>
-        <ProgressBar value={total ? (answeredCount / total) * 100 : 0} />
+        <ProgressBar value={percent(answeredCount, total)} />
       </div>
       <div className="vocab-session-stage">
         <ExerciseCard key={item.uid} item={item} index={index} onCheck={onCheck} onResolved={advance} />

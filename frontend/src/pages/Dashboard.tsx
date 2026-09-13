@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { ProgressBar } from "../components/ProgressBar";
 import { useAuth } from "../context/AuthContext";
+import { percent } from "../lib/percent";
 
 type Progress = {
   modules: { completed: number; total: number };
@@ -23,7 +24,7 @@ export function Dashboard() {
 
   if (!data) return <p className="text-ink-soft">Собираем прогресс…</p>;
 
-  const grammarPct = data.modules.total ? Math.round((data.modules.completed / data.modules.total) * 100) : 0;
+  const grammarPct = percent(data.modules.completed, data.modules.total);
 
   return (
     <div className="dash-page">
@@ -60,7 +61,7 @@ export function Dashboard() {
                 </span>
               </div>
               <p className="dash-level-title mb-2 mt-1 text-sm text-ink-soft">{level.title}</p>
-              <ProgressBar value={level.total ? (level.completed / level.total) * 100 : 0} />
+              <ProgressBar value={percent(level.completed, level.total)} />
             </Link>
           ))}
         </div>
