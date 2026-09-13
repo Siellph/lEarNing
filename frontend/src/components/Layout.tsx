@@ -21,6 +21,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { BrandMark } from "./BrandMark";
 import { DonationBanner } from "./DonationBanner";
+import { GlobalSearch } from "./GlobalSearch";
 import { PageEnter } from "./PageEnter";
 import { useAuth } from "../context/AuthContext";
 
@@ -146,7 +147,8 @@ export function Layout() {
               </button>
               <BrandMark size="sm" className="sm:hidden" />
             </div>
-            <div className="ml-auto flex items-center gap-3 text-sm text-ink-soft">
+            <div className="ml-auto flex items-center gap-2 text-sm text-ink-soft sm:gap-3">
+              <GlobalSearch />
               <span className="rounded-full bg-card px-3 py-1">{user?.xp ?? 0} XP</span>
               <span className="rounded-full bg-card px-3 py-1">🔥 {user?.streak ?? 0}</span>
             </div>
