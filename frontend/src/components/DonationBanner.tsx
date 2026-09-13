@@ -43,12 +43,12 @@ export function DonationBanner() {
     <>
       <div className="donate-bar-spacer" style={{ height }} aria-hidden />
       <aside className="donate-bar" ref={barRef}>
-        <Heart size={18} className="shrink-0" />
+        <Heart size={16} className="hidden shrink-0 sm:block" />
         <div className="min-w-0 flex-1">
-          <p className="font-semibold">{banner.title}</p>
-          <p className="text-sm opacity-90">{banner.message}</p>
+          <p className="truncate text-sm font-semibold sm:text-base">{banner.title}</p>
+          {banner.message ? <p className="mt-0.5 hidden text-sm opacity-90 sm:block">{banner.message}</p> : null}
         </div>
-        <a className="btn btn-primary shrink-0 text-sm" href={banner.url} target="_blank" rel="noreferrer">
+        <a className="btn btn-primary shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm" href={banner.url} target="_blank" rel="noreferrer">
           {banner.button || "Оставить чаевые"}
         </a>
       </aside>
