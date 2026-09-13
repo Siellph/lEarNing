@@ -30,7 +30,7 @@ export function GrammarLevels() {
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         {levels.map((level) => (
-          <Link key={level.code} to={`/app/grammar/${level.code}`} className="card p-6 hover:border-terra/40">
+          <Link key={level.code} to={`/app/grammar/${level.code}`} className="card card-lift p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-terra">{level.code}</p>
@@ -87,7 +87,7 @@ export function ModuleList() {
       </div>
       <div className="grid gap-3">
         {pack.modules.map((module, i) => (
-          <Link key={module.slug} to={`/app/module/${module.slug}`} className="card flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
+          <Link key={module.slug} to={`/app/module/${module.slug}`} className="card card-lift flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
             <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-paper-2 font-display text-lg">
               {i + 1}
             </div>

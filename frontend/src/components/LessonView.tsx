@@ -123,7 +123,7 @@ function NoteBlock({ title, text }: { title: string; text: string }) {
 
 export function LessonView({ content }: { content: LessonContent }) {
   return (
-    <div className="prose-lesson grid gap-6">
+    <div className="prose-lesson motion-stagger grid gap-6">
       <p className="text-lg leading-8 text-ink-soft">{renderEmphasized(content.intro)}</p>
       {content.articulation ? <NoteBlock title="Как это устроено" text={content.articulation} /> : null}
       {content.contrast ? <NoteBlock title="Не путайте" text={content.contrast} /> : null}

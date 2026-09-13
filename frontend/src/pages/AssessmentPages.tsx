@@ -60,7 +60,7 @@ export function ExamsPage() {
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {exams.map((exam) => (
-          <Link key={exam.id} to={`/app/exams/${exam.id}`} className="card p-6 hover:border-terra/40">
+          <Link key={exam.id} to={`/app/exams/${exam.id}`} className="card card-lift p-6">
             <p className="text-sm font-semibold text-terra">{exam.level.code}</p>
             <h2 className="font-display text-2xl">{exam.title}</h2>
             <p className="mt-2 text-sm text-ink-soft">{exam.description}</p>

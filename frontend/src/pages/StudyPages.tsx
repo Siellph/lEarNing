@@ -89,7 +89,7 @@ export function StudyHub({ kind }: { kind: "verbs" | "idioms" | "exceptions" }) 
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {decks.map((deck) => (
-          <Link key={deck.slug} to={`/app/${kind}/${deck.slug}`} className="card p-5 hover:border-terra/40">
+          <Link key={deck.slug} to={`/app/${kind}/${deck.slug}`} className="card card-lift p-5">
             <h2 className="font-display text-2xl">{deck.title}</h2>
             <p className="mt-2 text-sm text-ink-soft">{deck.description}</p>
             <div className="mt-4">

@@ -21,7 +21,7 @@ export function Landing() {
           </Link>
         </div>
       </header>
-      <section className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-5 py-[clamp(1.5rem,4vh,2.5rem)] lg:grid-cols-2">
+      <section className="motion-enter mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-5 py-[clamp(1.5rem,4vh,2.5rem)] lg:grid-cols-2">
         <div>
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-terra">CEFR A1–C2</p>
           <h1>

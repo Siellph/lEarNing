@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { CheckCircle2, CircleAlert } from "lucide-react";
 import { fullSentenceInstruction, kindLabel } from "../lib/kindLabels";
 import { extractEnglish, looksEnglish, speakableEnglish } from "../lib/speech";
@@ -81,7 +81,10 @@ function QuizCard({
   };
 
   return (
-    <article className={`quiz-card ${result ? (result.correct ? "quiz-card-ok" : "quiz-card-bad") : ""}`}>
+    <article
+      className={`quiz-card motion-enter ${result ? (result.correct ? "quiz-card-ok" : "quiz-card-bad") : ""}`}
+      style={{ "--motion-i": Math.min(index, 8) } as CSSProperties}
+    >
       <header className="quiz-card-head">
         <span className="quiz-kind">
           {index + 1}. {kindLabel(item.kind)}

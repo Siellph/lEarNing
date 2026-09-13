@@ -67,7 +67,7 @@ export function Dashboard() {
       </section>
       <Link
         to="/app/sounds"
-        className="card flex flex-col gap-2 p-[clamp(0.9rem,1.8vh,1.5rem)] hover:border-terra/40 sm:flex-row sm:items-center sm:justify-between"
+        className="card card-lift flex flex-col gap-2 p-[clamp(0.9rem,1.8vh,1.5rem)] sm:flex-row sm:items-center sm:justify-between"
       >
         <div>
           <p className="text-sm font-semibold text-terra">Произношение</p>

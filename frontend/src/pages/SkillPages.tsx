@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { ProgressBar } from "../components/ProgressBar";
@@ -98,7 +98,8 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
           return (
             <div
               key={`${line.speaker}-${i}`}
-              className={`flex ${isLeft ? "justify-start" : "justify-end"}`}
+              className={`motion-bubble flex ${isLeft ? "justify-start" : "justify-end"}`}
+              style={{ "--motion-i": Math.min(i, 10) } as CSSProperties}
             >
               <div className={`flex w-[min(100%,22rem)] flex-col ${isLeft ? "items-start" : "items-end"}`}>
                 <div
@@ -217,7 +218,7 @@ export function SkillHub({ kind }: { kind: SkillKind }) {
           <Link
             key={item.slug}
             to={`/app/${meta.path}/${item.slug}`}
-            className="card p-5 hover:border-terra/40"
+            className="card card-lift p-5"
           >
             <div className="flex items-start justify-between gap-3">
               <h2 className="font-display text-2xl">{item.title}</h2>

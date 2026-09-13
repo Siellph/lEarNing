@@ -134,7 +134,7 @@ export function PhoneticsPage() {
       <section className="grid gap-3">
         <h2 className="font-display text-2xl">Блоки разбора</h2>
         {topics.map((topic, index) => (
-          <Link key={topic.slug} to={`/app/sounds/${topic.slug}`} className="card flex flex-col gap-2 p-5 sm:flex-row sm:items-center">
+          <Link key={topic.slug} to={`/app/sounds/${topic.slug}`} className="card card-lift flex flex-col gap-2 p-5 sm:flex-row sm:items-center">
             <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-paper-2 font-display text-lg">
               {index + 1}
             </div>

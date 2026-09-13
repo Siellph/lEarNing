@@ -68,7 +68,7 @@ export function ModuleHub() {
 
 function Step({ n, title, text, to, done, meta }: { n: string; title: string; text: string; to: string; done: boolean; meta?: string }) {
   return (
-    <Link to={to} className="card p-5 hover:border-terra/40">
+    <Link to={to} className="card card-lift p-5">
       <div className="flex items-center justify-between">
         <span className="font-display text-2xl text-terra">{n}</span>
         {done && <span className="rounded-full bg-sage-soft px-2 py-1 text-xs font-semibold text-sage">Готово</span>}

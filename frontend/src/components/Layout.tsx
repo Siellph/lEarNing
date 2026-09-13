@@ -18,9 +18,10 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { BrandMark } from "./BrandMark";
 import { DonationBanner } from "./DonationBanner";
+import { PageEnter } from "./PageEnter";
 import { useAuth } from "../context/AuthContext";
 
 const desktopLinks = [
@@ -40,7 +41,7 @@ const desktopLinks = [
 ];
 
 function navClass({ isActive }: { isActive: boolean }) {
-  return `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
+  return `nav-item flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
     isActive ? "bg-card text-terra shadow-sm" : "text-ink-soft hover:bg-card/70"
   }`;
 }
@@ -151,14 +152,14 @@ export function Layout() {
             </div>
           </header>
           <main className="min-h-0 flex-1 overflow-y-auto px-4 py-[clamp(0.45rem,1.2vh,1.25rem)] sm:px-8">
-            <Outlet />
+            <PageEnter />
           </main>
         </div>
       </div>
 
       {/* Mobile drawer — only relevant below hide-sm breakpoint */}
       <div
-        className={`fixed inset-0 z-40 hidden bg-ink/35 transition-opacity duration-200 max-[720px]:block ${
+        className={`drawer-backdrop fixed inset-0 z-40 hidden bg-ink/35 max-[720px]:block ${
           drawerOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         aria-hidden={!drawerOpen}
@@ -171,7 +172,7 @@ export function Layout() {
         aria-labelledby={drawerTitleId}
         aria-hidden={!drawerOpen}
         inert={!drawerOpen ? true : undefined}
-        className={`fixed inset-y-0 left-0 z-50 hidden w-[min(17.5rem,88vw)] flex-col border-r border-line/70 bg-paper shadow-[4px_0_24px_rgba(18,32,51,0.12)] transition-transform duration-200 ease-out max-[720px]:flex ${
+        className={`drawer-panel fixed inset-y-0 left-0 z-50 hidden w-[min(17.5rem,88vw)] flex-col border-r border-line/70 bg-paper shadow-[4px_0_24px_rgba(18,32,51,0.12)] max-[720px]:flex ${
           drawerOpen ? "translate-x-0" : "pointer-events-none -translate-x-full"
         }`}
       >

@@ -472,6 +472,7 @@ input.gap-blank-input:disabled {
   border-radius: 1.35rem;
   box-shadow: 0 1px 0 rgba(18, 32, 51, 0.03);
   overflow: hidden;
+  transition: border-color var(--motion-fast, 160ms) ease, box-shadow var(--motion-fast, 160ms) ease;
 }
 
 .quiz-card-ok {
@@ -538,7 +539,10 @@ input.gap-blank-input:disabled {
   font: inherit;
   color: var(--color-ink);
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color var(--motion-fast, 160ms) ease,
+    background var(--motion-fast, 160ms) ease,
+    transform var(--motion-fast, 160ms) ease;
 }
 
 .quiz-choice:hover {
@@ -641,4 +645,169 @@ input.gap-blank-input:disabled {
 .word-tip:focus-visible .word-tip-bubble {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* ——— Motion (transform/opacity only; reused app-wide) ——— */
+:root {
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-fast: 160ms;
+  --motion-med: 280ms;
+  --motion-slow: 380ms;
+  --motion-stagger: 55ms;
+}
+
+@keyframes motion-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.55rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motion-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Page / block enter — slight rise + fade */
+.motion-enter {
+  animation: motion-rise var(--motion-med) var(--motion-ease) both;
+  animation-delay: calc(var(--motion-i, 0) * var(--motion-stagger));
+}
+
+/* Stagger children without JS remounts */
+.motion-stagger > * {
+  animation: motion-rise var(--motion-med) var(--motion-ease) both;
+  animation-delay: calc(var(--motion-i, 0) * var(--motion-stagger));
+}
+
+.motion-stagger > *:nth-child(1) {
+  --motion-i: 0;
+}
+.motion-stagger > *:nth-child(2) {
+  --motion-i: 1;
+}
+.motion-stagger > *:nth-child(3) {
+  --motion-i: 2;
+}
+.motion-stagger > *:nth-child(4) {
+  --motion-i: 3;
+}
+.motion-stagger > *:nth-child(5) {
+  --motion-i: 4;
+}
+.motion-stagger > *:nth-child(6) {
+  --motion-i: 5;
+}
+.motion-stagger > *:nth-child(7) {
+  --motion-i: 6;
+}
+.motion-stagger > *:nth-child(8) {
+  --motion-i: 7;
+}
+.motion-stagger > *:nth-child(n + 9) {
+  --motion-i: 8;
+}
+
+/* Dialogue / chat bubbles */
+.motion-bubble {
+  animation: motion-rise var(--motion-med) var(--motion-ease-out) both;
+  animation-delay: calc(var(--motion-i, 0) * var(--motion-stagger));
+}
+
+/* Quiz feedback pop-in */
+.quiz-feedback {
+  animation: motion-rise var(--motion-fast) var(--motion-ease) both;
+}
+
+.quiz-choice:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+/* Hub / skill cards — hover & focus lift */
+.card-lift {
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-med) ease;
+}
+
+.card-lift:hover,
+.card-lift:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(196, 92, 62, 0.4);
+  box-shadow: 0 1px 0 rgba(18, 32, 51, 0.03), 0 18px 36px -22px rgba(18, 32, 51, 0.32);
+  outline: none;
+}
+
+.card-lift:active {
+  transform: translateY(0);
+}
+
+/* Nav active / hover */
+.nav-item {
+  transition:
+    background-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease;
+}
+
+/* Mobile drawer */
+.drawer-backdrop {
+  transition: opacity var(--motion-med) var(--motion-ease);
+}
+
+.drawer-panel {
+  transition: transform var(--motion-med) var(--motion-ease-out);
+}
+
+/* Consent sheet */
+.consent-sheet-panel {
+  animation: motion-slide-up var(--motion-slow) var(--motion-ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .motion-enter,
+  .motion-stagger > *,
+  .motion-bubble,
+  .quiz-feedback,
+  .consent-sheet-panel {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .card-lift:hover,
+  .card-lift:focus-visible,
+  .card-lift:active {
+    transform: none;
+  }
 }

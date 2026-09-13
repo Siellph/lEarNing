@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink, Outlet, useParams } from "react-router-dom";
+import { Link, NavLink, useParams } from "react-router-dom";
 import { api } from "../../api/client";
 import { BrandMark } from "../../components/BrandMark";
+import { PageEnter } from "../../components/PageEnter";
 import { useAuth } from "../../context/AuthContext";
 
 export function AdminLayout() {
@@ -41,7 +42,7 @@ export function AdminLayout() {
               to={to}
               end={end}
               className={({ isActive }) =>
-                `whitespace-nowrap rounded-full px-4 py-2 text-sm ${isActive ? "bg-ink text-paper" : "bg-card text-ink-soft"}`
+                `nav-item whitespace-nowrap rounded-full px-4 py-2 text-sm ${isActive ? "bg-ink text-paper" : "bg-card text-ink-soft"}`
               }
             >
               {label}
@@ -50,7 +51,7 @@ export function AdminLayout() {
         </nav>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8">
-        <Outlet />
+        <PageEnter />
       </main>
     </div>
   );
@@ -977,7 +978,7 @@ export function AdminExams() {
         <h2 className="font-display mb-3 text-2xl">Экзамены уровней</h2>
         <div className="grid gap-3">
           {exams.map((e) => (
-            <Link key={e.id} to={`/admin/exams/${e.id}`} className="card p-4 hover:border-terra/40">
+            <Link key={e.id} to={`/admin/exams/${e.id}`} className="card card-lift p-4">
               <p className="font-semibold">
                 {e.level_code} · {e.title}
               </p>

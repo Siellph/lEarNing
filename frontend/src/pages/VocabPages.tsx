@@ -103,7 +103,7 @@ export function VocabPage() {
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {topics.map((topic) => (
-          <Link key={topic.slug} to={`/app/vocab/${topic.slug}`} className="card p-5 hover:border-terra/40">
+          <Link key={topic.slug} to={`/app/vocab/${topic.slug}`} className="card card-lift p-5">
             <p className="text-sm font-semibold text-terra">{topic.level_code}</p>
             <h2 className="font-display text-2xl">{topic.title}</h2>
             <p className="mt-2 text-sm text-ink-soft">{topic.description}</p>
