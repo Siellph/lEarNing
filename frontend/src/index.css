@@ -561,6 +561,75 @@ input.gap-blank-input:disabled {
   background: #fff1eb;
 }
 
+.quiz-status-bad {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  background: #fff5f3;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-rose);
+}
+
+/* Vocab party training — mobile-stable shell */
+.vocab-session {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.vocab-session-progress {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 -0.15rem;
+  padding: 0.65rem 0.15rem 0.85rem;
+  background: linear-gradient(180deg, var(--color-paper) 70%, transparent);
+}
+
+.vocab-session-stage {
+  min-height: min(58vh, 28rem);
+}
+
+.vocab-session .vocab-choice {
+  width: 100%;
+  min-height: 3.1rem;
+  padding: 1rem 1.1rem;
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
+.vocab-type-slot {
+  min-height: 3.25rem;
+}
+
+.vocab-session .vocab-type-input {
+  min-height: 3.25rem;
+  font-size: 16px;
+  padding: 0.95rem 1rem;
+}
+
+.quiz-card-shake {
+  animation: quiz-shake 0.42s ease;
+}
+
+@keyframes quiz-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-5px);
+  }
+  40%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
 .quiz-feedback {
   border-radius: 1rem;
   padding: 0.95rem 1.05rem;
@@ -806,6 +875,7 @@ input.gap-blank-input:disabled {
   .motion-stagger > *,
   .motion-bubble,
   .quiz-feedback,
+  .quiz-card-shake,
   .consent-sheet-panel {
     animation: none !important;
     opacity: 1 !important;

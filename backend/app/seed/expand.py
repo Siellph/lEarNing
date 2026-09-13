@@ -638,6 +638,45 @@ def ensure_vocab_mastery_column(engine) -> None:
         conn.execute(text("UPDATE vocab_progress SET mastery = 15 WHERE strength >= 3"))
 
 
+def ensure_assessment_attempt_columns(engine) -> None:
+    """Add in-progress attempt fields for module tests and exams without wiping data."""
+    inspector = inspect(engine)
+    for table in ("test_attempts", "exam_attempts"):
+        if table not in inspector.get_table_names():
+            continue
+        columns = {column["name"]: column for column in inspector.get_columns(table)}
+        with engine.begin() as conn:
+            if "status" not in columns:
+                conn.execute(
+                    text(
+                        f"ALTER TABLE {table} ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'submitted'"
+                    )
+                )
+            if "question_ids" not in columns:
+                conn.execute(
+                    text(
+                        f"ALTER TABLE {table} ADD COLUMN question_ids JSONB NOT NULL DEFAULT '[]'::jsonb"
+                    )
+                )
+            if "details" not in columns:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN details JSONB"))
+            if "started_at" not in columns:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN started_at TIMESTAMPTZ"))
+                conn.execute(text(f"UPDATE {table} SET started_at = created_at WHERE started_at IS NULL"))
+            if "ends_at" not in columns:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN ends_at TIMESTAMPTZ"))
+            score_col = columns.get("score")
+            if score_col is not None and not score_col.get("nullable", True):
+                conn.execute(text(f"ALTER TABLE {table} ALTER COLUMN score DROP NOT NULL"))
+            passed_col = columns.get("passed")
+            if passed_col is not None and not passed_col.get("nullable", True):
+                conn.execute(text(f"ALTER TABLE {table} ALTER COLUMN passed DROP NOT NULL"))
+            answers_col = columns.get("answers")
+            if answers_col is not None and not answers_col.get("nullable", True):
+                # Keep NOT NULL but ensure default for new rows via app; backfill nulls if any
+                conn.execute(text(f"UPDATE {table} SET answers = '{{}}'::jsonb WHERE answers IS NULL"))
+
+
 # Leftover fixture accounts only. Never recreate. Do not add real people here.
 PROTECTED_EMAILS = frozenset({"i@vgordin.ru"})
 LEGACY_DEMO_EMAILS = (

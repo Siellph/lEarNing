@@ -47,13 +47,21 @@ def my_progress(db: Session = Depends(get_db), user: User = Depends(get_current_
     )
     tests_passed = (
         db.query(func.count(TestAttempt.id))
-        .filter(TestAttempt.user_id == user.id, TestAttempt.passed.is_(True))
+        .filter(
+            TestAttempt.user_id == user.id,
+            TestAttempt.passed.is_(True),
+            TestAttempt.status == "submitted",
+        )
         .scalar()
         or 0
     )
     exams_passed = (
         db.query(func.count(func.distinct(ExamAttempt.exam_id)))
-        .filter(ExamAttempt.user_id == user.id, ExamAttempt.passed.is_(True))
+        .filter(
+            ExamAttempt.user_id == user.id,
+            ExamAttempt.passed.is_(True),
+            ExamAttempt.status == "submitted",
+        )
         .scalar()
         or 0
     )
@@ -68,14 +76,14 @@ def my_progress(db: Session = Depends(get_db), user: User = Depends(get_current_
 
     recent_tests = (
         db.query(TestAttempt)
-        .filter(TestAttempt.user_id == user.id)
+        .filter(TestAttempt.user_id == user.id, TestAttempt.status == "submitted")
         .order_by(TestAttempt.created_at.desc())
         .limit(5)
         .all()
     )
     recent_exams = (
         db.query(ExamAttempt)
-        .filter(ExamAttempt.user_id == user.id)
+        .filter(ExamAttempt.user_id == user.id, ExamAttempt.status == "submitted")
         .order_by(ExamAttempt.created_at.desc())
         .limit(5)
         .all()

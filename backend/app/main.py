@@ -5,12 +5,18 @@ from app.api import admin, assessments, auth, grammar, phonetics, practice, prog
 from app.core.config import settings
 from app import models  # noqa: F401
 from app.core.database import Base, engine
-from app.seed.expand import ensure_email_verified_column, ensure_site_setting_columns, ensure_vocab_mastery_column
+from app.seed.expand import (
+    ensure_assessment_attempt_columns,
+    ensure_email_verified_column,
+    ensure_site_setting_columns,
+    ensure_vocab_mastery_column,
+)
 
 Base.metadata.create_all(bind=engine)
 ensure_email_verified_column(engine)
 ensure_site_setting_columns(engine)
 ensure_vocab_mastery_column(engine)
+ensure_assessment_attempt_columns(engine)
 
 app = FastAPI(
     title="lEarNinG",

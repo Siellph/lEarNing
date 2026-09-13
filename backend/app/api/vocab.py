@@ -184,7 +184,11 @@ def _make_items(
     topic_words: list[VocabWord],
     mastery: dict[int, int],
 ) -> list[dict]:
-    """One pending task per missing mastery bit for words not yet fully learned."""
+    """One pending task per missing mastery bit for words not yet fully learned.
+
+    Choice (MCQ) tasks run first, then typing — reduces keyboard open/close thrash on mobile.
+    Within each group, tasks are interleaved so the same word rarely appears twice in a row.
+    """
     pending: list[dict] = []
     pool = batch_words if len(batch_words) >= 4 else topic_words
     for word in batch_words:
@@ -195,7 +199,9 @@ def _make_items(
         random.shuffle(missing)
         for kind in missing:
             pending.append(_build_task(word, kind, pool, topic_words))
-    return _interleave_shuffle(pending)
+    choice = [item for item in pending if str(item.get("kind", "")).startswith("choice_")]
+    typing = [item for item in pending if not str(item.get("kind", "")).startswith("choice_")]
+    return _interleave_shuffle(choice) + _interleave_shuffle(typing)
 
 
 @router.get("/topics")
@@ -323,7 +329,7 @@ def _touch_progress(
             progress.mastery = before | bit
             touch_user(db, user, 5)
         progress.strength = _mastery_count(progress.mastery)
-    # Wrong answers do not clear mastery bits — learner may retry immediately.
+    # Wrong answers do not clear mastery bits; the facet stays pending for a later pass.
     progress.last_reviewed = datetime.now(timezone.utc)
     return progress
 

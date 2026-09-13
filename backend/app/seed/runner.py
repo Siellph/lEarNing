@@ -27,6 +27,7 @@ from app.seed.exams import EXAMS
 from app.seed.levels import LEVELS
 from app.seed.expand import (
     ensure_admin_from_env,
+    ensure_assessment_attempt_columns,
     ensure_email_verified_column,
     ensure_site_setting_columns,
     ensure_site_settings,
@@ -152,6 +153,7 @@ def main() -> None:
     ensure_email_verified_column(engine)
     ensure_site_setting_columns(engine)
     ensure_vocab_mastery_column(engine)
+    ensure_assessment_attempt_columns(engine)
     db = SessionLocal()
     try:
         already = db.query(GrammarLevel).first() is not None

@@ -112,6 +112,14 @@ class ExamSubmitIn(BaseModel):
     answers: dict[str, str]
 
 
+class AttemptAnswersIn(BaseModel):
+    answers: dict[str, str]
+
+
+class AttemptSubmitIn(BaseModel):
+    answers: dict[str, str] | None = None
+
+
 class QuestionIn(BaseModel):
     kind: str
     prompt: str
