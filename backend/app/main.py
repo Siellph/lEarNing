@@ -9,6 +9,7 @@ from app.seed.expand import (
     ensure_assessment_attempt_columns,
     ensure_email_verified_column,
     ensure_site_setting_columns,
+    ensure_study_mastery_column,
     ensure_vocab_mastery_column,
 )
 
@@ -16,6 +17,7 @@ Base.metadata.create_all(bind=engine)
 ensure_email_verified_column(engine)
 ensure_site_setting_columns(engine)
 ensure_vocab_mastery_column(engine)
+ensure_study_mastery_column(engine)
 ensure_assessment_attempt_columns(engine)
 
 app = FastAPI(

@@ -288,7 +288,10 @@ function StudyCard({ word }: { word: Word }) {
             {word.transcription} · {word.part_of_speech}
           </p>
         </div>
-        <span className={`rounded-full px-2 py-1 text-xs ${word.learned ? "bg-sage-soft text-sage" : "bg-paper-2"}`}>
+        <span
+          className={`rounded-full px-2 py-1 text-xs ${word.learned ? "bg-sage-soft text-sage" : "bg-paper-2"}`}
+          title="Насколько хорошо запомнилась карточка (0–4 грани)"
+        >
           {word.learned ? "выучено" : `${Math.min(mastered, 4)}/4`}
         </span>
       </div>

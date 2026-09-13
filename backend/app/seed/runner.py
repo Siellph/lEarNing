@@ -2,6 +2,10 @@
 
 Creates an admin only when ADMIN_EMAIL and ADMIN_PASSWORD are both set.
 Run: python -m app.seed.runner
+
+Policy (existing DB): insert-only for content. ensure_* may add columns/settings;
+expanders add missing rows by slug/prompt; they do NOT update lesson theory,
+study/skill/vocab text, or exercise prompts/answers already in the DB.
 """
 
 from app import models  # noqa: F401 — register metadata
@@ -31,6 +35,7 @@ from app.seed.expand import (
     ensure_email_verified_column,
     ensure_site_setting_columns,
     ensure_site_settings,
+    ensure_study_mastery_column,
     ensure_vocab_mastery_column,
     ensure_word_order_modules,
     expand_exams,
@@ -162,6 +167,7 @@ def main() -> None:
     ensure_email_verified_column(engine)
     ensure_site_setting_columns(engine)
     ensure_vocab_mastery_column(engine)
+    ensure_study_mastery_column(engine)
     ensure_assessment_attempt_columns(engine)
     db = SessionLocal()
     try:

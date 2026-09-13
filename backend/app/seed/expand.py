@@ -270,8 +270,9 @@ def ensure_word_order_modules(db) -> int:
 
 
 def expand_study_decks(db) -> int:
-    """Insert missing study decks/cards; sync card text from seed by primary_text (no wipe)."""
+    """Insert missing study decks/cards only; never overwrite existing deck/card text."""
     added = 0
+    skipped = 0
     existing = {deck.slug: deck for deck in db.query(StudyDeck).all()}
     max_order = max((d.sort_order for d in existing.values()), default=0)
     for data in STUDY_DECKS:
@@ -290,21 +291,12 @@ def expand_study_decks(db) -> int:
             existing[deck.slug] = deck
             known: dict = {}
         else:
-            deck.title = data["title"]
-            deck.description = data["description"]
-            deck.kind = data["kind"]
             known = {card.primary_text.lower(): card for card in deck.cards}
         order = max((c.sort_order for c in deck.cards), default=0)
         for item in data["cards"]:
             key = item["primary_text"].lower()
             if key in known:
-                card = known[key]
-                card.secondary_text = item.get("secondary_text", "") or ""
-                card.tertiary_text = item.get("tertiary_text", "") or ""
-                card.translation = item["translation"]
-                card.example = item.get("example", "") or ""
-                card.example_translation = item.get("example_translation", "") or ""
-                card.category = item.get("category", "") or ""
+                skipped += 1
                 continue
             order += 1
             db.add(
@@ -322,12 +314,15 @@ def expand_study_decks(db) -> int:
             )
             known[key] = None
             added += 1
+    if skipped:
+        print(f"  study: skipped {skipped} existing cards")
     return added
 
 
 def expand_skills(db) -> int:
-    """Idempotent seed for reading / listening / dialogue items (by slug + prompt)."""
+    """Insert missing skill items/questions only; never overwrite existing skill content."""
     added = 0
+    skipped = 0
     existing = {item.slug: item for item in db.query(SkillItem).all()}
     max_order = max((i.sort_order for i in existing.values()), default=0)
     for data in SKILL_ITEMS:
@@ -350,18 +345,8 @@ def expand_skills(db) -> int:
             existing[item.slug] = item
             known_prompts: set[str] = set()
         else:
+            skipped += 1
             known_prompts = {q.prompt for q in item.questions}
-            # Sync graded content from seed (idempotent by slug; no wipe)
-            item.title = data["title"]
-            item.description = data.get("description", "")
-            item.level_code = data.get("level_code", item.level_code or "A1")
-            item.kind = data.get("kind", item.kind)
-            if "body" in data:
-                item.body = data.get("body") or ""
-            if "lines" in data:
-                item.lines = data.get("lines") or []
-            if "keywords" in data:
-                item.keywords = data.get("keywords") or []
         order = max((q.sort_order for q in item.questions), default=0)
         for qi, qdata in enumerate(data.get("questions") or [], start=1):
             prompt = qdata["prompt"]
@@ -383,165 +368,24 @@ def expand_skills(db) -> int:
             )
             known_prompts.add(prompt)
             added += 1
+    if skipped:
+        print(f"  skills: skipped {skipped} existing items (no content sync)")
     return added
 
 
 def fix_known_article_answers(db) -> int:
-    """Repair Open ___ door and similar gap/article items in existing DBs."""
-    fixed = 0
-    repairs = [
-        (
-            "Open ___ door",
-            {
-                "kind": "fill_blank",
-                "prompt": "Open ___ door. (мы оба видим дверь)",
-                "answer": "the",
-                "accepted": ["Open the door.", "Open the door", "open the door"],
-                "explanation": "Конкретный объект в ситуации — the. Можно ввести the или Open the door.",
-            },
-        ),
-        (
-            "I want ___ dog",
-            {
-                "kind": "fill_blank",
-                "prompt": "I want ___ dog. (любая собака)",
-                "answer": "a",
-                "accepted": ["I want a dog.", "I want a dog"],
-                "explanation": "Неопределённый экземпляр класса. Можно a или I want a dog.",
-            },
-        ),
-    ]
-    for needle, fields in repairs:
-        for model in (Exercise, TestQuestion):
-            rows = db.query(model).filter(model.prompt.contains(needle)).all()
-            for row in rows:
-                for key, value in fields.items():
-                    setattr(row, key, value)
-                fixed += 1
-    return fixed
-
+    """Disabled: do not overwrite existing exercise/test prompt/answer text on seed."""
+    return 0
 
 
 def fix_match_answer_leaks(db) -> int:
-    """Rewrite match items whose left slots already contained the right-side chip.
-
-    Identifies legacy rows by left options (not prompt alone), so duplicate prompts
-    like «Patterns» do not collide. Idempotent; safe with repair_match_options.
-    """
-    from app.services.match_format import normalize_match_payload
-
-    repairs = [
-        {
-            "old_left": {"a book", "an hour", "the moon"},
-            "prompt": "Соотнесите: a / an / the",
-            "options": ["___ book", "___ hour", "___ moon"],
-            "answer": "___ book=a; ___ hour=an; ___ moon=the",
-            "explanation": "Звук и уникальность.",
-        },
-        {
-            "old_left": {"explain sth to sb", "accuse of", "congratulate on"},
-            "prompt": "Соотнесите глагол и предлог",
-            "options": ["explain sth ___ sb", "accuse ___", "congratulate ___"],
-            "answer": "explain sth ___ sb=to; accuse ___=of; congratulate ___=on",
-            "explanation": "Reporting verbs.",
-        },
-        {
-            "old_left": {"verb + -ing", "verb + to-inf", "adj + to"},
-            "prompt": "Соотнесите конструкцию и форму",
-            "options": ["enjoy / avoid / finish", "decide / hope / want", "happy / ready / easy"],
-            "answer": "enjoy / avoid / finish=-ing; decide / hope / want=to-inf; happy / ready / easy=adj + to",
-            "explanation": "C2.",
-        },
-        {
-            "old_left": {"accuse of", "prevent from", "thank for"},
-            "prompt": "Соотнесите глагол и предлог (тест)",
-            "options": ["accuse ___", "prevent ___", "thank ___"],
-            "answer": "accuse ___=of; prevent ___=from; thank ___=for",
-            "explanation": "Patterns.",
-        },
-        {
-            "old_left": {"keep + -ing", "manage + to", "stop + sb + from"},
-            "prompt": "Соотнесите глагол и продолжение",
-            "options": ["keep", "manage", "stop + sb"],
-            "answer": "keep=-ing; manage=to-inf; stop + sb=from + -ing",
-            "explanation": "Patterns.",
-        },
-    ]
-
-    def row_left(row) -> set[str]:
-        opts = row.options
-        if isinstance(opts, dict):
-            return {str(x) for x in (opts.get("left") or [])}
-        if isinstance(opts, list):
-            return {str(x) for x in opts}
-        return set()
-
-    fixed = 0
-    for model in (Exercise, TestQuestion, ExamQuestion):
-        rows = db.query(model).filter(model.kind == "match").all()
-        for row in rows:
-            left = row_left(row)
-            for repair in repairs:
-                if not repair["old_left"].issubset(left):
-                    continue
-                sides, aligned = normalize_match_payload(repair["options"], repair["answer"])
-                if (
-                    row.prompt == repair["prompt"]
-                    and row.options == sides
-                    and row.answer == aligned
-                    and (row.explanation or "") == repair["explanation"]
-                ):
-                    break
-                row.prompt = repair["prompt"]
-                row.options = sides
-                row.answer = aligned
-                row.explanation = repair["explanation"]
-                fixed += 1
-                break
-    return fixed
+    """Disabled: do not overwrite existing match prompt/options/answer on seed."""
+    return 0
 
 
 def rewrite_known_prompts(db) -> int:
-    """Update terse transform prompts in live DB (old exact prompt → clearer wording).
-
-    If the target prompt already exists on the same parent bank, drop the old row
-    instead of creating a same-prompt duplicate (common after expand + rewrite).
-    """
-    from app.seed.prompt_rewrites import ANSWER_REWRITES, EXPLANATION_REWRITES, PROMPT_REWRITES
-
-    parent_key = {
-        Exercise: "module_id",
-        TestQuestion: "test_id",
-        ExamQuestion: "exam_id",
-    }
-    fixed = 0
-    for old_prompt, new_prompt in PROMPT_REWRITES.items():
-        if old_prompt == new_prompt:
-            continue
-        for model, fk in parent_key.items():
-            rows = db.query(model).filter(model.prompt == old_prompt).all()
-            for row in rows:
-                parent_id = getattr(row, fk)
-                clash = (
-                    db.query(model)
-                    .filter(
-                        getattr(model, fk) == parent_id,
-                        model.prompt == new_prompt,
-                        model.id != row.id,
-                    )
-                    .first()
-                )
-                if clash is not None:
-                    db.delete(row)
-                    fixed += 1
-                    continue
-                row.prompt = new_prompt
-                if old_prompt in EXPLANATION_REWRITES:
-                    row.explanation = EXPLANATION_REWRITES[old_prompt]
-                if old_prompt in ANSWER_REWRITES:
-                    row.answer = ANSWER_REWRITES[old_prompt]
-                fixed += 1
-    return fixed
+    """Disabled: do not rewrite prompt/answer/explanation on existing rows (preserves admin edits)."""
+    return 0
 
 
 def scrub_duplicate_prompts(db) -> dict[str, int]:
@@ -571,39 +415,11 @@ def scrub_duplicate_prompts(db) -> dict[str, int]:
 
 
 def sync_lesson_theory(db) -> int:
-    """Overwrite Lesson.title/content from seed packs by module slug (idempotent).
+    """Disabled by default: do not overwrite Lesson.title/content (preserves admin edits).
 
-    Fresh installs already get enriched theory via helpers.module() + THEORY_BY_SLUG.
-    Existing DBs pick up richer theory (and scrubs like «развилкать») on the next
-    ``python -m app.seed.runner`` without wiping data.
+    Fresh installs still get theory via helpers.module() / initial seed_modules.
     """
-    from app.seed.a1 import A1
-    from app.seed.a2 import A2
-    from app.seed.b1 import B1
-    from app.seed.b2 import B2
-    from app.seed.c1 import C1
-    from app.seed.c2 import C2
-
-    by_slug: dict[str, dict] = {}
-    for pack in (A1, A2, B1, B2, C1, C2, WORD_ORDER_MODULES):
-        for data in pack:
-            by_slug[data["slug"]] = data["lesson"]
-
-    updated = 0
-    modules = db.query(GrammarModule).all()
-    for gm in modules:
-        seed = by_slug.get(gm.slug)
-        if not seed or not gm.lessons:
-            continue
-        lesson = gm.lessons[0]
-        new_title = seed["title"]
-        new_content = seed["content"]
-        if lesson.title != new_title or lesson.content != new_content:
-            lesson.title = new_title
-            lesson.content = new_content
-            updated += 1
-    return updated
-
+    return 0
 
 
 def _collect_seed_match_items() -> list[dict]:
@@ -687,32 +503,8 @@ def _pick_seed_match(row, seeds: list[dict]) -> dict | None:
 
 
 def repair_match_options(db) -> int:
-    """Ensure match items store equal-capable {left, right} and aligned a=b answers.
-
-    Re-applies authored seed payloads when the prompt matches a seed item (so legacy
-    short chip lists and broken '=' labels get fixed). Otherwise only normalizes the
-    live row. Idempotent — safe on every expand run; does not wipe the DB.
-    """
-    from app.services.match_format import normalize_match_payload
-
-    seeds = _collect_seed_match_items()
-    fixed = 0
-    for model in (Exercise, TestQuestion, ExamQuestion):
-        rows = db.query(model).filter(model.kind == "match").all()
-        for row in rows:
-            seed = _pick_seed_match(row, seeds)
-            if seed:
-                sides, aligned = seed["options"], seed["answer"]
-            else:
-                sides, aligned = normalize_match_payload(row.options, row.answer)
-            sides, aligned = normalize_match_payload(sides, aligned)
-            if not sides.get("left") or not sides.get("right"):
-                continue
-            if row.options != sides or row.answer != aligned:
-                row.options = sides
-                row.answer = aligned
-                fixed += 1
-    return fixed
+    """Disabled: do not re-apply seed match options/answers onto existing rows."""
+    return 0
 
 
 DONATION_MESSAGE = (
@@ -776,6 +568,19 @@ def ensure_vocab_mastery_column(engine) -> None:
     with engine.begin() as conn:
         conn.execute(text("ALTER TABLE vocab_progress ADD COLUMN mastery INTEGER NOT NULL DEFAULT 0"))
         conn.execute(text("UPDATE vocab_progress SET mastery = 15 WHERE strength >= 3"))
+
+
+def ensure_study_mastery_column(engine) -> None:
+    """Add study mastery bitmask; treat former strength>=3 rows as both directions done."""
+    inspector = inspect(engine)
+    if "study_progress" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("study_progress")}
+    if "mastery" in columns:
+        return
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE study_progress ADD COLUMN mastery INTEGER NOT NULL DEFAULT 0"))
+        conn.execute(text("UPDATE study_progress SET mastery = 3 WHERE strength >= 3"))
 
 
 def ensure_assessment_attempt_columns(engine) -> None:

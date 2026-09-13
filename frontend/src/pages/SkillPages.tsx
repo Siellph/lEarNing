@@ -237,7 +237,8 @@ export function SkillHub({ kind }: { kind: SkillKind }) {
             <p className="mt-2 text-sm text-ink-soft">{item.description}</p>
             <p className="mt-3 text-xs text-ink-soft">
               {item.question_count} заданий
-              {item.keyword_count ? ` · ${item.keyword_count} слов` : ""} · сила {item.strength}/5
+              {item.keyword_count ? ` · ${item.keyword_count} слов` : ""} ·{" "}
+              <span title="Насколько хорошо запомнилась карточка (0–5)">сила {item.strength}/5</span>
             </p>
           </Link>
         ))}
@@ -394,7 +395,12 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
             </article>
           )}
 
-          <p className="text-sm text-ink-soft">Сила материала: {item.strength}/5</p>
+          <p
+            className="text-sm text-ink-soft"
+            title="Насколько хорошо запомнилась карточка (0–5)"
+          >
+            Сила материала: {item.strength}/5
+          </p>
         </div>
       ) : current ? (
         <article className="card grid gap-4 p-6">
