@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = "lEarNing <noreply@example.com>"
     SMTP_USE_TLS: bool = True
+    SMTP_USE_SSL: bool = False
     ADMIN_EMAIL: str = ""
     ADMIN_PASSWORD: str = ""
     ADMIN_NAME: str = "Администратор"

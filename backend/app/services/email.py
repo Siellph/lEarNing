@@ -48,9 +48,13 @@ def send_verification_email(to_email: str, raw_token: str) -> None:
     msg["From"] = settings.SMTP_FROM
     msg["To"] = to_email
     msg.set_content(body)
+    host = settings.SMTP_HOST.strip()
+    port = settings.SMTP_PORT
+    use_ssl = settings.SMTP_USE_SSL or port == 465
     try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=20) as smtp:
-            if settings.SMTP_USE_TLS:
+        factory = smtplib.SMTP_SSL if use_ssl else smtplib.SMTP
+        with factory(host, port, timeout=20) as smtp:
+            if not use_ssl and settings.SMTP_USE_TLS:
                 smtp.starttls()
             if settings.SMTP_USER:
                 smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
