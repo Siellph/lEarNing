@@ -6,12 +6,19 @@ SOURCES = [
 ]
 
 
-def mc(prompt: str, options: list[str], answer: str, explanation: str) -> dict:
+def mc(
+    prompt: str,
+    options: list[str],
+    answer: str,
+    explanation: str,
+    accepted: list[str] | None = None,
+) -> dict:
     return {
         "kind": "multiple_choice",
         "prompt": prompt,
         "options": options,
         "answer": answer,
+        "accepted": accepted or [],
         "explanation": explanation,
     }
 
