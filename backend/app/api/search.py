@@ -33,7 +33,7 @@ STUDY_PATHS = {
 }
 SKILL_SECTIONS = {
     "reading": "Чтение",
-    "listening": "Слушание",
+    "listening": "Аудирование",
     "dialogue": "Диалоги",
 }
 SKILL_PATHS = {
@@ -51,7 +51,7 @@ STATIC_ROUTES = [
     {"section": "Идиомы", "title": "Идиомы и пословицы", "subtitle": "Колоды для заучивания", "href": "/app/idioms"},
     {"section": "Исключения", "title": "Исключения", "subtitle": "Орфография и особые случаи", "href": "/app/exceptions"},
     {"section": "Чтение", "title": "Чтение", "subtitle": "Тексты с заданиями", "href": "/app/reading"},
-    {"section": "Слушание", "title": "Слушание", "subtitle": "Аудио и диктанты", "href": "/app/listening"},
+    {"section": "Аудирование", "title": "Аудирование", "subtitle": "Аудио и диктанты", "href": "/app/listening"},
     {"section": "Диалоги", "title": "Диалоги", "subtitle": "Мини-сцены", "href": "/app/dialogues"},
     {"section": "Экзамены", "title": "Экзамены", "subtitle": "Проверка по уровням", "href": "/app/exams"},
     {"section": "Справка", "title": "Справка", "subtitle": "Типы упражнений и подсказки", "href": "/app/help"},

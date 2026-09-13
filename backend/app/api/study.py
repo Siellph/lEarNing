@@ -19,8 +19,10 @@ router = APIRouter(prefix="/study", tags=["study"])
 
 BATCH_SIZE = 10
 KINDS = {"verbs", "idioms", "exceptions"}
+STRENGTH_TARGET = 5
 
-# Both-direction mastery — card is learned when mastery == LEARNED_MASTERY.
+# Both-direction mastery bits — track the current pass (EN↔RU / rule↔form).
+# A card leaves the practice queue only when strength >= STRENGTH_TARGET.
 MASTERY_BITS = {
     "choice_en_ru": 1,
     "choice_ru_en": 2,
@@ -53,7 +55,12 @@ def _batch_count(total: int) -> int:
     return max(1, math.ceil(total / BATCH_SIZE)) if total else 1
 
 
-def _is_learned(mastery_value: int) -> bool:
+def _is_learned(strength: int) -> bool:
+    """Fully done for practice progress when strength reaches the target."""
+    return strength >= STRENGTH_TARGET
+
+
+def _pass_complete(mastery_value: int) -> bool:
     return (mastery_value & LEARNED_MASTERY) == LEARNED_MASTERY
 
 
@@ -61,11 +68,11 @@ def _mastery_count(mastery_value: int) -> int:
     return bin(mastery_value & LEARNED_MASTERY).count("1")
 
 
-def _suggested_batch(cards: list[StudyCard], mastery: dict[int, int]) -> int:
+def _suggested_batch(cards: list[StudyCard], strength: dict[int, int]) -> int:
     n = _batch_count(len(cards))
     for index in range(n):
         chunk = cards[index * BATCH_SIZE : (index + 1) * BATCH_SIZE]
-        if any(not _is_learned(mastery.get(card.id, 0)) for card in chunk):
+        if any(not _is_learned(strength.get(card.id, 0)) for card in chunk):
             return index + 1
     return n
 
@@ -83,7 +90,7 @@ def _card_out(card: StudyCard, strength: int = 0, mastery_value: int = 0) -> dic
         "strength": strength,
         "mastery": mastery_value,
         "mastery_count": _mastery_count(mastery_value),
-        "learned": _is_learned(mastery_value),
+        "learned": _is_learned(strength),
     }
 
 
@@ -182,14 +189,14 @@ def _interleave_shuffle(items: list[dict]) -> list[dict]:
 def _make_items(
     batch_cards: list[StudyCard],
     deck_cards: list[StudyCard],
-    mastery: dict[int, int],
+    strength: dict[int, int],
     deck_kind: str,
 ) -> list[dict]:
-    """Both directions for every card that is not yet fully learned."""
+    """Both directions for every card still below the strength target."""
     pending: list[dict] = []
     pool = batch_cards if len(batch_cards) >= 4 else deck_cards
     for card in batch_cards:
-        if _is_learned(mastery.get(card.id, 0)):
+        if _is_learned(strength.get(card.id, 0)):
             continue
         kinds = list(TASK_KINDS)
         random.shuffle(kinds)
@@ -228,7 +235,11 @@ def _touch_progress(db: Session, user: User, card: StudyCard, correct: bool, kin
             before = int(progress.mastery or 0)
             if not (before & bit):
                 progress.mastery = before | bit
-        progress.strength = min(5, progress.strength + 1)
+        progress.strength = min(STRENGTH_TARGET, progress.strength + 1)
+        # Full both-direction pass done but still weak → clear flags so the next
+        # practice / «Добить» puts both MCQ sides back in rotation.
+        if _pass_complete(int(progress.mastery or 0)) and progress.strength < STRENGTH_TARGET:
+            progress.mastery = 0
         touch_user(db, user, 5)
     else:
         # Miss clears direction flags so the next run regenerates both tasks.
@@ -269,7 +280,7 @@ def check_card(
         "strength": progress.strength,
         "mastery": mastery_value,
         "mastery_count": _mastery_count(mastery_value),
-        "learned": _is_learned(mastery_value),
+        "learned": _is_learned(progress.strength),
         "primary_text": card.primary_text,
         "translation": card.translation,
         "example": card.example,
@@ -291,8 +302,8 @@ def list_decks(kind: str, db: Session = Depends(get_db), user: User = Depends(ge
     result = []
     for deck in decks:
         cards = _cards(db, deck)
-        _, mastery = _progress_maps(db, user.id, [c.id for c in cards])
-        learned = sum(1 for c in cards if _is_learned(mastery.get(c.id, 0)))
+        strength, _ = _progress_maps(db, user.id, [c.id for c in cards])
+        learned = sum(1 for c in cards if _is_learned(strength.get(c.id, 0)))
         result.append(
             {
                 "id": deck.id,
@@ -303,7 +314,7 @@ def list_decks(kind: str, db: Session = Depends(get_db), user: User = Depends(ge
                 "card_count": len(cards),
                 "learned_count": learned,
                 "batch_count": _batch_count(len(cards)),
-                "suggested_batch": _suggested_batch(cards, mastery),
+                "suggested_batch": _suggested_batch(cards, strength),
             }
         )
     return result
@@ -325,11 +336,11 @@ def get_deck(
     cards = _cards(db, deck)
     strength, mastery = _progress_maps(db, user.id, [c.id for c in cards])
     batches = _batch_count(len(cards))
-    batch_index = batch or _suggested_batch(cards, mastery)
+    batch_index = batch or _suggested_batch(cards, strength)
     batch_index = min(max(1, batch_index), batches)
     chunk = cards[(batch_index - 1) * BATCH_SIZE : batch_index * BATCH_SIZE]
-    learned = sum(1 for c in cards if _is_learned(mastery.get(c.id, 0)))
-    batch_learned = sum(1 for c in chunk if _is_learned(mastery.get(c.id, 0)))
+    learned = sum(1 for c in cards if _is_learned(strength.get(c.id, 0)))
+    batch_learned = sum(1 for c in chunk if _is_learned(strength.get(c.id, 0)))
     return {
         "slug": deck.slug,
         "title": deck.title,
@@ -341,7 +352,7 @@ def get_deck(
         "batch_index": batch_index,
         "batch_count": batches,
         "batch_learned": batch_learned,
-        "suggested_batch": _suggested_batch(cards, mastery),
+        "suggested_batch": _suggested_batch(cards, strength),
         "cards": [
             _card_out(c, strength.get(c.id, 0), mastery.get(c.id, 0)) for c in chunk
         ],
@@ -364,13 +375,13 @@ def practice_deck(
     cards = _cards(db, deck)
     strength, mastery = _progress_maps(db, user.id, [c.id for c in cards])
     batch_count = _batch_count(len(cards))
-    batch_index = min(batch or _suggested_batch(cards, mastery), batch_count)
+    batch_index = min(batch or _suggested_batch(cards, strength), batch_count)
     batch_index = max(1, batch_index)
     chunk = cards[(batch_index - 1) * BATCH_SIZE : batch_index * BATCH_SIZE]
-    pending_cards = [c for c in chunk if not _is_learned(mastery.get(c.id, 0))]
-    items = _make_items(pending_cards, cards, mastery, deck.kind)
-    learned = sum(1 for c in cards if _is_learned(mastery.get(c.id, 0)))
-    batch_learned = sum(1 for c in chunk if _is_learned(mastery.get(c.id, 0)))
+    pending_cards = [c for c in chunk if not _is_learned(strength.get(c.id, 0))]
+    items = _make_items(pending_cards, cards, strength, deck.kind)
+    learned = sum(1 for c in cards if _is_learned(strength.get(c.id, 0)))
+    batch_learned = sum(1 for c in chunk if _is_learned(strength.get(c.id, 0)))
     return {
         "deck": {"slug": deck.slug, "title": deck.title, "kind": deck.kind},
         "batch_index": batch_index,

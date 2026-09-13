@@ -57,7 +57,7 @@ const META: Record<
   listening: {
     path: "listening",
     eyebrow: "Слух",
-    title: "Слушание и диктант",
+    title: "Аудирование и диктант",
     subtitle: "Пассажи с озвучкой A1–C2: понимание на слух и набор услышанного.",
   },
   dialogue: {

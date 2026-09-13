@@ -34,7 +34,7 @@ const desktopLinks = [
   { to: "/app/idioms", label: "Идиомы", icon: MessageSquareQuote },
   { to: "/app/exceptions", label: "Исключения", icon: AlertTriangle },
   { to: "/app/reading", label: "Чтение", icon: BookOpen },
-  { to: "/app/listening", label: "Слушание", icon: Headphones },
+  { to: "/app/listening", label: "Аудирование", icon: Headphones },
   { to: "/app/dialogues", label: "Диалоги", icon: MessagesSquare },
   { to: "/app/exams", label: "Экзамены", icon: GraduationCap },
   { to: "/app/help", label: "Справка", icon: CircleHelp },

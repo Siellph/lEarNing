@@ -290,11 +290,13 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
                   className={`rounded-full px-2 py-1 text-xs ${c.learned ? "bg-sage-soft text-sage" : "text-ink-soft"}`}
                   title={
                     kind === "exceptions"
-                      ? "Выучено, когда верны обе стороны (правило и пример)"
-                      : "Выучено, когда верны обе стороны (EN→RU и RU→EN)"
+                      ? "Карточка выучена при силе 5/5. До этого обе стороны (правило и пример) снова попадают в практику."
+                      : "Карточка выучена при силе 5/5. До этого обе стороны (EN→RU и RU→EN) снова попадают в практику."
                   }
                 >
-                  {c.learned ? "выучено" : `${Math.min(c.mastery_count ?? 0, 2)}/2 · сила ${c.strength}/5`}
+                  {c.learned
+                    ? `выучено · сила ${c.strength}/5`
+                    : `${Math.min(c.mastery_count ?? 0, 2)}/2 · сила ${c.strength}/5`}
                 </span>
                 {c.primary_text && <SpeakButton text={c.primary_text.split("→")[0].trim()} />}
               </div>
@@ -432,14 +434,14 @@ function StudySession({
         <p className="text-sm uppercase tracking-[0.18em] text-terra">Сессия завершена</p>
         <h2 className="font-display text-3xl">{cleared ? "Партия закрыта" : "Прогресс сохранён"}</h2>
         <p className="text-ink-soft">
-          Верно: {correctCount} из {total || answeredCount}. В партии выучено {cardsMastered}/
+          Верно: {correctCount} из {total || answeredCount}. В партии до силы 5: {cardsMastered}/
           {pack.batch_card_count}. В колоде {pack.learned_count}/{pack.card_count}.
         </p>
         {reviewGroups.length > 0 ? (
           <div className="grid gap-3">
             <p className="font-semibold">Нужно повторить</p>
             <p className="text-sm text-ink-soft">
-              После ошибки мастерство карточки сбрасывается — в следующей тренировке снова обе стороны.
+              Ошибка снижает силу и сбрасывает проход — в следующей тренировке снова обе стороны.
             </p>
             <ul className="grid gap-2">
               {reviewGroups.map((group) => (
@@ -485,7 +487,7 @@ function StudySession({
               Партия {pack.batch_index} из {pack.batch_count}
             </p>
             <p className="text-sm text-ink-soft">
-              Осталось: {left} · выучено: {cardsMastered}/{pack.batch_card_count}
+              Осталось: {left} · сила 5: {cardsMastered}/{pack.batch_card_count}
             </p>
           </div>
           <p className="text-sm text-ink-soft">
