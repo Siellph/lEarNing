@@ -216,34 +216,91 @@ export function RateSwitch() {
   }, []);
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-ink-soft">Темп</span>
-      <div className="flex rounded-full bg-paper-2 p-1 text-xs font-semibold">
-        {RATE_LABELS.map((item) => (
-          <button
-            key={item.value}
-            type="button"
-            title={item.title}
-            className={`rounded-full px-3 py-1 ${rate === item.value ? "bg-card text-terra" : "text-ink-soft"}`}
-            onClick={() => {
-              setRatePreset(item.value);
-              setValue(item.value);
-            }}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
+    <div className="flex rounded-full bg-paper-2 p-1 text-xs font-semibold">
+      {RATE_LABELS.map((item) => (
+        <button
+          key={item.value}
+          type="button"
+          title={item.title}
+          className={`rounded-full px-3 py-1 ${rate === item.value ? "bg-card text-terra" : "text-ink-soft"}`}
+          onClick={() => {
+            setRatePreset(item.value);
+            setValue(item.value);
+          }}
+        >
+          {item.label}
+        </button>
+      ))}
     </div>
   );
 }
 
 export function VoiceControls({ className = "" }: { className?: string }) {
   return (
-    <div className={`flex flex-wrap items-center gap-3 ${className}`}>
-      <span className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">Озвучка</span>
-      <AccentSwitch />
-      <RateSwitch />
+    <div className={`flex flex-col gap-3 ${className}`}>
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">Акцент</span>
+        <AccentSwitch />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">Темп</span>
+        <RateSwitch />
+      </div>
+    </div>
+  );
+}
+
+/** Global header control: speaker icon → accent + rate dropdown. */
+export function VoiceSettingsMenu({ className = "" }: { className?: string }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (event: globalThis.MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        btnRef.current?.blur();
+      }
+    };
+    document.addEventListener("mousedown", onPointer);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className={`relative shrink-0 ${className}`}>
+      <button
+        ref={btnRef}
+        type="button"
+        className={`inline-flex size-9 items-center justify-center rounded-full border border-line/80 bg-card text-ink shadow-sm transition-colors hover:border-terra hover:bg-paper-2 hover:text-terra ${
+          open ? "border-terra text-terra" : ""
+        }`}
+        aria-label="Настройки озвучки"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        title="Озвучка"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <Volume2 size={18} aria-hidden />
+      </button>
+      {open ? (
+        <div
+          role="dialog"
+          aria-label="Настройки озвучки"
+          className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-[min(17.5rem,calc(100vw-1.5rem))] rounded-2xl border border-line/80 bg-card p-4 shadow-[0_12px_40px_rgba(18,32,51,0.12)]"
+        >
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">Озвучка</p>
+          <VoiceControls />
+        </div>
+      ) : null}
     </div>
   );
 }

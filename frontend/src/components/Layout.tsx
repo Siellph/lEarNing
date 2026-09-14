@@ -23,6 +23,7 @@ import { BrandMark } from "./BrandMark";
 import { DonationBanner } from "./DonationBanner";
 import { GlobalSearch } from "./GlobalSearch";
 import { PageEnter } from "./PageEnter";
+import { VoiceSettingsMenu } from "./SpeakButton";
 import { useAuth } from "../context/AuthContext";
 
 const desktopLinks = [
@@ -149,6 +150,7 @@ export function Layout() {
             </div>
             <div className="ml-auto flex items-center gap-2 text-sm text-ink-soft sm:gap-3">
               <GlobalSearch />
+              <VoiceSettingsMenu />
               <span className="rounded-full bg-card px-3 py-1">{user?.xp ?? 0} XP</span>
               <span className="rounded-full bg-card px-3 py-1">🔥 {user?.streak ?? 0}</span>
             </div>

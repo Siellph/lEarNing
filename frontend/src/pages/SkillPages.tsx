@@ -9,7 +9,7 @@ import {
 import { CheckCircle2, CircleAlert } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
-import { SpeakButton, VoiceControls } from "../components/SpeakButton";
+import { SpeakButton } from "../components/SpeakButton";
 import { speakEnglish, stopSpeech, mapSpeakersToGender, type DialogueSpeakLine } from "../lib/speech";
 import { SEARCH_HIGHLIGHT_PARAM, useSearchHighlight } from "../lib/searchHighlight";
 
@@ -611,7 +611,6 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
 
       {mode !== "practice" && mode !== "done" && (
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <VoiceControls className="min-w-0" />
           {kind === "listening" && (
             <button
               type="button"

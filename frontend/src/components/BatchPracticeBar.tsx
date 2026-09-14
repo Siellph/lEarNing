@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { VoiceControls } from "./SpeakButton";
 
 type BatchPracticeBarProps = {
   batchCount: number;
@@ -15,8 +14,9 @@ type BatchPracticeBarProps = {
 const CHIP_STEP = 40; // ~chip width + gap
 
 /**
- * Batch chips (swipeable) + voice/practice.
- * Never forces the page wider than the viewport.
+ * Batch chips + practice.
+ * Mobile: chips centered (scroll if needed), practice full-width below.
+ * Desktop: chips left, practice right.
  */
 export function BatchPracticeBar({
   batchCount,
@@ -73,8 +73,8 @@ export function BatchPracticeBar({
   }
 
   return (
-    <div className={`flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 ${className}`}>
-      <div className="relative min-w-0 w-full flex-1">
+    <div className={`flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-3 ${className}`}>
+      <div className="relative mx-auto min-w-0 w-full flex-1 sm:mx-0">
         {canScrollLeft && (
           <>
             <div
@@ -94,28 +94,30 @@ export function BatchPracticeBar({
 
         <div
           ref={scrollRef}
-          className="flex min-w-0 touch-pan-x gap-1.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="min-w-0 touch-pan-x overflow-x-auto overscroll-x-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{ WebkitOverflowScrolling: "touch" }}
           role="group"
           aria-label="Партии"
         >
-          {batches.map((n) => {
-            const active = activeBatch === n;
-            return (
-              <button
-                key={n}
-                type="button"
-                data-batch={n}
-                aria-current={active ? "true" : undefined}
-                className={`inline-flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full px-2 text-sm font-semibold transition-colors ${
-                  active ? "bg-ink text-paper" : "bg-card text-ink-soft hover:text-ink"
-                }`}
-                onClick={() => onSelectBatch(n)}
-              >
-                {n}
-              </button>
-            );
-          })}
+          <div className="flex w-max min-w-full justify-center gap-1.5 sm:justify-start">
+            {batches.map((n) => {
+              const active = activeBatch === n;
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  data-batch={n}
+                  aria-current={active ? "true" : undefined}
+                  className={`inline-flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full px-2 text-sm font-semibold transition-colors ${
+                    active ? "bg-ink text-paper" : "bg-card text-ink-soft hover:text-ink"
+                  }`}
+                  onClick={() => onSelectBatch(n)}
+                >
+                  {n}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {canScrollRight && (
@@ -136,11 +138,10 @@ export function BatchPracticeBar({
         )}
       </div>
 
-      <div className="flex min-w-0 flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
-        <VoiceControls className="min-w-0" />
+      <div className="flex w-full min-w-0 sm:w-auto sm:shrink-0 sm:justify-end">
         <button
           type="button"
-          className="btn btn-primary h-8 shrink-0 px-4 py-0 text-sm shadow-none"
+          className="btn btn-primary h-10 w-full px-4 py-0 text-sm shadow-none sm:h-8 sm:w-auto"
           onClick={onPractice}
           disabled={busy}
           title="Тренировать текущую партию"

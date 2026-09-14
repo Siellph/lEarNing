@@ -7,7 +7,7 @@ import { extractEnglish, looksEnglish, speakableEnglish } from "../lib/speech";
 import type { QuizOptions } from "../lib/match";
 import { MatchQuestion } from "../components/MatchQuestion";
 import { PromptWithBlanks, countBlanks, joinGapAnswers } from "../components/PromptWithBlanks";
-import { SpeakButton, VoiceControls } from "../components/SpeakButton";
+import { SpeakButton } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
 import { useSearchHighlight } from "../lib/searchHighlight";
 
@@ -361,7 +361,6 @@ function AssessmentRunner({ kind, id, back }: { kind: "test" | "exam"; id: numbe
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <VoiceControls />
           {phase === "running" && !result && left != null && (
             <div className="rounded-full bg-card px-4 py-2 font-semibold">{clock}</div>
           )}

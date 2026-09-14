@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { LessonView, type LessonContent } from "../components/LessonView";
-import { VoiceControls } from "../components/SpeakButton";
 
 export function LessonPage() {
   const { slug, lessonId } = useParams();
@@ -16,14 +15,11 @@ export function LessonPage() {
 
   return (
     <div className="mx-auto grid max-w-3xl gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link to={`/app/module/${data.module.slug}`} className="text-sm text-terra">
-            ← {data.module.title}
-          </Link>
-          <h1 className="font-display mt-2 text-4xl">{data.title}</h1>
-        </div>
-        <VoiceControls />
+      <div>
+        <Link to={`/app/module/${data.module.slug}`} className="text-sm text-terra">
+          ← {data.module.title}
+        </Link>
+        <h1 className="font-display mt-2 text-4xl">{data.title}</h1>
       </div>
       <LessonView content={data.content} />
       <div className="flex flex-wrap gap-3">

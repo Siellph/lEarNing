@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { LessonView, type LessonContent } from "../components/LessonView";
-import { SpeakButton, VoiceControls } from "../components/SpeakButton";
+import { SpeakButton } from "../components/SpeakButton";
 import { speakEnglish } from "../lib/speech";
 import { useSearchHighlight } from "../lib/searchHighlight";
 
@@ -85,10 +85,9 @@ export function PhoneticsPage() {
           <h1 className="font-display mt-1 text-4xl">Транскрипция и слух</h1>
           <p className="mt-2 max-w-2xl text-ink-soft">
             Нажмите символ — услышите ключевое слово и откроете постановку. Ниже — правила чтения, слабые формы и то,
-            как слова склеиваются в потоке. Темп и акцент действуют на все динамики.
+            как слова склеиваются в потоке. Акцент и темп — в шапке (иконка динамика).
           </p>
         </div>
-        <VoiceControls />
       </div>
       {chart.map((group) => {
         const open = group.items.find((item) => item.ipa === selected) || null;
@@ -168,15 +167,12 @@ export function PhoneticsTopicPage() {
 
   return (
     <div className="mx-auto grid max-w-3xl gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link to="/app/sounds" className="text-sm text-terra">
-            ← Все звуки
-          </Link>
-          <h1 className="font-display mt-2 text-4xl">{topic.title}</h1>
-          <p className="mt-1 text-ink-soft">{topic.lesson.title}</p>
-        </div>
-        <VoiceControls />
+      <div>
+        <Link to="/app/sounds" className="text-sm text-terra">
+          ← Все звуки
+        </Link>
+        <h1 className="font-display mt-2 text-4xl">{topic.title}</h1>
+        <p className="mt-1 text-ink-soft">{topic.lesson.title}</p>
       </div>
       <LessonView content={topic.lesson.content} />
     </div>
