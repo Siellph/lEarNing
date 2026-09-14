@@ -15,7 +15,7 @@ import { ProgressBar } from "../components/ProgressBar";
 import { SpeakButton } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
 import { percent } from "../lib/percent";
-import { looksEnglish, verbFormsSpeakText } from "../lib/speech";
+import { exceptionFormsSpeakText, looksEnglish, verbFormsSpeakText } from "../lib/speech";
 import { useSearchHighlight } from "../lib/searchHighlight";
 
 type Deck = {
@@ -352,7 +352,9 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
                     text={
                       kind === "verbs"
                         ? verbFormsSpeakText(c)
-                        : c.primary_text.split("→")[0].trim()
+                        : kind === "exceptions"
+                          ? exceptionFormsSpeakText(c.primary_text)
+                          : c.primary_text.split("→")[0].trim()
                     }
                   />
                 )}

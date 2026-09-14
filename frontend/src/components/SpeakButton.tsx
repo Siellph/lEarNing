@@ -1,5 +1,5 @@
 import { Pause, Play, RotateCcw, Volume2 } from "lucide-react";
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { onConsentChange } from "../lib/consent";
 import {
   toggleSpeakEnglish,
@@ -30,12 +30,13 @@ export function SpeakButton({
   ratePreset,
   voiceGender,
   dialogueLines,
-  compact = false,
+  compact: _compact = false,
   showRestart = false,
   className = "",
 }: {
   text: string;
   speak?: string;
+  /** Accessible name / tooltip when idle (icon-only UI). */
   label?: string;
   /** Override tempo preset; default = user VoiceControls setting. */
   ratePreset?: SpeechRate;
@@ -43,7 +44,7 @@ export function SpeakButton({
   voiceGender?: VoiceGender;
   /** Full dialogue: sequential lines with per-speaker voices. */
   dialogueLines?: DialogueSpeakLine[];
-  /** Hide label text on small screens (icon-only; aria-label kept). */
+  /** @deprecated Icon-only; kept for call-site compatibility. */
   compact?: boolean;
   /** Second control: stop and play the same unit from the beginning. */
   showRestart?: boolean;
@@ -51,6 +52,8 @@ export function SpeakButton({
 }) {
   const [ready, setReady] = useState(false);
   const [playback, setPlayback] = useState<SpeakPlaybackState>("idle");
+  const mainRef = useRef<HTMLButtonElement>(null);
+  const restartRef = useRef<HTMLButtonElement>(null);
   const spoken = useMemo(() => {
     if (dialogueLines?.length) {
       return dialogueLines
@@ -78,6 +81,13 @@ export function SpeakButton({
     return onSpeakPlaybackChange(sync);
   }, [spoken]);
 
+  // Drop mouse focus highlight when this clip finishes (or another clip takes over).
+  useEffect(() => {
+    if (playback !== "idle") return;
+    mainRef.current?.blur();
+    restartRef.current?.blur();
+  }, [playback]);
+
   // If this control started playback, silence it when the control leaves the tree
   // (in-page remounts / quiz step changes). Route changes are handled globally.
   useEffect(() => {
@@ -90,13 +100,13 @@ export function SpeakButton({
 
   const isSpeaking = playback === "speaking";
   const isPaused = playback === "paused";
-  const aria =
-    isSpeaking ? `Пауза: ${spoken}` : isPaused ? `Продолжить: ${spoken}` : label || `Прослушать: ${spoken}`;
-  const title = isSpeaking ? "Пауза" : isPaused ? "Продолжить" : label || "Прослушать";
+  const idleName = label || "Прослушать";
+  const aria = isSpeaking ? `Пауза: ${spoken}` : isPaused ? `Продолжить: ${spoken}` : `${idleName}: ${spoken}`;
+  const title = isSpeaking ? "Пауза" : isPaused ? "Продолжить" : idleName;
   const Icon = isSpeaking ? Pause : isPaused ? Play : Volume2;
 
   const speakOpts = { ratePreset: ratePreset ?? getRatePreset() };
-  const btnClass = `speak-btn ${compact ? "speak-btn--compact" : ""} ${isSpeaking ? "speak-btn--speaking" : ""} ${isPaused ? "speak-btn--paused" : ""}`;
+  const btnClass = `speak-btn ${isSpeaking ? "speak-btn--speaking" : ""} ${isPaused ? "speak-btn--paused" : ""}`;
 
   const onToggle = (event: MouseEvent) => {
     event.preventDefault();
@@ -120,6 +130,7 @@ export function SpeakButton({
 
   const mainButton = (extraClass = "") => (
     <button
+      ref={mainRef}
       type="button"
       className={`${btnClass} ${extraClass}`.trim()}
       aria-label={aria}
@@ -129,8 +140,7 @@ export function SpeakButton({
       onPointerDown={() => primeSpeech()}
       onClick={onToggle}
     >
-      <Icon size={16} />
-      {label ? <span className={compact ? "speak-btn__label" : undefined}>{label}</span> : null}
+      <Icon size={16} aria-hidden />
     </button>
   );
 
@@ -142,16 +152,16 @@ export function SpeakButton({
     <span className={`speak-btn-group ${className}`.trim()}>
       {mainButton()}
       <button
+        ref={restartRef}
         type="button"
-        className={`speak-btn speak-btn--restart ${compact ? "speak-btn--compact" : ""}`}
+        className="speak-btn speak-btn--restart"
         aria-label={`Сначала: ${spoken}`}
         title="Сначала"
         disabled={!ready}
         onPointerDown={() => primeSpeech()}
         onClick={onRestart}
       >
-        <RotateCcw size={16} />
-        <span className={compact ? "speak-btn__label" : undefined}>Сначала</span>
+        <RotateCcw size={16} aria-hidden />
       </button>
     </span>
   );

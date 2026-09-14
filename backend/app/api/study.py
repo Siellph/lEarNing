@@ -169,23 +169,38 @@ def _form_pair_options(correct: str, pool: list[StudyCard], extra: list[StudyCar
     return choices[: n + 1]
 
 
-def _verb_forms_speak(card: StudyCard) -> str:
-    """Plain TTS for irregular verbs: V1, V2, V3 with pauses; expand slash alts; no gloss."""
+def _speak_form_parts(fields: list[str]) -> str:
     parts: list[str] = []
-    for field in (
-        card.primary_text.split("→")[0].strip(),
-        (card.secondary_text or "").strip(),
-        (card.tertiary_text or "").strip(),
-    ):
+    for field in fields:
+        field = (field or "").strip()
         if not field:
             continue
         parts.extend(p.strip() for p in field.split("/") if p.strip())
     return ". ".join(parts)
 
 
+def _verb_forms_speak(card: StudyCard) -> str:
+    """Plain TTS for irregular verbs: V1, V2, V3 with pauses; expand slash alts; no gloss."""
+    return _speak_form_parts(
+        [
+            card.primary_text.split("→")[0].strip(),
+            (card.secondary_text or "").strip(),
+            (card.tertiary_text or "").strip(),
+        ]
+    )
+
+
+def _exception_forms_speak(card: StudyCard) -> str:
+    """Speak full exception chain, e.g. child → children → 'child. children'."""
+    spoken = _speak_form_parts([p.strip() for p in card.primary_text.split("→")])
+    return spoken or card.primary_text.strip()
+
+
 def _card_speak(card: StudyCard, deck_kind: str) -> str:
     if deck_kind == "verbs":
         return _verb_forms_speak(card)
+    if deck_kind == "exceptions":
+        return _exception_forms_speak(card)
     return card.primary_text.split("→")[0].strip()
 
 

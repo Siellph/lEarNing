@@ -1080,26 +1080,36 @@ function speakDialogueWebSpeech(
   void whenVoicesReady().then(kick);
 }
 
+function speakFormParts(fields: string[]): string {
+  const parts: string[] = [];
+  for (const field of fields) {
+    const trimmed = field.trim();
+    if (!trimmed) continue;
+    for (const piece of trimmed.split("/")) {
+      const word = piece.trim();
+      if (word) parts.push(word);
+    }
+  }
+  return parts.join(". ");
+}
+
 /** Irregular verbs: speak V1, V2, V3 with pauses; expand slash alts; no gloss. */
 export function verbFormsSpeakText(card: {
   primary_text: string;
   secondary_text?: string;
   tertiary_text?: string;
 }): string {
-  const fields = [
+  return speakFormParts([
     card.primary_text.split("→")[0].trim(),
-    (card.secondary_text || "").trim(),
-    (card.tertiary_text || "").trim(),
-  ];
-  const parts: string[] = [];
-  for (const field of fields) {
-    if (!field) continue;
-    for (const piece of field.split("/")) {
-      const word = piece.trim();
-      if (word) parts.push(word);
-    }
-  }
-  return parts.join(". ");
+    card.secondary_text || "",
+    card.tertiary_text || "",
+  ]);
+}
+
+/** Exceptions: speak full chain, e.g. child → children → "child. children". */
+export function exceptionFormsSpeakText(primary: string): string {
+  const spoken = speakFormParts(primary.split("→"));
+  return spoken || primary.trim();
 }
 
 export function extractEnglish(text: string): string | null {
