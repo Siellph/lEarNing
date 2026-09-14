@@ -3,11 +3,12 @@
 Creates an admin only when ADMIN_EMAIL and ADMIN_PASSWORD are both set.
 Run: python -m app.seed.runner
 
-Policy (existing DB): insert-only for content. ensure_* may add columns/settings;
-expanders add missing rows by slug/prompt; they do NOT update lesson theory
-globally (sync_lesson_theory is a no-op). Narrow exception: sync_lesson_theory_for_slugs
-may overwrite Lesson.content for an explicit corrected-slug list only.
-Study/skill/vocab text and existing exercise prompts/answers stay untouched.
+Policy (existing DB): insert-only for grammar banks/exams by prompt; ensure_* may
+add columns/settings. Study decks / skill items / vocab topics that already exist
+are not refilled with missing seed rows (admin deletes stick across restarts).
+Expanders do NOT update lesson theory globally (sync_lesson_theory is a no-op).
+Narrow exception: sync_lesson_theory_for_slugs may overwrite Lesson.content for
+an explicit corrected-slug list only. Existing exercise prompts/answers stay untouched.
 """
 
 from app import models  # noqa: F401 — register metadata
@@ -139,7 +140,7 @@ def seed_modules(db, levels_by_code: dict[str, GrammarLevel]) -> tuple[int, int,
     return n_modules, n_lessons, n_exercises, n_questions
 
 
-def _run_expanders(db) -> dict:
+def _run_expanders(db, *, refill_existing_vocab: bool = False) -> dict:
     scrubbed = scrub_off_topic_pad_items(db)
     stats = {
         "scrub_practice": scrubbed["practice"],
@@ -150,7 +151,7 @@ def _run_expanders(db) -> dict:
         "practice": expand_practice_banks(db),
         "tests": expand_module_tests(db),
         "exams": expand_exams(db),
-        "words": expand_vocabulary(db),
+        "words": expand_vocabulary(db, refill_existing=refill_existing_vocab),
         "study": expand_study_decks(db),
         "skills": expand_skills(db),
         "article_fixes": fix_known_article_answers(db),
@@ -249,7 +250,7 @@ def main() -> None:
                 )
                 n_exam_q += 1
 
-        stats = _run_expanders(db)
+        stats = _run_expanders(db, refill_existing_vocab=True)
         ensure_site_settings(db)
         removed_demo += remove_legacy_demo_accounts(db)
         db.commit()

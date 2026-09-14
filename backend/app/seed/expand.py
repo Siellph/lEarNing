@@ -270,35 +270,31 @@ def ensure_word_order_modules(db) -> int:
 
 
 def expand_study_decks(db) -> int:
-    """Insert missing study decks/cards only; never overwrite existing deck/card text."""
+    """Create missing study decks with all seed cards; never refill an existing deck.
+
+    Once a deck slug exists (even with zero cards after admin deletes), startup seed
+    must not re-insert cards — otherwise hard-deletes undo on container restart.
+    """
     added = 0
-    skipped = 0
+    skipped_decks = 0
     existing = {deck.slug: deck for deck in db.query(StudyDeck).all()}
     max_order = max((d.sort_order for d in existing.values()), default=0)
     for data in STUDY_DECKS:
-        deck = existing.get(data["slug"])
-        if deck is None:
-            max_order += 1
-            deck = StudyDeck(
-                slug=data["slug"],
-                title=data["title"],
-                description=data["description"],
-                kind=data["kind"],
-                sort_order=max_order,
-            )
-            db.add(deck)
-            db.flush()
-            existing[deck.slug] = deck
-            known: dict = {}
-        else:
-            known = {card.primary_text.lower(): card for card in deck.cards}
-        order = max((c.sort_order for c in deck.cards), default=0)
-        for item in data["cards"]:
-            key = item["primary_text"].lower()
-            if key in known:
-                skipped += 1
-                continue
-            order += 1
+        if data["slug"] in existing:
+            skipped_decks += 1
+            continue
+        max_order += 1
+        deck = StudyDeck(
+            slug=data["slug"],
+            title=data["title"],
+            description=data["description"],
+            kind=data["kind"],
+            sort_order=max_order,
+        )
+        db.add(deck)
+        db.flush()
+        existing[deck.slug] = deck
+        for order, item in enumerate(data["cards"], start=1):
             db.add(
                 StudyCard(
                     deck_id=deck.id,
@@ -312,64 +308,54 @@ def expand_study_decks(db) -> int:
                     sort_order=order,
                 )
             )
-            known[key] = None
             added += 1
-    if skipped:
-        print(f"  study: skipped {skipped} existing cards")
+    if skipped_decks:
+        print(f"  study: skipped card insert for {skipped_decks} existing decks")
     return added
 
 
 def expand_skills(db) -> int:
-    """Insert missing skill items/questions only; never overwrite existing skill content."""
+    """Create missing skill items with questions; never refill questions on existing items."""
     added = 0
     skipped = 0
     existing = {item.slug: item for item in db.query(SkillItem).all()}
     max_order = max((i.sort_order for i in existing.values()), default=0)
     for data in SKILL_ITEMS:
-        item = existing.get(data["slug"])
-        if item is None:
-            max_order += 1
-            item = SkillItem(
-                slug=data["slug"],
-                title=data["title"],
-                description=data.get("description", ""),
-                kind=data["kind"],
-                level_code=data.get("level_code", "A1"),
-                body=data.get("body", ""),
-                lines=data.get("lines") or [],
-                keywords=data.get("keywords") or [],
-                sort_order=max_order,
-            )
-            db.add(item)
-            db.flush()
-            existing[item.slug] = item
-            known_prompts: set[str] = set()
-        else:
+        if data["slug"] in existing:
             skipped += 1
-            known_prompts = {q.prompt for q in item.questions}
-        order = max((q.sort_order for q in item.questions), default=0)
+            continue
+        max_order += 1
+        item = SkillItem(
+            slug=data["slug"],
+            title=data["title"],
+            description=data.get("description", ""),
+            kind=data["kind"],
+            level_code=data.get("level_code", "A1"),
+            body=data.get("body", ""),
+            lines=data.get("lines") or [],
+            keywords=data.get("keywords") or [],
+            sort_order=max_order,
+        )
+        db.add(item)
+        db.flush()
+        existing[item.slug] = item
         for qi, qdata in enumerate(data.get("questions") or [], start=1):
-            prompt = qdata["prompt"]
-            if prompt in known_prompts:
-                continue
-            order += 1
             db.add(
                 SkillQuestion(
                     item_id=item.id,
                     kind=qdata["kind"],
-                    prompt=prompt,
+                    prompt=qdata["prompt"],
                     options=qdata.get("options"),
                     answer=qdata["answer"],
                     accepted=qdata.get("accepted"),
                     speak=qdata.get("speak", ""),
                     explanation=qdata.get("explanation", ""),
-                    sort_order=order if order else qi,
+                    sort_order=qi,
                 )
             )
-            known_prompts.add(prompt)
             added += 1
     if skipped:
-        print(f"  skills: skipped {skipped} existing items (no content sync)")
+        print(f"  skills: skipped question insert for {skipped} existing items")
     return added
 
 
@@ -732,8 +718,16 @@ def ensure_admin_from_env(db) -> bool:
     return True
 
 
-def expand_vocabulary(db) -> int:
+def expand_vocabulary(db, *, refill_existing: bool = False) -> int:
+    """Create missing vocab topics with words.
+
+    refill_existing=False (restarts): never add words to an existing topic so
+    admin deletes stick; brand-new topic slugs are still created once.
+    refill_existing=True (fresh install): also insert missing EXTRA pack words
+    into topics that already received core TOPICS seed.
+    """
     added = 0
+    skipped_topics = 0
     topics = {topic.slug: topic for topic in db.query(VocabTopic).all()}
     max_order = max((topic.sort_order for topic in topics.values()), default=0)
 
@@ -741,18 +735,6 @@ def expand_vocabulary(db) -> int:
     for mapping in (EXTRA_WORDS_BY_SLUG, MORE_WORDS_BY_SLUG, PLUS_WORDS_BY_SLUG):
         for slug, words in mapping.items():
             extra_by_slug.setdefault(slug, []).extend(words)
-
-    for slug, words in extra_by_slug.items():
-        topic = topics.get(slug)
-        if topic is None:
-            continue
-        existing = {word.word.lower() for word in topic.words}
-        for item in words:
-            if item["word"].lower() in existing:
-                continue
-            db.add(VocabWord(topic_id=topic.id, **item))
-            existing.add(item["word"].lower())
-            added += 1
 
     for data in [*NEW_TOPICS, *MORE_TOPICS, *PLUS_TOPICS]:
         topic = topics.get(data["slug"])
@@ -769,12 +751,35 @@ def expand_vocabulary(db) -> int:
             db.flush()
             topics[topic.slug] = topic
             existing: set[str] = set()
+            pack_words = list(data["words"]) + list(extra_by_slug.get(data["slug"], []))
+        elif not refill_existing:
+            skipped_topics += 1
+            continue
         else:
             existing = {word.word.lower() for word in topic.words}
-        for item in data["words"]:
+            pack_words = list(data["words"])
+        for item in pack_words:
             if item["word"].lower() in existing:
                 continue
             db.add(VocabWord(topic_id=topic.id, **item))
             existing.add(item["word"].lower())
             added += 1
+
+    for slug, words in extra_by_slug.items():
+        topic = topics.get(slug)
+        if topic is None:
+            continue
+        if not refill_existing:
+            skipped_topics += 1
+            continue
+        existing = {word.word.lower() for word in topic.words}
+        for item in words:
+            if item["word"].lower() in existing:
+                continue
+            db.add(VocabWord(topic_id=topic.id, **item))
+            existing.add(item["word"].lower())
+            added += 1
+
+    if skipped_topics:
+        print(f"  vocab: skipped word insert for {skipped_topics} existing topics")
     return added
