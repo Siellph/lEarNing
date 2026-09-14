@@ -57,6 +57,7 @@ export function getAccent(): Accent {
 export function setAccent(accent: Accent) {
   memoryAccent = accent;
   if (canPersistPrefs()) localStorage.setItem(ACCENT_KEY, accent);
+  stopSpeech();
 }
 
 export function getRatePreset(): SpeechRate {
@@ -66,6 +67,7 @@ export function getRatePreset(): SpeechRate {
 export function setRatePreset(preset: SpeechRate) {
   memoryRate = preset;
   if (canPersistPrefs()) localStorage.setItem(RATE_KEY, preset);
+  stopSpeech();
 }
 
 export function getRate(): number {
@@ -965,13 +967,22 @@ export function speakEnglish(text: string, options?: SpeakOptions) {
   setPlayback("speaking", spoken);
 
   const accent = options?.accent || getAccent();
-  const ratePreset = resolveRatePreset(options);
   const gender = options?.voiceGender ?? "female";
 
   void (async () => {
     try {
-      const blob = await fetchEdgeTtsBlob(spoken, accent, ratePreset, gender);
+      let ratePreset = resolveRatePreset(options);
+      let blob = await fetchEdgeTtsBlob(spoken, accent, ratePreset, gender);
       if (generation !== speakGeneration) return;
+      // Prefer current UI tempo if the user changed it during the fetch.
+      if (!options?.ratePreset) {
+        const latest = getRatePreset();
+        if (latest !== ratePreset) {
+          ratePreset = latest;
+          blob = await fetchEdgeTtsBlob(spoken, accent, ratePreset, gender);
+          if (generation !== speakGeneration) return;
+        }
+      }
       await playEdgeBlob(blob, generation, spoken);
     } catch {
       if (generation !== speakGeneration) return;

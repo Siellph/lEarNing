@@ -319,47 +319,7 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
       {mode === "cards" ? (
         <div className="grid gap-3">
           {deck.cards.map((c) => (
-            <article key={c.id} data-search-id={String(c.id)} className="card p-5">
-              {kind === "verbs" ? (
-                <>
-                  <p className="font-display text-2xl">{c.primary_text}</p>
-                  <p className="mt-2 text-sm text-ink-soft">
-                    V2: <b className="text-ink">{c.secondary_text}</b> · V3: <b className="text-ink">{c.tertiary_text}</b>
-                  </p>
-                  <p className="mt-2">{c.translation}</p>
-                </>
-              ) : (
-                <>
-                  <p className="font-display text-2xl">{c.primary_text}</p>
-                  <p className="mt-2">{c.translation}</p>
-                </>
-              )}
-              {c.example && (
-                <p className="mt-3 text-sm text-ink-soft">
-                  {c.example}
-                  {c.example_translation ? ` — ${c.example_translation}` : ""}
-                </p>
-              )}
-              <div className="mt-3 flex items-center justify-between">
-                <span
-                  className={`rounded-full px-2 py-1 text-xs ${c.learned ? "bg-sage-soft text-sage" : "text-ink-soft"}`}
-                  title={cardProgressTitle(kind)}
-                >
-                  {cardProgressLabel(c, kind)}
-                </span>
-                {c.primary_text && (
-                  <SpeakButton
-                    text={
-                      kind === "verbs"
-                        ? verbFormsSpeakText(c)
-                        : kind === "exceptions"
-                          ? exceptionFormsSpeakText(c.primary_text)
-                          : c.primary_text.split("→")[0].trim()
-                    }
-                  />
-                )}
-              </div>
-            </article>
+            <StudyBrowseCard key={c.id} card={c} kind={kind} />
           ))}
         </div>
       ) : (
@@ -409,6 +369,73 @@ type FailedFacet = {
   translation: string;
   kind: string;
 };
+
+function StudyBrowseCard({ card, kind }: { card: Card; kind: "verbs" | "idioms" | "exceptions" }) {
+  const [open, setOpen] = useState(false);
+  const speakMain =
+    kind === "verbs"
+      ? verbFormsSpeakText(card)
+      : kind === "exceptions"
+        ? exceptionFormsSpeakText(card.primary_text)
+        : card.primary_text.split("→")[0].trim();
+
+  return (
+    <article
+      data-search-id={String(card.id)}
+      className="card cursor-pointer p-5"
+      onClick={() => setOpen((value) => !value)}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-display text-2xl">{card.primary_text}</p>
+            {speakMain ? (
+              <div onClick={(event) => event.stopPropagation()}>
+                <SpeakButton text={speakMain} label={kind === "verbs" ? "формы" : "фраза"} />
+              </div>
+            ) : null}
+          </div>
+          {kind === "verbs" ? (
+            <p className="mt-1 text-sm text-ink-soft">
+              V2: <b className="text-ink">{card.secondary_text}</b> · V3:{" "}
+              <b className="text-ink">{card.tertiary_text}</b>
+            </p>
+          ) : null}
+        </div>
+        <span
+          className={`shrink-0 rounded-full px-2 py-1 text-xs ${
+            card.learned ? "bg-sage-soft text-sage" : "bg-paper-2 text-ink-soft"
+          }`}
+          title={cardProgressTitle(kind)}
+        >
+          {cardProgressLabel(card, kind)}
+        </span>
+      </div>
+
+      {open ? (
+        <div className="mt-3" onClick={(event) => event.stopPropagation()}>
+          <p className="font-semibold">{card.translation}</p>
+          {card.example ? (
+            <div className="mt-2 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm">{card.example}</p>
+                {card.example_translation ? (
+                  <p className="text-sm text-ink-soft">{card.example_translation}</p>
+                ) : null}
+              </div>
+              <SpeakButton text={card.example} label="пример" />
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-ink-soft">
+          {kind === "exceptions" ? "Нажмите, чтобы увидеть правило" : "Нажмите, чтобы увидеть перевод"}
+          {card.example ? " и пример" : ""}
+        </p>
+      )}
+    </article>
+  );
+}
 
 function StudySession({
   pack,

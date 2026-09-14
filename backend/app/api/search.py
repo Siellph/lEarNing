@@ -166,17 +166,11 @@ def _search_grammar(db: Session, q: str, pattern: str) -> list[dict]:
     )
     for module in modules:
         level_title = module.level.title if module.level else None
-        level_code = module.level.code if module.level else None
-        href = (
-            f"/app/grammar/{level_code}?highlight={module.slug}"
-            if level_code
-            else f"/app/module/{module.slug}"
-        )
         hits.append(
             _hit(
                 "Грамматика",
                 module.title,
-                href,
+                f"/app/module/{module.slug}",
                 level_title,
                 rank=_rank(q, module.title, module.description) + 2,
             )
@@ -249,7 +243,7 @@ def _search_vocab(db: Session, q: str, pattern: str) -> list[dict]:
             _hit(
                 "Словарь",
                 topic.title,
-                f"/app/vocab?highlight={topic.slug}",
+                f"/app/vocab/{topic.slug}",
                 topic.description or topic.level_code,
                 rank=_rank(q, topic.title, topic.description),
             )

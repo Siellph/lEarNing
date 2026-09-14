@@ -2,6 +2,7 @@ import { LoaderCircle, Search, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
+import { clearAppScroll, scrollAppToTop } from "../lib/scrollRestore";
 
 export type SearchHit = {
   section: string;
@@ -16,6 +17,17 @@ type SearchResponse = {
 };
 
 const DEBOUNCE_MS = 250;
+
+function goSearchHit(navigate: ReturnType<typeof useNavigate>, href: string) {
+  try {
+    const url = new URL(href, window.location.origin);
+    clearAppScroll(url.pathname);
+  } catch {
+    /* ignore */
+  }
+  scrollAppToTop();
+  navigate(href);
+}
 
 function useDebouncedValue<T>(value: T, delay: number) {
   const [debounced, setDebounced] = useState(value);
@@ -198,7 +210,7 @@ function DesktopSearch() {
   const selectHit = (hit: SearchHit) => {
     setOpen(false);
     setQuery("");
-    navigate(hit.href);
+    goSearchHit(navigate, hit.href);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -316,7 +328,7 @@ function MobileSearch() {
 
   const selectHit = (hit: SearchHit) => {
     close();
-    navigate(hit.href);
+    goSearchHit(navigate, hit.href);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

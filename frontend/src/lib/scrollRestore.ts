@@ -56,3 +56,27 @@ export function scrollAppToTop(): void {
   const el = getAppScrollEl();
   if (el) el.scrollTop = 0;
 }
+
+export function clearAppScroll(pathname: string): void {
+  memory.delete(pathname);
+  try {
+    sessionStorage.removeItem(STORAGE_PREFIX + pathname);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Forget saved positions so the next route opens from the top. */
+export function clearAllAppScroll(): void {
+  memory.clear();
+  try {
+    const keys: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key?.startsWith(STORAGE_PREFIX)) keys.push(key);
+    }
+    for (const key of keys) sessionStorage.removeItem(key);
+  } catch {
+    /* ignore */
+  }
+}

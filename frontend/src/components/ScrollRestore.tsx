@@ -51,7 +51,11 @@ export function ScrollRestore() {
   }, [pathname]);
 
   useLayoutEffect(() => {
-    if (skipHighlight) return;
+    // Search deep-links: always start from top; highlight scrolls the target into view.
+    if (skipHighlight) {
+      scrollAppToTop();
+      return;
+    }
 
     const saved = readAppScroll(pathname);
     if (saved == null || saved <= 0) {

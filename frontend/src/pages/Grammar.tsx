@@ -91,15 +91,20 @@ export function ModuleList() {
       </div>
       <div className="grid gap-3">
         {pack.modules.map((module, i) => (
-          <Link key={module.slug} to={`/app/module/${module.slug}`} data-search-id={module.slug} className="card card-lift flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
+          <Link
+            key={module.slug}
+            to={`/app/module/${module.slug}`}
+            data-search-id={module.slug}
+            className="card card-lift relative flex flex-col gap-3 p-5 sm:flex-row sm:items-center"
+          >
+            <div className="absolute right-4 top-4">
+              <Status status={module.progress.status} />
+            </div>
             <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-paper-2 font-display text-lg">
               {i + 1}
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-semibold">{module.title}</h2>
-                <Status status={module.progress.status} />
-              </div>
+            <div className="min-w-0 flex-1 pr-24 sm:pr-28">
+              <h2 className="font-semibold">{module.title}</h2>
               <p className="mt-1 text-sm text-ink-soft">{module.description}</p>
               <p className="mt-2 text-xs text-ink-soft">
                 {module.estimated_minutes} мин · {module.exercise_count} упражнений

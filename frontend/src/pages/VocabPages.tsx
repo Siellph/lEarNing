@@ -93,10 +93,24 @@ type CheckResult = {
 
 export function VocabPage() {
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [levelFilter, setLevelFilter] = useState<string>("all");
   useEffect(() => {
     api<Topic[]>("/vocab/topics").then(setTopics);
   }, []);
-  useSearchHighlight(topics.length > 0);
+  useSearchHighlight(topics.length > 0 && levelFilter === "all");
+
+  const levelOptions = useMemo(() => {
+    const present = new Set(topics.map((t) => t.level_code).filter(Boolean));
+    const order = ["A1", "A2", "B1", "B2", "B2+", "C1", "C2"];
+    const ordered = order.filter((code) => present.has(code));
+    const extras = [...present].filter((code) => !order.includes(code)).sort();
+    return [...ordered, ...extras];
+  }, [topics]);
+
+  const visible = useMemo(() => {
+    if (levelFilter === "all") return topics;
+    return topics.filter((t) => t.level_code === levelFilter);
+  }, [topics, levelFilter]);
 
   return (
     <div className="grid gap-6">
@@ -113,8 +127,45 @@ export function VocabPage() {
           .
         </p>
       </div>
+
+      {levelOptions.length > 0 && (
+        <div className="h-scroll-x" role="group" aria-label="Фильтр по уровню CEFR">
+          <div className="flex w-max gap-2">
+            <button
+              type="button"
+              className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+                levelFilter === "all" ? "bg-terra text-white" : "bg-paper-2 text-ink-soft hover:bg-paper"
+              }`}
+              onClick={() => setLevelFilter("all")}
+            >
+              Все
+            </button>
+            {levelOptions.map((code) => {
+              const count = topics.filter((t) => t.level_code === code).length;
+              const active = levelFilter === code;
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+                    active ? "bg-terra text-white" : "bg-paper-2 text-ink-soft hover:bg-paper"
+                  }`}
+                  onClick={() => setLevelFilter(code)}
+                  aria-pressed={active}
+                >
+                  {code}
+                  <span className={`ml-1.5 text-xs ${active ? "text-white/80" : "text-ink-soft/80"}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2">
-        {topics.map((topic) => (
+        {visible.map((topic) => (
           <Link key={topic.slug} to={`/app/vocab/${topic.slug}`} data-search-id={topic.slug} className="card card-lift p-5">
             <p className="text-sm font-semibold text-terra">{topic.level_code}</p>
             <h2 className="font-display text-2xl">{topic.title}</h2>
@@ -128,6 +179,9 @@ export function VocabPage() {
           </Link>
         ))}
       </div>
+      {visible.length === 0 && levelFilter !== "all" ? (
+        <p className="text-ink-soft">Нет тем для уровня {levelFilter}.</p>
+      ) : null}
     </div>
   );
 }

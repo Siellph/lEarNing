@@ -24,6 +24,7 @@ import { DonationBanner } from "./DonationBanner";
 import { GlobalSearch } from "./GlobalSearch";
 import { PageEnter } from "./PageEnter";
 import { ScrollRestore } from "./ScrollRestore";
+import { ScrollToTopButton } from "./ScrollToTopButton";
 import { VoiceSettingsMenu } from "./SpeakButton";
 import { useAuth } from "../context/AuthContext";
 
@@ -163,6 +164,7 @@ export function Layout() {
             <ScrollRestore />
             <PageEnter />
           </main>
+          <ScrollToTopButton />
         </div>
       </div>
 
