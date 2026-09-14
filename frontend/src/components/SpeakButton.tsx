@@ -1,13 +1,16 @@
 import { Pause, Play, Volume2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { onConsentChange } from "../lib/consent";
 import {
   toggleSpeakEnglish,
+  toggleSpeakDialogue,
   speakableEnglish,
   primeSpeech,
   type Accent,
   type SpeechRate,
   type SpeakPlaybackState,
+  type VoiceGender,
+  type DialogueSpeakLine,
   getAccent,
   setAccent,
   getRate,
@@ -23,17 +26,31 @@ export function SpeakButton({
   speak,
   label,
   rate,
+  voiceGender,
+  dialogueLines,
   className = "",
 }: {
   text: string;
   speak?: string;
   label?: string;
   rate?: number;
+  /** Single-line dialogue role (female = 1st speaker, male = 2nd). */
+  voiceGender?: VoiceGender;
+  /** Full dialogue: sequential lines with per-speaker voices. */
+  dialogueLines?: DialogueSpeakLine[];
   className?: string;
 }) {
   const [ready, setReady] = useState(false);
   const [playback, setPlayback] = useState<SpeakPlaybackState>("idle");
-  const spoken = (speak ?? speakableEnglish(text)).trim();
+  const spoken = useMemo(() => {
+    if (dialogueLines?.length) {
+      return dialogueLines
+        .map((line) => speakableEnglish(line.text))
+        .filter(Boolean)
+        .join("\n");
+    }
+    return (speak ?? speakableEnglish(text)).trim();
+  }, [dialogueLines, speak, text]);
 
   useEffect(() => {
     if (!window.speechSynthesis) return;
@@ -73,7 +90,12 @@ export function SpeakButton({
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
-        toggleSpeakEnglish(spoken, { rate: rate ?? getRate() });
+        const opts = { rate: rate ?? getRate() };
+        if (dialogueLines?.length) {
+          toggleSpeakDialogue(dialogueLines, opts);
+        } else {
+          toggleSpeakEnglish(spoken, { ...opts, voiceGender });
+        }
       }}
     >
       <Icon size={16} />

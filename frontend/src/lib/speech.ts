@@ -71,12 +71,128 @@ export function getRate(): number {
   return SPEECH_RATES[getRatePreset()];
 }
 
+export type VoiceGender = "female" | "male";
+
+/** Heuristic name cues — Web Speech has no reliable gender field. */
+const FEMALE_VOICE_HINT =
+  /\b(samantha|victoria|karen|moira|fiona|tessa|veena|zira|hazel|susan|allison|ava|serena|kate|emily|martha|linda|heather|nancy|salli|joanna|ivy|kimberly|kendra|amy|emma|olivia|google uk english female|google us english female|microsoft.*(zira|hazel|susan)|female)\b/i;
+const MALE_VOICE_HINT =
+  /\b(daniel|alex|david|fred|tom|james|oliver|mark|ravi|arthur|aaron|bruce|gordon|lee|nathan|thomas|diego|jorge|google uk english male|google us english male|microsoft.*(david|mark|george)|male)\b/i;
+
+function normalizeVoiceLang(lang: string): string {
+  return lang.replace(/_/g, "-").toLowerCase();
+}
+
+function isEnglishVoice(voice: SpeechSynthesisVoice): boolean {
+  return normalizeVoiceLang(voice.lang).startsWith("en");
+}
+
+function voiceMatchesAccent(voice: SpeechSynthesisVoice, accent: Accent): boolean {
+  const lang = normalizeVoiceLang(voice.lang);
+  const name = voice.name;
+  if (accent === "en-GB") {
+    return (
+      lang.includes("gb") ||
+      lang.includes("uk") ||
+      /british|uk english|en-gb/i.test(name)
+    );
+  }
+  return lang.includes("us") || /american|us english|en-us/i.test(name);
+}
+
+function scoreGenderedVoice(
+  voice: SpeechSynthesisVoice,
+  gender: VoiceGender,
+  accent: Accent,
+): number {
+  if (!isEnglishVoice(voice)) return -1;
+  let score = 10;
+  if (voiceMatchesAccent(voice, accent)) score += 50;
+  const female = FEMALE_VOICE_HINT.test(voice.name);
+  const male = MALE_VOICE_HINT.test(voice.name);
+  if (gender === "female") {
+    if (female) score += 100;
+    if (male) score -= 80;
+  } else {
+    if (male) score += 100;
+    if (female) score -= 80;
+  }
+  if (voice.localService) score += 5;
+  return score;
+}
+
 function pickVoice(lang: Accent): SpeechSynthesisVoice | undefined {
   const voices = window.speechSynthesis.getVoices();
   const exact = voices.find((voice) => voice.lang === lang || voice.lang.replace("_", "-") === lang);
   if (exact) return exact;
   const prefix = voices.find((voice) => voice.lang.startsWith(lang.slice(0, 2)));
   return prefix;
+}
+
+/**
+ * Pick an EN voice for a dialogue gender role.
+ * Prefers name heuristics + user accent (UK/US). If only one EN voice exists, returns it.
+ */
+export function pickVoiceForGender(
+  gender: VoiceGender,
+  accent: Accent = getAccent(),
+): SpeechSynthesisVoice | undefined {
+  const english = window.speechSynthesis.getVoices().filter(isEnglishVoice);
+  if (!english.length) return pickVoice(accent);
+  if (english.length === 1) return english[0];
+
+  let best: SpeechSynthesisVoice | undefined;
+  let bestScore = -Infinity;
+  for (const voice of english) {
+    const score = scoreGenderedVoice(voice, gender, accent);
+    if (score > bestScore) {
+      bestScore = score;
+      best = voice;
+    }
+  }
+  return best ?? english[0];
+}
+
+/**
+ * Female + male pair for a dialogue. Tries to keep them distinct when ≥2 EN voices exist.
+ * Mapping convention: first unique speaker → female, second → male (then alternate).
+ */
+export function pickDialogueVoices(accent: Accent = getAccent()): {
+  female: SpeechSynthesisVoice | undefined;
+  male: SpeechSynthesisVoice | undefined;
+} {
+  const female = pickVoiceForGender("female", accent);
+  let male = pickVoiceForGender("male", accent);
+  if (female && male && female.voiceURI === male.voiceURI) {
+    const english = window.speechSynthesis.getVoices().filter(isEnglishVoice);
+    const other =
+      english
+        .filter((voice) => voice.voiceURI !== female.voiceURI)
+        .sort((a, b) => scoreGenderedVoice(b, "male", accent) - scoreGenderedVoice(a, "male", accent))[0] ??
+      undefined;
+    if (other) male = other;
+  }
+  return { female, male };
+}
+
+/** First unique speaker → female, second → male, then alternate. Stable within one dialogue. */
+export function mapSpeakersToGender(speakers: Iterable<string>): Map<string, VoiceGender> {
+  const map = new Map<string, VoiceGender>();
+  for (const raw of speakers) {
+    const name = raw.trim();
+    if (!name || map.has(name)) continue;
+    map.set(name, map.size % 2 === 0 ? "female" : "male");
+  }
+  return map;
+}
+
+export type DialogueSpeakLine = {
+  text: string;
+  voiceGender: VoiceGender;
+};
+
+function dialogueFingerprint(spokenLines: string[]): string {
+  return spokenLines.join("\n");
 }
 
 const SEGMENT_CONNECTOR = /^(vs\.?|versus|v\.)$/i;
@@ -172,8 +288,15 @@ export function resumeSpeech() {
   setPlayback("speaking");
 }
 
+export type SpeakOptions = {
+  rate?: number;
+  accent?: Accent;
+  /** Dialogue role voice; ignored when omitted (uses default accent voice). */
+  voiceGender?: VoiceGender;
+};
+
 /** Speak, or pause/resume the same active phrase (SpeakButton toggle). */
-export function toggleSpeakEnglish(text: string, options?: { rate?: number; accent?: Accent }) {
+export function toggleSpeakEnglish(text: string, options?: SpeakOptions) {
   const spoken = speakableEnglish(text);
   if (!spoken || typeof window === "undefined" || !window.speechSynthesis) return;
 
@@ -190,6 +313,29 @@ export function toggleSpeakEnglish(text: string, options?: { rate?: number; acce
   }
 
   speakEnglish(text, options);
+}
+
+/** Speak a multi-speaker script, or pause/resume the same active dialogue. */
+export function toggleSpeakDialogue(lines: DialogueSpeakLine[], options?: SpeakOptions) {
+  const prepared = lines
+    .map((line) => ({ spoken: speakableEnglish(line.text), voiceGender: line.voiceGender }))
+    .filter((line) => line.spoken);
+  if (!prepared.length || typeof window === "undefined" || !window.speechSynthesis) return;
+
+  const fingerprint = dialogueFingerprint(prepared.map((line) => line.spoken));
+  const synth = window.speechSynthesis;
+  const same = activeSpokenText === fingerprint;
+
+  if (same && (playbackState === "speaking" || (synth.speaking && !synth.paused))) {
+    pauseSpeech();
+    return;
+  }
+  if (same && (playbackState === "paused" || synth.paused)) {
+    resumeSpeech();
+    return;
+  }
+
+  speakDialogue(lines, options);
 }
 
 function whenVoicesReady(): Promise<void> {
@@ -566,7 +712,7 @@ function extractEnglishCore(source: string): string | null {
   return null;
 }
 
-export function speakEnglish(text: string, options?: { rate?: number; accent?: Accent }) {
+export function speakEnglish(text: string, options?: SpeakOptions) {
   // Plain text only — never SSML. Rate/accent are utterance properties.
   const spoken = speakableEnglish(text);
   if (!spoken || typeof window === "undefined" || !window.speechSynthesis) return;
@@ -590,7 +736,9 @@ export function speakEnglish(text: string, options?: { rate?: number; accent?: A
 
   const start = () => {
     if (generation !== speakGeneration) return;
-    const voice = pickVoice(accent);
+    const voice = options?.voiceGender
+      ? pickVoiceForGender(options.voiceGender, accent)
+      : pickVoice(accent);
     if (voice) utterance.voice = voice;
     flushSynth();
     synth.speak(utterance);
@@ -601,6 +749,70 @@ export function speakEnglish(text: string, options?: { rate?: number; accent?: A
   const kick = () => {
     if (generation !== speakGeneration) return;
     // Next macrotask so Chromium cancel() cannot swallow this speak().
+    window.setTimeout(start, 0);
+  };
+
+  if (synth.getVoices().length) {
+    kick();
+    return;
+  }
+  void whenVoicesReady().then(kick);
+}
+
+/**
+ * Speak dialogue lines in order; each line uses its speaker gender voice.
+ * Sequential (onend → next) rather than bulk-queue — more reliable on iOS/Safari.
+ */
+export function speakDialogue(lines: DialogueSpeakLine[], options?: SpeakOptions) {
+  const prepared = lines
+    .map((line) => ({ spoken: speakableEnglish(line.text), voiceGender: line.voiceGender }))
+    .filter((line) => line.spoken);
+  if (!prepared.length || typeof window === "undefined" || !window.speechSynthesis) return;
+
+  const fingerprint = dialogueFingerprint(prepared.map((line) => line.spoken));
+  const generation = ++speakGeneration;
+  const synth = window.speechSynthesis;
+  flushSynth();
+  setPlayback("speaking", fingerprint);
+
+  const accent = options?.accent || getAccent();
+  const rate = options?.rate ?? getRate();
+
+  const start = () => {
+    if (generation !== speakGeneration) return;
+    const voices = pickDialogueVoices(accent);
+
+    const speakAt = (index: number) => {
+      if (generation !== speakGeneration) return;
+      if (index >= prepared.length) {
+        setPlayback("idle");
+        return;
+      }
+
+      const line = prepared[index];
+      const utterance = new SpeechSynthesisUtterance(line.spoken);
+      utterance.lang = accent;
+      utterance.rate = rate;
+      const voice = line.voiceGender === "male" ? voices.male : voices.female;
+      if (voice) utterance.voice = voice;
+
+      utterance.onend = () => speakAt(index + 1);
+      utterance.onerror = () => {
+        if (generation !== speakGeneration) return;
+        setPlayback("idle");
+      };
+
+      if (index === 0) flushSynth();
+      synth.speak(utterance);
+      primed = true;
+      priming = false;
+    };
+
+    speakAt(0);
+  };
+
+  const kick = () => {
+    if (generation !== speakGeneration) return;
     window.setTimeout(start, 0);
   };
 

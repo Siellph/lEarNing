@@ -5,7 +5,7 @@ import { ProgressBar } from "../components/ProgressBar";
 import { SpeakButton, VoiceControls } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
 import { percent } from "../lib/percent";
-import { speakEnglish } from "../lib/speech";
+import { speakEnglish, mapSpeakersToGender, type DialogueSpeakLine } from "../lib/speech";
 import { SEARCH_HIGHLIGHT_PARAM, useSearchHighlight } from "../lib/searchHighlight";
 
 type SkillKind = "reading" | "listening" | "dialogue";
@@ -83,6 +83,21 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
     return lines[0]?.speaker ?? "";
   }, [lines]);
 
+  // First unique speaker → female voice, second → male (then alternate).
+  const speakerGenders = useMemo(
+    () => mapSpeakersToGender(lines.map((line) => line.speaker)),
+    [lines],
+  );
+
+  const dialogueSpeakLines = useMemo((): DialogueSpeakLine[] => {
+    return lines
+      .filter((line) => line.text.trim())
+      .map((line) => ({
+        text: line.text,
+        voiceGender: speakerGenders.get(line.speaker.trim()) ?? "female",
+      }));
+  }, [lines, speakerGenders]);
+
   const fullScript = useMemo(
     () => lines.map((line) => line.text).filter(Boolean).join(". "),
     [lines],
@@ -92,11 +107,14 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
     <article className="card grid gap-4 p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs uppercase tracking-wide text-ink-soft">{body || "Сцена"}</p>
-        {fullScript ? <SpeakButton text={fullScript} label="Весь диалог" /> : null}
+        {dialogueSpeakLines.length ? (
+          <SpeakButton text={fullScript} dialogueLines={dialogueSpeakLines} label="Весь диалог" />
+        ) : null}
       </div>
       <div className="grid gap-3.5" role="log" aria-label="Диалог">
         {lines.map((line, i) => {
           const isLeft = line.speaker.trim() === firstSpeaker || (!firstSpeaker && i % 2 === 0);
+          const voiceGender = speakerGenders.get(line.speaker.trim()) ?? "female";
           return (
             <div
               key={`${line.speaker}-${i}`}
@@ -110,7 +128,7 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
                   <p className="text-[11px] font-semibold tracking-wide text-ink-soft/80">
                     {line.speaker}
                   </p>
-                  <SpeakButton text={line.text} label="реплика" />
+                  <SpeakButton text={line.text} label="реплика" voiceGender={voiceGender} />
                 </div>
                 <div
                   className={`px-3.5 py-2.5 ${
