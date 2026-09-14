@@ -57,28 +57,41 @@ export function useSearchHighlight(ready = true) {
       const targetEl = document.querySelector<HTMLElement>(
         `[data-search-id="${escapeAttr(highlight)}"]`
       );
+      const container = getAppScrollEl() || document.documentElement;
 
-      if (targetEl) {
+      if (targetEl && container) {
         applied.current = highlight;
 
-        // 1. Очищаем сохраненный скролл для текущей страницы
         clearAppScroll(window.location.pathname);
 
-        // 2. Делаем прокрутку в 2 этапа: мгновенно для точности, затем с анимацией
         const scrollToTarget = () => {
+          // 1. Пробуем сначала отцентрировать через scrollIntoView
           targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+
+          // 2. Защитный скролл для элементов на самом дне страницы:
+          // Если элемент ниже текущей видимой области, докручиваем контейнер на максимум
+          window.setTimeout(() => {
+            const containerRect = container.getBoundingClientRect();
+            const targetRect = targetEl.getBoundingClientRect();
+
+            // Если нижний край элемента все еще прижат к низу экрана или уходит за него
+            if (targetRect.bottom > containerRect.bottom - 40) {
+              container.scrollTo({
+                top: container.scrollHeight,
+                behavior: "smooth",
+              });
+            }
+          }, 150);
+
           targetEl.classList.add(HIGHLIGHT_CLASS);
         };
 
-        // Задержка 50мс гарантирует, что браузер завершил layout-сдвиги страницы
         window.setTimeout(scrollToTarget, 50);
 
-        // 3. Таймер удаления подсветки
         window.setTimeout(() => {
           targetEl.classList.remove(HIGHLIGHT_CLASS);
         }, HIGHLIGHT_MS);
 
-        // 4. Очищаем URL от ?highlight= только ПОСЛЕ того, как скролл произошел
         window.setTimeout(() => {
           setParams(
             (prev) => {
@@ -88,7 +101,7 @@ export function useSearchHighlight(ready = true) {
             },
             { replace: true }
           );
-        }, 500);
+        }, 600);
 
         return;
       }
@@ -99,7 +112,6 @@ export function useSearchHighlight(ready = true) {
       }
     };
 
-    // Даем 100мс на то, чтобы отработали все эффекты мантирования/восстановления скролла
     const initialTimer = window.setTimeout(tick, 100);
 
     return () => {
