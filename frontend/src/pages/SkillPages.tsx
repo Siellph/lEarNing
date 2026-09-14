@@ -32,12 +32,27 @@ import {
   Star,
   UserRound,
   Utensils,
+  Pause,
+  Play,
   type LucideIcon,
 } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { SpeakButton } from "../components/SpeakButton";
-import { speakEnglish, stopSpeech, mapSpeakersToGender, type DialogueSpeakLine } from "../lib/speech";
+import {
+  speakEnglish,
+  stopSpeech,
+  mapSpeakersToGender,
+  speakableEnglish,
+  toggleSpeakEnglish,
+  getSpeakPlaybackState,
+  getActiveSpokenText,
+  onSpeakPlaybackChange,
+  primeSpeech,
+  type DialogueSpeakLine,
+  type SpeakPlaybackState,
+  type VoiceGender,
+} from "../lib/speech";
 import { SEARCH_HIGHLIGHT_PARAM, useSearchHighlight } from "../lib/searchHighlight";
 
 const FEEDBACK_ADVANCE_MS = 1500;
@@ -167,6 +182,69 @@ const KIND_API: Record<SkillKind, string> = {
   dialogue: "dialogue",
 };
 
+function DialogueAvatarSpeak({
+  text,
+  voiceGender,
+  Icon,
+  isLeft,
+  speaker,
+}: {
+  text: string;
+  voiceGender: VoiceGender;
+  Icon: LucideIcon;
+  isLeft: boolean;
+  speaker: string;
+}) {
+  const [playback, setPlayback] = useState<SpeakPlaybackState>("idle");
+  const spoken = useMemo(() => speakableEnglish(text).trim(), [text]);
+
+  useEffect(() => {
+    const sync = () => {
+      const active = getActiveSpokenText() === spoken;
+      setPlayback(active ? getSpeakPlaybackState() : "idle");
+    };
+    sync();
+    return onSpeakPlaybackChange(sync);
+  }, [spoken]);
+
+  useEffect(() => {
+    return () => {
+      if (getActiveSpokenText() === spoken) stopSpeech();
+    };
+  }, [spoken]);
+
+  if (!spoken) return null;
+
+  const isSpeaking = playback === "speaking";
+  const isPaused = playback === "paused";
+  const StateIcon = isSpeaking ? Pause : isPaused ? Play : Icon;
+  const title = isSpeaking ? "Пауза" : isPaused ? "Продолжить" : `Прослушать: ${speaker}`;
+
+  return (
+    <button
+      type="button"
+      className={`flex size-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+        isSpeaking || isPaused
+          ? "border border-terra bg-[#fff1eb] text-terra"
+          : isLeft
+            ? "border border-line/80 bg-paper-2 text-dusk hover:border-terra hover:text-terra"
+            : "border border-sage/30 bg-sage-soft text-sage hover:border-terra hover:text-terra"
+      }`}
+      aria-label={title}
+      title={title}
+      aria-pressed={isSpeaking || isPaused}
+      onPointerDown={() => primeSpeech()}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleSpeakEnglish(spoken, { voiceGender });
+      }}
+    >
+      <StateIcon size={16} strokeWidth={2} aria-hidden />
+    </button>
+  );
+}
+
 function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }) {
   const [openRu, setOpenRu] = useState<number | null>(null);
 
@@ -227,17 +305,13 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
           const showRu = openRu === i && Boolean(line.ru);
           const Icon = avatarBySpeaker.get(speaker) ?? UserRound;
           const avatar = (
-            <div
-              className={`flex size-9 shrink-0 items-center justify-center rounded-full ${
-                isLeft
-                  ? "border border-line/80 bg-paper-2 text-dusk"
-                  : "border border-sage/30 bg-sage-soft text-sage"
-              }`}
-              aria-hidden
-              title={speaker}
-            >
-              <Icon size={16} strokeWidth={2} />
-            </div>
+            <DialogueAvatarSpeak
+              text={line.text}
+              voiceGender={voiceGender}
+              Icon={Icon}
+              isLeft={isLeft}
+              speaker={line.speaker}
+            />
           );
 
           return (
@@ -254,8 +328,8 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
                 tabIndex={0}
                 className={`w-full max-w-[min(100%,20rem)] cursor-pointer px-3.5 py-2.5 text-left transition-colors ${
                   isLeft
-                    ? "rounded-2xl rounded-tl-md border border-line/70 bg-paper-2 text-ink hover:border-line"
-                    : "rounded-2xl rounded-tr-md border border-sage/25 bg-sage-soft text-ink hover:border-sage/40"
+                    ? "rounded-2xl rounded-bl-md border border-line/70 bg-paper-2 text-ink hover:border-line"
+                    : "rounded-2xl rounded-br-md border border-sage/25 bg-sage-soft text-ink hover:border-sage/40"
                 }`}
                 aria-expanded={line.ru ? showRu : undefined}
                 aria-label={
@@ -277,18 +351,9 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
                   }
                 }}
               >
-                <div className="mb-1.5 flex items-center justify-between gap-2">
-                  <p className="min-w-0 truncate text-[11px] font-semibold tracking-wide text-ink-soft/80">
-                    {line.speaker}
-                  </p>
-                  <div
-                    className="shrink-0"
-                    onClick={(event) => event.stopPropagation()}
-                    onKeyDown={(event) => event.stopPropagation()}
-                  >
-                    <SpeakButton text={line.text} label="реплика" voiceGender={voiceGender} />
-                  </div>
-                </div>
+                <p className="mb-1 min-w-0 truncate text-[11px] font-semibold tracking-wide text-ink-soft/80">
+                  {line.speaker}
+                </p>
                 <p className="break-words text-lg leading-snug">{line.text}</p>
                 {showRu ? (
                   <p className="mt-1.5 break-words text-sm leading-snug text-ink-soft/80">{line.ru}</p>
