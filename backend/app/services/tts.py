@@ -9,12 +9,15 @@ import os
 import tempfile
 import time
 from pathlib import Path
+from typing import Literal
 
 import edge_tts
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+Boundary = Literal["WordBoundary", "SentenceBoundary"]
 
 MAX_TTS_CHARS = 4000
 # Prune target as a fraction of max so we don't thrash near the limit.
@@ -26,7 +29,7 @@ Gender = str  # "female" | "male"
 
 VOICES: dict[tuple[str, str], str] = {
     ("us", "female"): "en-US-MichelleNeural",
-    ("us", "male"): "en-US-EricNeural",
+    ("us", "male"): "en-US-SteffanNeural",
     ("uk", "female"): "en-GB-SoniaNeural",
     ("uk", "male"): "en-GB-RyanNeural",
 }
@@ -35,7 +38,7 @@ VOICES: dict[tuple[str, str], str] = {
 RATE_PERCENTS: dict[str, str] = {
     "slow": "-30%",
     "normal": "0%",
-    "fast": "+30%",
+    "fast": "+20%",
 }
 
 _synth_locks: dict[str, asyncio.Lock] = {}
@@ -149,6 +152,7 @@ async def synthesize_cached(
 
     voice = resolve_voice(accent, gender)
     rate_pct = resolve_rate(rate)
+    boundary: Boundary = "WordBoundary"
     key = cache_key(cleaned, accent, rate, voice)
     directory = cache_dir()
     out = directory / f"{key}.mp3"
@@ -165,7 +169,7 @@ async def synthesize_cached(
 
         tmp = out.with_name(f"{key}.partial.mp3")
         try:
-            communicate = edge_tts.Communicate(cleaned, voice, rate=rate_pct)
+            communicate = edge_tts.Communicate(text=cleaned, voice=voice, rate=rate_pct, boundary=boundary)
             await communicate.save(str(tmp))
             if not tmp.is_file() or tmp.stat().st_size == 0:
                 raise RuntimeError("TTS produced empty audio")
