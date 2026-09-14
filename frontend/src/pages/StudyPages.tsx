@@ -413,7 +413,7 @@ function StudyBrowseCard({ card, kind }: { card: Card; kind: "verbs" | "idioms" 
       </div>
 
       {open ? (
-        <div className="mt-3" onClick={(event) => event.stopPropagation()}>
+        <div className="mt-3">
           <p className="font-semibold">{card.translation}</p>
           {card.example ? (
             <div className="mt-2 flex items-start justify-between gap-3">
@@ -423,7 +423,9 @@ function StudyBrowseCard({ card, kind }: { card: Card; kind: "verbs" | "idioms" 
                   <p className="text-sm text-ink-soft">{card.example_translation}</p>
                 ) : null}
               </div>
-              <SpeakButton text={card.example} label="пример" />
+              <div onClick={(event) => event.stopPropagation()}>
+                <SpeakButton text={card.example} label="пример" />
+              </div>
             </div>
           ) : null}
         </div>
