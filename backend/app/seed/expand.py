@@ -446,37 +446,23 @@ def sync_lesson_theory(db) -> int:
 
 
 # Slugs whose theory overlays were fact-checked and corrected; expand may push these only.
-THEORY_FIX_SLUGS: list[str] = [
-    "nouns-plurals",
-    "countable-uncountable",
-    "quantifiers-a2",
-    "will-vs-going-to",
-    "modals-possibility",
-    "reported-statements",
-    "question-tags",
-]
+THEORY_FIX_SLUGS: list[str] = []
 
 
-def sync_lesson_theory_for_slugs(db, slugs: list[str] | None = None) -> int:
-    """Overwrite Lesson.content from THEORY_BY_SLUG for listed module slugs only.
-
-    Does not touch titles or unrelated modules (admin edits elsewhere stay intact).
-    Global sync_lesson_theory remains disabled.
+def sync_lesson_theory_for_slugs(db, exclude_slugs: list[str] | None = None) -> int:
+    """Overwrite Lesson.content from THEORY_BY_SLUG for all modules 
+    EXCEPT those listed in exclude_slugs (or THEORY_FIX_SLUGS).
     """
     from app.models.grammar import GrammarModule
     from app.seed.theory_content import THEORY_BY_SLUG
 
-    target = list(slugs) if slugs is not None else list(THEORY_FIX_SLUGS)
-    if not target:
-        return 0
+    excluded = set(exclude_slugs if exclude_slugs is not None else THEORY_FIX_SLUGS)
 
+    modules = db.query(GrammarModule).all()
     updated = 0
-    modules = (
-        db.query(GrammarModule)
-        .filter(GrammarModule.slug.in_(target))
-        .all()
-    )
     for module in modules:
+        if module.slug in excluded:
+            continue
         overlay = THEORY_BY_SLUG.get(module.slug)
         if not overlay or not module.lessons:
             continue
