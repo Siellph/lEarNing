@@ -34,8 +34,8 @@ VOICES: dict[tuple[str, str], str] = {
 # Approximate map vs previous Web Speech rates (~0.65 / 0.88 / 1.15).
 RATE_PERCENTS: dict[str, str] = {
     "slow": "-30%",
-    "normal": "-12%",
-    "fast": "+20%",
+    "normal": "0%",
+    "fast": "+30%",
 }
 
 _synth_locks: dict[str, asyncio.Lock] = {}
