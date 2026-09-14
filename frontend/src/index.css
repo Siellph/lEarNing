@@ -1093,3 +1093,58 @@ input.gap-blank-input:disabled {
     transform: none;
   }
 }
+
+/* ===== Mobile overflow protection ===== */
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Все основные контейнеры должны иметь право сжиматься */
+main,
+section,
+article,
+.card,
+.quiz-card,
+.lesson-callout,
+.lesson-pair {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Текст не должен создавать горизонтальный скролл */
+.prose-lesson {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+/* Длинные ссылки / английские конструкции */
+.prose-lesson a,
+.prose-lesson code {
+  overflow-wrap: anywhere;
+}
+
+/* Таблица скроллится сама, а не растягивает страницу */
+.lesson-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.lesson-table {
+  min-width: max-content;
+}
