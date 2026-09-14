@@ -62,11 +62,8 @@ export function useSearchHighlight(ready = true) {
       if (targetEl && container) {
         applied.current = highlight;
 
+        // 1. Очищаем сохраненный скролл страницы
         clearAppScroll(window.location.pathname);
-
-        // 1. Временно добавляем padding снизу, чтобы элементы на самом дне могли встать строго в центр
-        const originalPaddingBottom = container.style.paddingBottom;
-        container.style.paddingBottom = `${container.clientHeight / 2}px`;
 
         const scrollStep = () => {
           if (cancelled) return;
@@ -74,52 +71,52 @@ export function useSearchHighlight(ready = true) {
           const containerRect = container.getBoundingClientRect();
           const targetRect = targetEl.getBoundingClientRect();
 
-          // Формула точной прокрутки элемента в центр контейнера
+          // Вычисляем идеал: позиция элемента в центре контейнера
           const targetTop =
             targetRect.top -
             containerRect.top +
             container.scrollTop -
             (containerRect.height / 2 - targetRect.height / 2);
 
+          // Максимально возможная прокрутка без всяких временных padding-bottom
+          const maxScrollTop = container.scrollHeight - container.clientHeight;
+
+          // Ключевой момент: берем минимум между желаемым центром и потолком скролла (дном страницы).
+          // Если элемент в самом низу — он просто доедет до дна, а если есть запас — станет ближе к центру.
+          const finalScrollTop = Math.min(Math.max(0, targetTop), Math.max(0, maxScrollTop));
+
           container.scrollTo({
-            top: Math.max(0, targetTop),
+            top: finalScrollTop,
             behavior: "smooth",
           });
 
           targetEl.classList.add(HIGHLIGHT_CLASS);
         };
 
-        // 2. Делаем два захода скролла:
-        // Первичный - сразу
+        // Двойной вызов гарантирует подстройку, если контент догружался с микрозадержкой
         requestAnimationFrame(scrollStep);
-        // Корректирующий - через 120мс (когда layout точно полностью посчитан)
-        const adjustTimer = window.setTimeout(scrollStep, 120);
-        retryTimers.push(adjustTimer);
+        retryTimers.push(window.setTimeout(scrollStep, 150));
 
-        // 3. Через 1 секунду (когда плавный скролл гарантированно закончился) — аккуратно возвращаем всё назад
-        const cleanupTimer = window.setTimeout(() => {
-          container.style.paddingBottom = originalPaddingBottom;
-        }, 1000);
-        retryTimers.push(cleanupTimer);
+        // 2. Снятие класса подсветки
+        retryTimers.push(
+          window.setTimeout(() => {
+            targetEl.classList.remove(HIGHLIGHT_CLASS);
+          }, HIGHLIGHT_MS)
+        );
 
-        // 4. Снимаем класс подсветки
-        const highlightTimer = window.setTimeout(() => {
-          targetEl.classList.remove(HIGHLIGHT_CLASS);
-        }, HIGHLIGHT_MS);
-        retryTimers.push(highlightTimer);
-
-        // 5. Очищаем URL
-        const urlTimer = window.setTimeout(() => {
-          setParams(
-            (prev) => {
-              const next = new URLSearchParams(prev);
-              next.delete(SEARCH_HIGHLIGHT_PARAM);
-              return next;
-            },
-            { replace: true }
-          );
-        }, 600);
-        retryTimers.push(urlTimer);
+        // 3. Очищаем URL от ?highlight=
+        retryTimers.push(
+          window.setTimeout(() => {
+            setParams(
+              (prev) => {
+                const next = new URLSearchParams(prev);
+                next.delete(SEARCH_HIGHLIGHT_PARAM);
+                return next;
+              },
+              { replace: true }
+            );
+          }, 600)
+        );
 
         return;
       }
