@@ -404,38 +404,44 @@ export function SkillHub({ kind }: { kind: SkillKind }) {
       </div>
 
       {levelOptions.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Фильтр по уровню CEFR">
-          <button
-            type="button"
-            className={`rounded-full px-3 py-1.5 text-sm font-semibold transition ${
-              levelFilter === "all"
-                ? "bg-terra text-white"
-                : "bg-paper-2 text-ink-soft hover:bg-paper"
-            }`}
-            onClick={() => setLevelFilter("all")}
-          >
-            Все
-          </button>
-          {levelOptions.map((code) => {
-            const count = items.filter((i) => i.level_code === code).length;
-            const active = levelFilter === code;
-            return (
-              <button
-                key={code}
-                type="button"
-                className={`rounded-full px-3 py-1.5 text-sm font-semibold transition ${
-                  active ? "bg-terra text-white" : "bg-paper-2 text-ink-soft hover:bg-paper"
-                }`}
-                onClick={() => setLevelFilter(code)}
-                aria-pressed={active}
-              >
-                {code}
-                <span className={`ml-1.5 text-xs ${active ? "text-white/80" : "text-ink-soft/80"}`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+        <div
+          className="h-scroll-x"
+          role="group"
+          aria-label="Фильтр по уровню CEFR"
+        >
+          <div className="flex w-max gap-2">
+            <button
+              type="button"
+              className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+                levelFilter === "all"
+                  ? "bg-terra text-white"
+                  : "bg-paper-2 text-ink-soft hover:bg-paper"
+              }`}
+              onClick={() => setLevelFilter("all")}
+            >
+              Все
+            </button>
+            {levelOptions.map((code) => {
+              const count = items.filter((i) => i.level_code === code).length;
+              const active = levelFilter === code;
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+                    active ? "bg-terra text-white" : "bg-paper-2 text-ink-soft hover:bg-paper"
+                  }`}
+                  onClick={() => setLevelFilter(code)}
+                  aria-pressed={active}
+                >
+                  {code}
+                  <span className={`ml-1.5 text-xs ${active ? "text-white/80" : "text-ink-soft/80"}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
