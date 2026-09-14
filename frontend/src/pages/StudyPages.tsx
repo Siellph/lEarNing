@@ -220,13 +220,13 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
   if (!deck) return <p className="text-ink-soft">Загружаем…</p>;
 
   return (
-    <div className="mx-auto grid max-w-3xl gap-5">
-      <div>
+    <div className="mx-auto grid min-w-0 max-w-3xl gap-5">
+      <div className="min-w-0">
         <Link to={`/app/${kind}`} className="text-sm text-terra">
           ← Назад
         </Link>
-        <h1 className="font-display mt-2 text-4xl">{deck.title}</h1>
-        <p className="mt-1 text-ink-soft">{deck.description}</p>
+        <h1 className="font-display mt-2 break-words text-3xl sm:text-4xl">{deck.title}</h1>
+        <p className="mt-1 break-words text-ink-soft">{deck.description}</p>
         <div className="mt-4">
           <ProgressBar
             value={percent(deck.learned_count, deck.card_count)}

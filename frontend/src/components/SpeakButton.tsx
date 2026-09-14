@@ -28,6 +28,7 @@ export function SpeakButton({
   rate,
   voiceGender,
   dialogueLines,
+  compact = false,
   className = "",
 }: {
   text: string;
@@ -38,6 +39,8 @@ export function SpeakButton({
   voiceGender?: VoiceGender;
   /** Full dialogue: sequential lines with per-speaker voices. */
   dialogueLines?: DialogueSpeakLine[];
+  /** Hide label text on small screens (icon-only; aria-label kept). */
+  compact?: boolean;
   className?: string;
 }) {
   const [ready, setReady] = useState(false);
@@ -81,7 +84,7 @@ export function SpeakButton({
   return (
     <button
       type="button"
-      className={`speak-btn ${isSpeaking ? "speak-btn--speaking" : ""} ${isPaused ? "speak-btn--paused" : ""} ${className}`}
+      className={`speak-btn ${compact ? "speak-btn--compact" : ""} ${isSpeaking ? "speak-btn--speaking" : ""} ${isPaused ? "speak-btn--paused" : ""} ${className}`}
       aria-label={aria}
       aria-pressed={isSpeaking || isPaused}
       title={title}
@@ -99,7 +102,7 @@ export function SpeakButton({
       }}
     >
       <Icon size={16} />
-      {label ? <span>{label}</span> : null}
+      {label ? <span className={compact ? "speak-btn__label" : undefined}>{label}</span> : null}
     </button>
   );
 }

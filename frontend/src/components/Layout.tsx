@@ -153,7 +153,7 @@ export function Layout() {
               <span className="rounded-full bg-card px-3 py-1">🔥 {user?.streak ?? 0}</span>
             </div>
           </header>
-          <main className="min-h-0 flex-1 overflow-y-auto px-4 py-[clamp(0.45rem,1.2vh,1.25rem)] sm:px-8">
+          <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-[clamp(0.45rem,1.2vh,1.25rem)] sm:px-8">
             <PageEnter />
           </main>
         </div>

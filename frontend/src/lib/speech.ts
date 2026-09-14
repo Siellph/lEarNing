@@ -73,11 +73,23 @@ export function getRate(): number {
 
 export type VoiceGender = "female" | "male";
 
-/** Heuristic name cues — Web Speech has no reliable gender field. */
+/** Heuristic name cues — Web Speech has no reliable gender field on most engines. */
 const FEMALE_VOICE_HINT =
-  /\b(samantha|victoria|karen|moira|fiona|tessa|veena|zira|hazel|susan|allison|ava|serena|kate|emily|martha|linda|heather|nancy|salli|joanna|ivy|kimberly|kendra|amy|emma|olivia|google uk english female|google us english female|microsoft.*(zira|hazel|susan)|female)\b/i;
+  /\b(samantha|victoria|karen|moira|fiona|tessa|veena|zira|hazel|susan|allison|ava|serena|kate|kathy|emily|martha|linda|heather|nancy|salli|joanna|ivy|kimberly|kendra|amy|emma|olivia|michelle|jenny|aria|sonia|lesley|lisa|laura|helen|catherine|nicky|princess|google uk english female|google us english female|microsoft.*(zira|hazel|susan|aria|jenny)|#female|female[_-]?\d*|female)\b/i;
 const MALE_VOICE_HINT =
-  /\b(daniel|alex|david|fred|tom|james|oliver|mark|ravi|arthur|aaron|bruce|gordon|lee|nathan|thomas|diego|jorge|google uk english male|google us english male|microsoft.*(david|mark|george)|male)\b/i;
+  /\b(daniel|alex|david|fred|tom|james|oliver|mark|ravi|arthur|aaron|bruce|gordon|lee|nathan|thomas|diego|jorge|guy|ryan|brian|matthew|justin|kevin|eric|paul|richard|george|ralph|albert|ed|google uk english male|google us english male|microsoft.*(david|mark|guy|ryan|brian|george)|#male|male[_-]?\d*|male)\b/i;
+
+/** Android TTS voice-name fragments (often appear in voiceURI / name). */
+const ANDROID_FEMALE_VOICE =
+  /(?:#female|female[_-]?\d+)|en-[a-z]{2}-x-(?:sfg|tpc|tpf|cfg|dfg|efg|hfg|ifg|jfg|lfg|nfg|ofg|rfg)(?:-|[.#]|$)/i;
+const ANDROID_MALE_VOICE =
+  /(?:#male|male[_-]?\d+)|en-[a-z]{2}-x-(?:iom|iol|tpd|aub|aud|gbb|gbd|rjs|end|ene)(?:-|[.#]|$)/i;
+
+/** Slight pitch split when only one ENG voice is available (esp. Chrome Android). */
+const PITCH_FEMALE_FALLBACK = 1.12;
+const PITCH_MALE_FALLBACK = 0.88;
+
+type VoiceWithGender = SpeechSynthesisVoice & { gender?: string };
 
 function normalizeVoiceLang(lang: string): string {
   return lang.replace(/_/g, "-").toLowerCase();
@@ -85,6 +97,19 @@ function normalizeVoiceLang(lang: string): string {
 
 function isEnglishVoice(voice: SpeechSynthesisVoice): boolean {
   return normalizeVoiceLang(voice.lang).startsWith("en");
+}
+
+function voiceGenderHint(voice: SpeechSynthesisVoice): VoiceGender | null {
+  const tagged = (voice as VoiceWithGender).gender?.toLowerCase();
+  if (tagged === "female" || tagged === "male") return tagged;
+
+  const label = `${voice.name} ${voice.voiceURI}`;
+  const female =
+    FEMALE_VOICE_HINT.test(label) || ANDROID_FEMALE_VOICE.test(label);
+  const male = MALE_VOICE_HINT.test(label) || ANDROID_MALE_VOICE.test(label);
+  if (female && !male) return "female";
+  if (male && !female) return "male";
+  return null;
 }
 
 function voiceMatchesAccent(voice: SpeechSynthesisVoice, accent: Accent): boolean {
@@ -108,15 +133,9 @@ function scoreGenderedVoice(
   if (!isEnglishVoice(voice)) return -1;
   let score = 10;
   if (voiceMatchesAccent(voice, accent)) score += 50;
-  const female = FEMALE_VOICE_HINT.test(voice.name);
-  const male = MALE_VOICE_HINT.test(voice.name);
-  if (gender === "female") {
-    if (female) score += 100;
-    if (male) score -= 80;
-  } else {
-    if (male) score += 100;
-    if (female) score -= 80;
-  }
+  const hinted = voiceGenderHint(voice);
+  if (hinted === gender) score += 100;
+  else if (hinted && hinted !== gender) score -= 80;
   if (voice.localService) score += 5;
   return score;
 }
@@ -131,7 +150,8 @@ function pickVoice(lang: Accent): SpeechSynthesisVoice | undefined {
 
 /**
  * Pick an EN voice for a dialogue gender role.
- * Prefers name heuristics + user accent (UK/US). If only one EN voice exists, returns it.
+ * Prefers name / voiceURI heuristics + optional `voice.gender` + user accent (UK/US).
+ * If only one EN voice exists, returns it (caller may apply pitch fallback).
  */
 export function pickVoiceForGender(
   gender: VoiceGender,
@@ -173,6 +193,21 @@ export function pickDialogueVoices(accent: Accent = getAccent()): {
     if (other) male = other;
   }
   return { female, male };
+}
+
+/** True when female/male resolve to the same engine voice — use pitch to differentiate. */
+export function needsGenderPitchFallback(accent: Accent = getAccent()): boolean {
+  const { female, male } = pickDialogueVoices(accent);
+  if (!female || !male) return true;
+  return female.voiceURI === male.voiceURI;
+}
+
+export function pitchForGender(
+  gender: VoiceGender,
+  useFallback: boolean,
+): number {
+  if (!useFallback) return 1;
+  return gender === "female" ? PITCH_FEMALE_FALLBACK : PITCH_MALE_FALLBACK;
 }
 
 /** First unique speaker → female, second → male, then alternate. Stable within one dialogue. */
@@ -342,18 +377,27 @@ function whenVoicesReady(): Promise<void> {
   if (typeof window === "undefined" || !window.speechSynthesis) return Promise.resolve();
   if (!voicesReady) {
     voicesReady = new Promise((resolve) => {
-      const finish = () => resolve();
-      if (window.speechSynthesis.getVoices().length) {
-        finish();
-        return;
-      }
-      const onChange = () => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
         window.speechSynthesis.removeEventListener("voiceschanged", onChange);
-        finish();
+        resolve();
+      };
+      const onChange = () => {
+        // Chrome Android often fires voiceschanged after an empty/stub list.
+        if (window.speechSynthesis.getVoices().length) finish();
       };
       window.speechSynthesis.addEventListener("voiceschanged", onChange);
+      // Kick load; may be empty until voiceschanged.
       window.speechSynthesis.getVoices();
-      window.setTimeout(finish, 400);
+      if (window.speechSynthesis.getVoices().length) {
+        // Still give voiceschanged a moment — Android may replace the list.
+        window.setTimeout(() => {
+          if (window.speechSynthesis.getVoices().length) finish();
+        }, 50);
+      }
+      window.setTimeout(finish, 1500);
     });
   }
   return voicesReady;
@@ -740,6 +784,12 @@ export function speakEnglish(text: string, options?: SpeakOptions) {
       ? pickVoiceForGender(options.voiceGender, accent)
       : pickVoice(accent);
     if (voice) utterance.voice = voice;
+    if (options?.voiceGender) {
+      utterance.pitch = pitchForGender(
+        options.voiceGender,
+        needsGenderPitchFallback(accent),
+      );
+    }
     flushSynth();
     synth.speak(utterance);
     primed = true;
@@ -752,10 +802,7 @@ export function speakEnglish(text: string, options?: SpeakOptions) {
     window.setTimeout(start, 0);
   };
 
-  if (synth.getVoices().length) {
-    kick();
-    return;
-  }
+  // Always wait for voiceschanged when possible — Android often lists voices late.
   void whenVoicesReady().then(kick);
 }
 
@@ -781,6 +828,7 @@ export function speakDialogue(lines: DialogueSpeakLine[], options?: SpeakOptions
   const start = () => {
     if (generation !== speakGeneration) return;
     const voices = pickDialogueVoices(accent);
+    const pitchFallback = needsGenderPitchFallback(accent);
 
     const speakAt = (index: number) => {
       if (generation !== speakGeneration) return;
@@ -795,6 +843,7 @@ export function speakDialogue(lines: DialogueSpeakLine[], options?: SpeakOptions
       utterance.rate = rate;
       const voice = line.voiceGender === "male" ? voices.male : voices.female;
       if (voice) utterance.voice = voice;
+      utterance.pitch = pitchForGender(line.voiceGender, pitchFallback);
 
       utterance.onend = () => speakAt(index + 1);
       utterance.onerror = () => {
@@ -816,10 +865,6 @@ export function speakDialogue(lines: DialogueSpeakLine[], options?: SpeakOptions
     window.setTimeout(start, 0);
   };
 
-  if (synth.getVoices().length) {
-    kick();
-    return;
-  }
   void whenVoicesReady().then(kick);
 }
 

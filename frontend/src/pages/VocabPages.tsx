@@ -185,14 +185,14 @@ export function VocabTopicPage() {
   if (!topic) return <p className="text-ink-soft">Открываем тему…</p>;
 
   return (
-    <div className="grid gap-6">
-      <div>
+    <div className="grid min-w-0 gap-6">
+      <div className="min-w-0">
         <Link to="/app/vocab" className="text-sm text-terra">
           ← Все темы
         </Link>
-        <div className="mt-2">
+        <div className="mt-2 min-w-0">
           <p className="text-sm font-semibold text-terra">{topic.level_code}</p>
-          <h1 className="font-display text-4xl">{topic.title}</h1>
+          <h1 className="font-display break-words text-3xl sm:text-4xl">{topic.title}</h1>
         </div>
         <p className="mt-2 max-w-2xl text-ink-soft">{topic.description}</p>
         <div className="mt-4">

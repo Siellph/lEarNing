@@ -15,8 +15,8 @@ type BatchPracticeBarProps = {
 const CHIP_STEP = 40; // ~chip width + gap
 
 /**
- * One row: scrollable batch chips (left) + voice/practice (right).
- * Overflow uses hidden scrollbar + edge chevrons.
+ * Batch chips (swipeable) + voice/practice.
+ * Never forces the page wider than the viewport.
  */
 export function BatchPracticeBar({
   batchCount,
@@ -73,8 +73,8 @@ export function BatchPracticeBar({
   }
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      <div className="relative min-w-0 flex-1">
+    <div className={`flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 ${className}`}>
+      <div className="relative min-w-0 w-full flex-1">
         {canScrollLeft && (
           <>
             <div
@@ -94,7 +94,8 @@ export function BatchPracticeBar({
 
         <div
           ref={scrollRef}
-          className="flex min-w-0 gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex min-w-0 touch-pan-x gap-1.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          style={{ WebkitOverflowScrolling: "touch" }}
           role="group"
           aria-label="Партии"
         >
@@ -106,7 +107,7 @@ export function BatchPracticeBar({
                 type="button"
                 data-batch={n}
                 aria-current={active ? "true" : undefined}
-                className={`inline-flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full px-2.5 text-sm font-semibold transition-colors ${
+                className={`inline-flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full px-2 text-sm font-semibold transition-colors ${
                   active ? "bg-ink text-paper" : "bg-card text-ink-soft hover:text-ink"
                 }`}
                 onClick={() => onSelectBatch(n)}
@@ -135,8 +136,8 @@ export function BatchPracticeBar({
         )}
       </div>
 
-      <div className="flex shrink-0 items-center justify-end gap-2">
-        <VoiceControls className="!flex-nowrap" />
+      <div className="flex min-w-0 flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
+        <VoiceControls className="min-w-0" />
         <button
           type="button"
           className="btn btn-primary h-8 shrink-0 px-4 py-0 text-sm shadow-none"

@@ -4,7 +4,7 @@ import { Outlet, useLocation } from "react-router-dom";
 export function PageEnter() {
   const { pathname } = useLocation();
   return (
-    <div key={pathname} className="motion-enter">
+    <div key={pathname} className="motion-enter min-w-0">
       <Outlet />
     </div>
   );

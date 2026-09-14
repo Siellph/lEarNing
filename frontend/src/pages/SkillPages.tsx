@@ -104,44 +104,64 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
   );
 
   return (
-    <article className="card grid gap-4 p-5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs uppercase tracking-wide text-ink-soft">{body || "Сцена"}</p>
+    <article className="card grid min-w-0 gap-4 p-4 sm:p-5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="min-w-0 flex-1 truncate text-xs uppercase tracking-wide text-ink-soft">
+          {body || "Сцена"}
+        </p>
         {dialogueSpeakLines.length ? (
-          <SpeakButton text={fullScript} dialogueLines={dialogueSpeakLines} label="Весь диалог" />
+          <SpeakButton
+            text={fullScript}
+            dialogueLines={dialogueSpeakLines}
+            label="Весь диалог"
+            compact
+            className="shrink-0"
+          />
         ) : null}
       </div>
-      <div className="grid gap-3.5" role="log" aria-label="Диалог">
+      <div className="grid min-w-0 gap-3.5" role="log" aria-label="Диалог">
         {lines.map((line, i) => {
           const isLeft = line.speaker.trim() === firstSpeaker || (!firstSpeaker && i % 2 === 0);
           const voiceGender = speakerGenders.get(line.speaker.trim()) ?? "female";
           return (
             <div
               key={`${line.speaker}-${i}`}
-              className={`motion-bubble flex ${isLeft ? "justify-start" : "justify-end"}`}
+              className={`motion-bubble flex min-w-0 ${isLeft ? "justify-start" : "justify-end"}`}
               style={{ "--motion-i": Math.min(i, 10) } as CSSProperties}
             >
-              <div className={`flex w-[min(100%,22rem)] flex-col ${isLeft ? "items-start" : "items-end"}`}>
+              <div
+                className={`flex w-full max-w-[min(100%,22rem)] min-w-0 flex-col ${
+                  isLeft ? "items-start" : "items-end"
+                }`}
+              >
                 <div
-                  className={`mb-1 flex items-center gap-1.5 ${isLeft ? "flex-row" : "flex-row-reverse"}`}
+                  className={`mb-1 flex max-w-full items-center gap-1 ${
+                    isLeft ? "flex-row" : "flex-row-reverse"
+                  }`}
                 >
-                  <p className="text-[11px] font-semibold tracking-wide text-ink-soft/80">
+                  <p className="min-w-0 truncate text-[11px] font-semibold tracking-wide text-ink-soft/80">
                     {line.speaker}
                   </p>
-                  <SpeakButton text={line.text} label="реплика" voiceGender={voiceGender} />
+                  <SpeakButton
+                    text={line.text}
+                    label="реплика"
+                    voiceGender={voiceGender}
+                    compact
+                    className="shrink-0"
+                  />
                 </div>
                 <div
-                  className={`px-3.5 py-2.5 ${
+                  className={`max-w-full px-3.5 py-2.5 ${
                     isLeft
                       ? "rounded-2xl rounded-tl-md border border-line/70 bg-paper-2 text-ink"
                       : "rounded-2xl rounded-tr-md border border-sage/25 bg-sage-soft text-ink"
                   }`}
                 >
-                  <p className="text-lg leading-snug">{line.text}</p>
+                  <p className="break-words text-lg leading-snug">{line.text}</p>
                 </div>
                 {line.ru ? (
                   <p
-                    className={`mt-1 max-w-full text-sm leading-snug text-ink-soft/70 ${
+                    className={`mt-1 max-w-full break-words text-sm leading-snug text-ink-soft/70 ${
                       isLeft ? "text-left" : "text-right"
                     }`}
                   >
@@ -348,20 +368,20 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
   if (!item) return <p className="text-ink-soft">Загружаем…</p>;
 
   return (
-    <div className="mx-auto grid max-w-3xl gap-5">
-      <div>
+    <div className="mx-auto grid min-w-0 max-w-3xl gap-5">
+      <div className="min-w-0">
         <Link to={`/app/${meta.path}`} className="text-sm text-terra">
           ← Назад
         </Link>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <h1 className="font-display text-4xl">{item.title}</h1>
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
+          <h1 className="font-display min-w-0 break-words text-3xl sm:text-4xl">{item.title}</h1>
           <span className="rounded-full bg-card px-3 py-1 text-sm text-ink-soft">{item.level_code}</span>
         </div>
-        <p className="mt-1 text-ink-soft">{item.description}</p>
+        <p className="mt-1 break-words text-ink-soft">{item.description}</p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <VoiceControls />
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <VoiceControls className="min-w-0" />
         {kind === "listening" && (
           <button
             type="button"
