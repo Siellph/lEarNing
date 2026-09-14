@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     ADMIN_NAME: str = "Администратор"
     # Fallback when site_settings row is missing; admin UI overrides via DB.
     EMAIL_VERIFICATION_REQUIRED: bool = True
+    # Disk cache for edge-tts MP3s; empty = system temp / learning_tts_cache
+    TTS_CACHE_DIR: str = ""
 
     @property
     def cors_origins(self) -> list[str]:

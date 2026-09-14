@@ -1,4 +1,5 @@
 import { ACCENT_KEY, RATE_KEY, canPersistPrefs, onConsentChange } from "./consent";
+import { getToken } from "../api/client";
 
 export type Accent = "en-GB" | "en-US";
 export type SpeechRate = "slow" | "normal" | "fast";
@@ -243,6 +244,10 @@ let playbackState: SpeakPlaybackState = "idle";
 let activeSpokenText: string | null = null;
 const playbackListeners = new Set<() => void>();
 
+/** Active HTMLAudioElement for edge-tts playback (primary path). */
+let edgeAudio: HTMLAudioElement | null = null;
+let edgeObjectUrl: string | null = null;
+
 function notifyPlayback() {
   playbackListeners.forEach((listener) => listener());
 }
@@ -277,20 +282,123 @@ function speechPauseUnreliable(): boolean {
 }
 
 function flushSynth() {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
   const synth = window.speechSynthesis;
   synth.cancel();
   // Chromium can stick in paused after cancel; clear it so the next speak() runs.
   if (synth.paused) synth.resume();
 }
 
+function stopEdgeAudio() {
+  if (edgeAudio) {
+    edgeAudio.onended = null;
+    edgeAudio.onerror = null;
+    edgeAudio.onpause = null;
+    edgeAudio.onplay = null;
+    try {
+      edgeAudio.pause();
+    } catch {
+      /* ignore */
+    }
+    edgeAudio.removeAttribute("src");
+    edgeAudio.load();
+    edgeAudio = null;
+  }
+  if (edgeObjectUrl) {
+    URL.revokeObjectURL(edgeObjectUrl);
+    edgeObjectUrl = null;
+  }
+}
+
+function accentToApi(accent: Accent): "uk" | "us" {
+  return accent === "en-US" ? "us" : "uk";
+}
+
+async function fetchEdgeTtsBlob(
+  text: string,
+  accent: Accent,
+  ratePreset: SpeechRate,
+  gender: VoiceGender = "female",
+): Promise<Blob> {
+  const token = getToken();
+  const headers: HeadersInit = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch("/api/tts", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      text,
+      accent: accentToApi(accent),
+      rate: ratePreset,
+      gender,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`TTS HTTP ${res.status}`);
+  }
+  const blob = await res.blob();
+  if (!blob.size) throw new Error("Empty TTS audio");
+  return blob;
+}
+
+function playEdgeBlob(
+  blob: Blob,
+  generation: number,
+  fingerprint: string,
+  markIdleOnEnd = true,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (generation !== speakGeneration) {
+      resolve();
+      return;
+    }
+    stopEdgeAudio();
+    const url = URL.createObjectURL(blob);
+    edgeObjectUrl = url;
+    const audio = new Audio(url);
+    edgeAudio = audio;
+
+    audio.onended = () => {
+      if (generation !== speakGeneration) {
+        resolve();
+        return;
+      }
+      stopEdgeAudio();
+      if (markIdleOnEnd) setPlayback("idle");
+      resolve();
+    };
+    audio.onerror = () => {
+      stopEdgeAudio();
+      reject(new Error("Audio playback failed"));
+    };
+
+    void audio.play().then(
+      () => {
+        if (generation === speakGeneration) setPlayback("speaking", fingerprint);
+      },
+      (err) => {
+        stopEdgeAudio();
+        reject(err);
+      },
+    );
+  });
+}
+
 export function stopSpeech() {
-  if (typeof window === "undefined" || !window.speechSynthesis) return;
   speakGeneration += 1;
+  stopEdgeAudio();
   flushSynth();
   setPlayback("idle");
 }
 
 export function pauseSpeech() {
+  if (edgeAudio && !edgeAudio.paused) {
+    edgeAudio.pause();
+    setPlayback("paused");
+    return;
+  }
+
   if (typeof window === "undefined" || !window.speechSynthesis) return;
   const synth = window.speechSynthesis;
 
@@ -316,6 +424,14 @@ export function pauseSpeech() {
 }
 
 export function resumeSpeech() {
+  if (edgeAudio && edgeAudio.paused && playbackState === "paused") {
+    void edgeAudio.play().then(
+      () => setPlayback("speaking"),
+      () => stopSpeech(),
+    );
+    return;
+  }
+
   if (typeof window === "undefined" || !window.speechSynthesis) return;
   const synth = window.speechSynthesis;
   if (!synth.paused && playbackState !== "paused") return;
@@ -325,29 +441,50 @@ export function resumeSpeech() {
 
 export type SpeakOptions = {
   rate?: number;
+  /** Preferred for edge-tts; falls back to getRatePreset(). */
+  ratePreset?: SpeechRate;
   accent?: Accent;
   /** Dialogue role voice; ignored when omitted (uses default accent voice). */
   voiceGender?: VoiceGender;
 };
 
+function resolveRatePreset(options?: SpeakOptions): SpeechRate {
+  if (options?.ratePreset) return options.ratePreset;
+  return getRatePreset();
+}
+
+function isActivelySpeaking(): boolean {
+  if (edgeAudio && !edgeAudio.paused && !edgeAudio.ended) return true;
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    const synth = window.speechSynthesis;
+    if (synth.speaking && !synth.paused) return true;
+  }
+  return playbackState === "speaking";
+}
+
+function isPausedPlayback(): boolean {
+  if (edgeAudio && edgeAudio.paused && playbackState === "paused") return true;
+  if (typeof window !== "undefined" && window.speechSynthesis?.paused) return true;
+  return playbackState === "paused";
+}
+
 /** Speak, or pause/resume the same active phrase (SpeakButton toggle). */
 export function toggleSpeakEnglish(text: string, options?: SpeakOptions) {
   const spoken = speakableEnglish(text);
-  if (!spoken || typeof window === "undefined" || !window.speechSynthesis) return;
+  if (!spoken) return;
 
-  const synth = window.speechSynthesis;
   const same = activeSpokenText === spoken;
 
-  if (same && (playbackState === "speaking" || (synth.speaking && !synth.paused))) {
+  if (same && isActivelySpeaking()) {
     pauseSpeech();
     return;
   }
-  if (same && (playbackState === "paused" || synth.paused)) {
+  if (same && isPausedPlayback()) {
     resumeSpeech();
     return;
   }
 
-  speakEnglish(text, options);
+  void speakEnglish(text, options);
 }
 
 /** Speak a multi-speaker script, or pause/resume the same active dialogue. */
@@ -355,22 +492,21 @@ export function toggleSpeakDialogue(lines: DialogueSpeakLine[], options?: SpeakO
   const prepared = lines
     .map((line) => ({ spoken: speakableEnglish(line.text), voiceGender: line.voiceGender }))
     .filter((line) => line.spoken);
-  if (!prepared.length || typeof window === "undefined" || !window.speechSynthesis) return;
+  if (!prepared.length) return;
 
   const fingerprint = dialogueFingerprint(prepared.map((line) => line.spoken));
-  const synth = window.speechSynthesis;
   const same = activeSpokenText === fingerprint;
 
-  if (same && (playbackState === "speaking" || (synth.speaking && !synth.paused))) {
+  if (same && isActivelySpeaking()) {
     pauseSpeech();
     return;
   }
-  if (same && (playbackState === "paused" || synth.paused)) {
+  if (same && isPausedPlayback()) {
     resumeSpeech();
     return;
   }
 
-  speakDialogue(lines, options);
+  void speakDialogue(lines, options);
 }
 
 function whenVoicesReady(): Promise<void> {
@@ -756,12 +892,12 @@ function extractEnglishCore(source: string): string | null {
   return null;
 }
 
-export function speakEnglish(text: string, options?: SpeakOptions) {
-  // Plain text only — never SSML. Rate/accent are utterance properties.
-  const spoken = speakableEnglish(text);
-  if (!spoken || typeof window === "undefined" || !window.speechSynthesis) return;
+function speakEnglishWebSpeech(spoken: string, options: SpeakOptions | undefined, generation: number) {
+  if (typeof window === "undefined" || !window.speechSynthesis) {
+    if (generation === speakGeneration) setPlayback("idle");
+    return;
+  }
 
-  const generation = ++speakGeneration;
   const synth = window.speechSynthesis;
   flushSynth();
   setPlayback("speaking", spoken);
@@ -798,12 +934,36 @@ export function speakEnglish(text: string, options?: SpeakOptions) {
 
   const kick = () => {
     if (generation !== speakGeneration) return;
-    // Next macrotask so Chromium cancel() cannot swallow this speak().
     window.setTimeout(start, 0);
   };
 
-  // Always wait for voiceschanged when possible — Android often lists voices late.
   void whenVoicesReady().then(kick);
+}
+
+export function speakEnglish(text: string, options?: SpeakOptions) {
+  // Plain text only — never SSML. Rate/accent drive edge-tts (or Web Speech fallback).
+  const spoken = speakableEnglish(text);
+  if (!spoken || typeof window === "undefined") return;
+
+  const generation = ++speakGeneration;
+  stopEdgeAudio();
+  flushSynth();
+  setPlayback("speaking", spoken);
+
+  const accent = options?.accent || getAccent();
+  const ratePreset = resolveRatePreset(options);
+  const gender = options?.voiceGender ?? "female";
+
+  void (async () => {
+    try {
+      const blob = await fetchEdgeTtsBlob(spoken, accent, ratePreset, gender);
+      if (generation !== speakGeneration) return;
+      await playEdgeBlob(blob, generation, spoken);
+    } catch {
+      if (generation !== speakGeneration) return;
+      speakEnglishWebSpeech(spoken, options, generation);
+    }
+  })();
 }
 
 /**
@@ -814,16 +974,54 @@ export function speakDialogue(lines: DialogueSpeakLine[], options?: SpeakOptions
   const prepared = lines
     .map((line) => ({ spoken: speakableEnglish(line.text), voiceGender: line.voiceGender }))
     .filter((line) => line.spoken);
-  if (!prepared.length || typeof window === "undefined" || !window.speechSynthesis) return;
+  if (!prepared.length || typeof window === "undefined") return;
 
   const fingerprint = dialogueFingerprint(prepared.map((line) => line.spoken));
   const generation = ++speakGeneration;
-  const synth = window.speechSynthesis;
+  stopEdgeAudio();
   flushSynth();
   setPlayback("speaking", fingerprint);
 
   const accent = options?.accent || getAccent();
+  const ratePreset = resolveRatePreset(options);
   const rate = options?.rate ?? getRate();
+
+  void (async () => {
+    try {
+      const blobs = await Promise.all(
+        prepared.map((line) =>
+          fetchEdgeTtsBlob(line.spoken, accent, ratePreset, line.voiceGender),
+        ),
+      );
+      if (generation !== speakGeneration) return;
+
+      for (let i = 0; i < blobs.length; i += 1) {
+        if (generation !== speakGeneration) return;
+        const last = i === blobs.length - 1;
+        await playEdgeBlob(blobs[i], generation, fingerprint, last);
+      }
+    } catch {
+      if (generation !== speakGeneration) return;
+      speakDialogueWebSpeech(prepared, fingerprint, accent, rate, generation);
+    }
+  })();
+}
+
+function speakDialogueWebSpeech(
+  prepared: { spoken: string; voiceGender: VoiceGender }[],
+  fingerprint: string,
+  accent: Accent,
+  rate: number,
+  generation: number,
+) {
+  if (typeof window === "undefined" || !window.speechSynthesis) {
+    if (generation === speakGeneration) setPlayback("idle");
+    return;
+  }
+
+  const synth = window.speechSynthesis;
+  flushSynth();
+  setPlayback("speaking", fingerprint);
 
   const start = () => {
     if (generation !== speakGeneration) return;

@@ -13,7 +13,6 @@ import {
   type DialogueSpeakLine,
   getAccent,
   setAccent,
-  getRate,
   getRatePreset,
   setRatePreset,
   getSpeakPlaybackState,
@@ -25,7 +24,7 @@ export function SpeakButton({
   text,
   speak,
   label,
-  rate,
+  ratePreset,
   voiceGender,
   dialogueLines,
   compact = false,
@@ -34,7 +33,8 @@ export function SpeakButton({
   text: string;
   speak?: string;
   label?: string;
-  rate?: number;
+  /** Override tempo preset; default = user VoiceControls setting. */
+  ratePreset?: SpeechRate;
   /** Single-line dialogue role (female = 1st speaker, male = 2nd). */
   voiceGender?: VoiceGender;
   /** Full dialogue: sequential lines with per-speaker voices. */
@@ -56,9 +56,9 @@ export function SpeakButton({
   }, [dialogueLines, speak, text]);
 
   useEffect(() => {
+    setReady(true);
     if (!window.speechSynthesis) return;
     const unlock = () => setReady(true);
-    unlock();
     window.speechSynthesis.addEventListener("voiceschanged", unlock);
     return () => window.speechSynthesis.removeEventListener("voiceschanged", unlock);
   }, []);
@@ -93,7 +93,7 @@ export function SpeakButton({
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
-        const opts = { rate: rate ?? getRate() };
+        const opts = { ratePreset: ratePreset ?? getRatePreset() };
         if (dialogueLines?.length) {
           toggleSpeakDialogue(dialogueLines, opts);
         } else {
