@@ -10,7 +10,7 @@ function LegalShell({ title, children }: { title: string; children: React.ReactN
           <p className="mt-1 text-sm text-ink-soft">учим ENG</p>
         </Link>
         <article className="card mt-6 p-6 sm:p-8">
-          <p className="text-sm text-ink-soft">Обновлено 13 сентября 2026</p>
+          <p className="text-sm text-ink-soft">Обновлено 14 сентября 2026</p>
           <h1 className="mt-2 font-display text-3xl sm:text-4xl">{title}</h1>
           <div className="mt-6 grid gap-5 text-[1.05rem] leading-7 text-ink-soft">{children}</div>
         </article>
@@ -51,7 +51,18 @@ export function TermsPage() {
         </p>
       </section>
       <section className="grid gap-2">
-        <h2 className="font-display text-2xl text-ink">2. Аккаунт</h2>
+        <h2 className="font-display text-2xl text-ink">2. Характер материалов</h2>
+        <p>
+          lEarNinG — учебный помощник, а не «последняя инстанция» по английскому языку. Объяснения,
+          примеры, переводы, озвучка, тесты и разметка по уровням CEFR сделаны для самостоятельной
+          практики; они могут быть упрощены, неполны или местами неточны. Сервис не заменяет преподавателя,
+          официальные экзаменационные центры, академические справочники и актуальные учебники. Если вам
+          нужен результат для школы, вуза, работы или экзамена — сверяйтесь с авторитетными источниками и
+          при необходимости с живым специалистом.
+        </p>
+      </section>
+      <section className="grid gap-2">
+        <h2 className="font-display text-2xl text-ink">3. Аккаунт</h2>
         <p>
           Для регистрации нужны имя, адрес электронной почты и пароль. Вы отвечаете за сохранность пароля и
           за действия в своём аккаунте. Один аккаунт — для личного использования. Если сервис запрашивает
@@ -59,7 +70,7 @@ export function TermsPage() {
         </p>
       </section>
       <section className="grid gap-2">
-        <h2 className="font-display text-2xl text-ink">3. Правила использования</h2>
+        <h2 className="font-display text-2xl text-ink">4. Правила использования</h2>
         <p>
           Нельзя взламывать сервис, мешать его работе, выдавать себя за другого человека, распространять
           вредоносный код, копировать учебный контент для коммерции или массовой перепечатки, оскорблять
@@ -68,7 +79,7 @@ export function TermsPage() {
         </p>
       </section>
       <section className="grid gap-2">
-        <h2 className="font-display text-2xl text-ink">4. Интеллектуальная собственность</h2>
+        <h2 className="font-display text-2xl text-ink">5. Интеллектуальная собственность</h2>
         <p>
           Тексты уроков, упражнения, структура курса и оформление принадлежат проекту lEarNinG или
           используются на законных основаниях. Карта тем опирается на открытые учебные структуры (CEFR и
@@ -76,15 +87,15 @@ export function TermsPage() {
         </p>
       </section>
       <section className="grid gap-2">
-        <h2 className="font-display text-2xl text-ink">5. Ограничение ответственности</h2>
+        <h2 className="font-display text-2xl text-ink">6. Ограничение ответственности</h2>
         <p>
           Сервис предоставляется «как есть». Возможны ошибки в материалах, перерывы в работе и потеря
           несохранённых данных. Мы не отвечаем за косвенный ущерб, упущенную выгоду или решения, принятые
-          только на основе курса.
+          только на основе курса — в том числе за оценки, экзамены и любые выводы о вашем уровне языка.
         </p>
       </section>
       <section className="grid gap-2">
-        <h2 className="font-display text-2xl text-ink">6. Изменения</h2>
+        <h2 className="font-display text-2xl text-ink">7. Изменения</h2>
         <p>
           Мы можем обновлять сервис и это соглашение. Актуальная версия публикуется на этой странице.
         </p>

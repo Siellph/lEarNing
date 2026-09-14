@@ -1,5 +1,5 @@
 import { Pause, Play, RotateCcw, Volume2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { onConsentChange } from "../lib/consent";
 import {
   toggleSpeakEnglish,
@@ -253,8 +253,53 @@ export function VoiceControls({ className = "" }: { className?: string }) {
 /** Global header control: speaker icon → accent + rate dropdown. */
 export function VoiceSettingsMenu({ className = "" }: { className?: string }) {
   const [open, setOpen] = useState(false);
+  const [panelStyle, setPanelStyle] = useState<CSSProperties | undefined>();
   const rootRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const placePanel = () => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const margin = 12;
+    const gap = 6;
+    const maxW = Math.min(280, window.innerWidth - margin * 2);
+    let left = rect.right - maxW;
+    if (left < margin) left = margin;
+    if (left + maxW > window.innerWidth - margin) {
+      left = Math.max(margin, window.innerWidth - margin - maxW);
+    }
+    let top = rect.bottom + gap;
+    const panelH = panelRef.current?.offsetHeight ?? 220;
+    if (top + panelH > window.innerHeight - margin) {
+      top = Math.max(margin, rect.top - gap - panelH);
+    }
+    setPanelStyle({
+      position: "fixed",
+      top,
+      left,
+      width: maxW,
+      zIndex: 60,
+    });
+  };
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPanelStyle(undefined);
+      return;
+    }
+    placePanel();
+    const id = requestAnimationFrame(() => placePanel());
+    const onReposition = () => placePanel();
+    window.addEventListener("resize", onReposition);
+    window.addEventListener("scroll", onReposition, true);
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener("resize", onReposition);
+      window.removeEventListener("scroll", onReposition, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -293,9 +338,11 @@ export function VoiceSettingsMenu({ className = "" }: { className?: string }) {
       </button>
       {open ? (
         <div
+          ref={panelRef}
           role="dialog"
           aria-label="Настройки озвучки"
-          className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-[min(17.5rem,calc(100vw-1.5rem))] rounded-2xl border border-line/80 bg-card p-4 shadow-[0_12px_40px_rgba(18,32,51,0.12)]"
+          style={panelStyle ?? { position: "fixed", visibility: "hidden" as const }}
+          className="rounded-2xl border border-line/80 bg-card p-4 shadow-[0_12px_40px_rgba(18,32,51,0.12)]"
         >
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">Озвучка</p>
           <VoiceControls />
