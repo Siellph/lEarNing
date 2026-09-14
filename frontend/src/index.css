@@ -1093,3 +1093,7 @@ input.gap-blank-input:disabled {
     transform: none;
   }
 }
+
+[data-app-scroll] {
+  padding-bottom: 40vh;
+}
