@@ -9,10 +9,7 @@ import {
 import { CheckCircle2, CircleAlert } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
-import { ProgressBar } from "../components/ProgressBar";
 import { SpeakButton, VoiceControls } from "../components/SpeakButton";
-import { useAuth } from "../context/AuthContext";
-import { percent } from "../lib/percent";
 import { speakEnglish, mapSpeakersToGender, type DialogueSpeakLine } from "../lib/speech";
 import { SEARCH_HIGHLIGHT_PARAM, useSearchHighlight } from "../lib/searchHighlight";
 
@@ -37,8 +34,6 @@ type SkillSummary = {
   level_code: string;
   question_count: number;
   keyword_count: number;
-  strength: number;
-  learned: boolean;
 };
 
 type Keyword = { en: string; ru: string };
@@ -220,22 +215,12 @@ export function SkillHub({ kind }: { kind: SkillKind }) {
     return items.filter((i) => i.level_code === levelFilter);
   }, [items, levelFilter]);
 
-  const learned = filtered.filter((i) => i.learned).length;
-
   return (
     <div className="grid gap-6">
       <div>
         <p className="text-sm uppercase tracking-[0.18em] text-terra">{meta.eyebrow}</p>
         <h1 className="font-display mt-1 text-4xl">{meta.title}</h1>
         <p className="mt-2 max-w-2xl text-ink-soft">{meta.subtitle}</p>
-        {items.length > 0 && (
-          <div className="mt-4 max-w-md">
-            <ProgressBar
-              value={percent(learned, filtered.length)}
-              label={`${learned}/${filtered.length} освоено${levelFilter !== "all" ? ` · ${levelFilter}` : ""}`}
-            />
-          </div>
-        )}
       </div>
 
       {levelOptions.length > 0 && (
@@ -291,8 +276,7 @@ export function SkillHub({ kind }: { kind: SkillKind }) {
             <p className="mt-2 text-sm text-ink-soft">{item.description}</p>
             <p className="mt-3 text-xs text-ink-soft">
               {item.question_count} заданий
-              {item.keyword_count ? ` · ${item.keyword_count} слов` : ""} ·{" "}
-              <span title="Насколько хорошо запомнилась карточка (0–5)">сила {item.strength}/5</span>
+              {item.keyword_count ? ` · ${item.keyword_count} слов` : ""}
             </p>
           </Link>
         ))}
@@ -546,13 +530,14 @@ function SkillPracticeCard({
 
 export function SkillItemPage({ kind }: { kind: SkillKind }) {
   const { slug } = useParams();
-  const { refresh } = useAuth();
   const meta = META[kind];
   const [item, setItem] = useState<SkillDetail | null>(null);
-  const [mode, setMode] = useState<"study" | "practice">("study");
+  const [mode, setMode] = useState<"study" | "practice" | "done">("study");
   const [showTranscript, setShowTranscript] = useState(kind !== "listening");
   const [items, setItems] = useState<PracticeItem[]>([]);
   const [index, setIndex] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [sessionTotal, setSessionTotal] = useState(0);
 
   const load = () => {
     if (!slug) return;
@@ -564,6 +549,8 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
     setShowTranscript(kind !== "listening");
     setItems([]);
     setIndex(0);
+    setCorrectCount(0);
+    setSessionTotal(0);
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind, slug]);
@@ -573,26 +560,32 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
     const data = await api<{ items: PracticeItem[] }>(`/skills/${KIND_API[kind]}/${slug}/practice`);
     setItems(data.items);
     setIndex(0);
+    setCorrectCount(0);
+    setSessionTotal(data.items.length);
     setMode("practice");
+  };
+
+  const finishToStudy = () => {
+    setMode("study");
+    setItems([]);
+    setIndex(0);
   };
 
   const current = items[index];
 
   const checkAnswer = async (practiceItem: PracticeItem, answer: string): Promise<CheckResult> => {
-    const res = await api<CheckResult>(`/skills/questions/${practiceItem.id}/check`, {
+    return api<CheckResult>(`/skills/questions/${practiceItem.id}/check`, {
       method: "POST",
       body: JSON.stringify({ answer, kind: practiceItem.kind }),
     });
-    refresh();
-    return res;
   };
 
-  const advance = () => {
+  const advance = (res: CheckResult) => {
+    setCorrectCount((count) => count + (res.correct ? 1 : 0));
     if (index + 1 >= items.length) {
-      setMode("study");
+      setMode("done");
       setItems([]);
       setIndex(0);
-      load();
       return;
     }
     setIndex((i) => i + 1);
@@ -613,21 +606,23 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
         <p className="mt-1 break-words text-ink-soft">{item.description}</p>
       </div>
 
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <VoiceControls className="min-w-0" />
-        {kind === "listening" && (
-          <button
-            type="button"
-            className="btn btn-ghost text-sm"
-            onClick={() => setShowTranscript((v) => !v)}
-          >
-            {showTranscript ? "Скрыть текст" : "Показать текст"}
+      {mode !== "practice" && mode !== "done" && (
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <VoiceControls className="min-w-0" />
+          {kind === "listening" && (
+            <button
+              type="button"
+              className="btn btn-ghost text-sm"
+              onClick={() => setShowTranscript((v) => !v)}
+            >
+              {showTranscript ? "Скрыть текст" : "Показать текст"}
+            </button>
+          )}
+          <button className="btn btn-primary ml-auto text-sm" onClick={startPractice}>
+            Практика
           </button>
-        )}
-        <button className="btn btn-primary ml-auto text-sm" onClick={startPractice}>
-          Практика
-        </button>
-      </div>
+        </div>
+      )}
 
       {mode === "study" ? (
         <div className="grid gap-4">
@@ -665,14 +660,22 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
               </ul>
             </article>
           )}
-
-          <p
-            className="text-sm text-ink-soft"
-            title="Насколько хорошо запомнилась карточка (0–5)"
-          >
-            Сила материала: {item.strength}/5
-          </p>
         </div>
+      ) : mode === "done" ? (
+        <section className="card grid gap-4 p-6 motion-enter">
+          <p className="text-sm uppercase tracking-[0.18em] text-terra">Практика завершена</p>
+          <h2 className="font-display text-3xl">
+            Верно {correctCount} из {sessionTotal}
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn btn-primary" onClick={startPractice}>
+              Ещё раз
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={finishToStudy}>
+              К материалу
+            </button>
+          </div>
+        </section>
       ) : current ? (
         <SkillPracticeCard
           key={current.uid}

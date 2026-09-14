@@ -39,7 +39,8 @@ MASTERY_BITS = {
 }
 # Idioms / exceptions: both meaning (or rule↔form) sides.
 MEANING_MASTERY = 3
-# Verbs: EN↔RU + V2 + V3.
+# Verbs (vocab-like): 4 facets → learned. Forms are additive, never a replacement for meaning.
+# Bits: EN→RU (1) | RU→EN (2) | V2 (4) | V3 (8) = 15.
 VERB_LEARNED_MASTERY = 15
 TASK_KINDS_DEFAULT = ("choice_en_ru", "choice_ru_en")
 TASK_KINDS_VERBS = ("choice_en_ru", "choice_ru_en", "choice_v2", "choice_v3")
@@ -228,6 +229,28 @@ def _build_task(
         v1 = card.primary_text
         v2 = card.secondary_text or ""
         v3 = card.tertiary_text or ""
+        # Meaning facets first — same as vocab; forms are additional, not a substitute.
+        if kind == "choice_en_ru":
+            return {
+                "uid": f"enru-{card.id}",
+                "id": card.id,
+                "kind": kind,
+                "prompt": f"Как переводится «{v1}»?",
+                "options": _options(card.translation, pool, "translation", deck_cards),
+                "speak": v1,
+                "target": "translation",
+                "example": card.example or None,
+            }
+        if kind == "choice_ru_en":
+            return {
+                "uid": f"ruen-{card.id}",
+                "id": card.id,
+                "kind": kind,
+                "prompt": f"Как по-английски: «{card.translation}»?",
+                "options": _options(v1, pool, "primary_text", deck_cards),
+                "target": "primary",
+                "example": card.example or None,
+            }
         if kind == "choice_v2":
             return {
                 "uid": f"v2-{card.id}",
@@ -345,7 +368,7 @@ def _make_items(
 
     Idioms/exceptions still below strength target get a full new pass once both
     meaning sides are already done. Verbs never strength-grind: done when all
-    required facets (meaning + V2/V3) are correct once.
+    four facets (EN→RU, RU→EN, V2, V3) are correct once — forms do not replace meaning.
 
     ignore_progress=True rebuilds a full facet set for voluntary batch replay
     without clearing stored mastery until the user actually misses.

@@ -103,7 +103,7 @@ const META: Record<string, { title: string; subtitle: string; eyebrow: string }>
   verbs: {
     eyebrow: "Спряжение",
     title: "Неправильные глаголы",
-    subtitle: "Смысл EN↔RU и формы V2/V3. Партия закрывается после верного прохода, без прокачки силы.",
+    subtitle: "Как словарь: перевод EN↔RU плюс формы V2/V3. Выучено после 4 верных граней, без прокачки силы.",
   },
   idioms: {
     eyebrow: "Речь",
@@ -154,7 +154,7 @@ function cardProgressLabel(c: Card, kind: string) {
 
 function cardProgressTitle(kind: string) {
   if (kind === "verbs") {
-    return "Глагол выучен, когда верно пройдены смысл в обе стороны и формы V2/V3 (один раз).";
+    return "Выучено после 4 верных граней: EN→RU, RU→EN, форма V2 и форма V3 (как у словаря).";
   }
   if (kind === "exceptions") {
     return "Карточка выучена при силе 5/5. До этого обе стороны (правило и пример) снова попадают в практику.";
