@@ -6,7 +6,34 @@ import {
   type CSSProperties,
   type MutableRefObject,
 } from "react";
-import { CheckCircle2, CircleAlert } from "lucide-react";
+import {
+  Anchor,
+  Bird,
+  BookOpen,
+  Briefcase,
+  Camera,
+  Cat,
+  CheckCircle2,
+  CircleAlert,
+  Coffee,
+  Crown,
+  Dog,
+  Fish,
+  Flower2,
+  GraduationCap,
+  Heart,
+  Leaf,
+  Music,
+  Phone,
+  Plane,
+  ShoppingBag,
+  Smile,
+  Sparkles,
+  Star,
+  UserRound,
+  Utensils,
+  type LucideIcon,
+} from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { SpeakButton } from "../components/SpeakButton";
@@ -14,6 +41,61 @@ import { speakEnglish, stopSpeech, mapSpeakersToGender, type DialogueSpeakLine }
 import { SEARCH_HIGHLIGHT_PARAM, useSearchHighlight } from "../lib/searchHighlight";
 
 const FEEDBACK_ADVANCE_MS = 1500;
+
+const SPEAKER_AVATAR_ICONS: LucideIcon[] = [
+  Coffee,
+  UserRound,
+  Smile,
+  Cat,
+  Dog,
+  Briefcase,
+  GraduationCap,
+  Heart,
+  Star,
+  Music,
+  Plane,
+  ShoppingBag,
+  Utensils,
+  Phone,
+  BookOpen,
+  Camera,
+  Flower2,
+  Fish,
+  Bird,
+  Crown,
+  Sparkles,
+  Anchor,
+  Leaf,
+];
+
+function hashSpeakerName(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+/** Stable "random" icon per speaker name; unique within one dialogue when possible. */
+function speakerAvatarIcons(speakers: string[]): Map<string, LucideIcon> {
+  const map = new Map<string, LucideIcon>();
+  const used = new Set<number>();
+  const unique: string[] = [];
+  for (const raw of speakers) {
+    const name = raw.trim();
+    if (name && !map.has(name)) unique.push(name);
+  }
+  for (const name of unique) {
+    let idx = hashSpeakerName(name) % SPEAKER_AVATAR_ICONS.length;
+    for (let n = 0; n < SPEAKER_AVATAR_ICONS.length; n++) {
+      const i = (idx + n) % SPEAKER_AVATAR_ICONS.length;
+      if (!used.has(i)) {
+        used.add(i);
+        map.set(name, SPEAKER_AVATAR_ICONS[i]);
+        break;
+      }
+    }
+  }
+  return map;
+}
 
 type CheckResult = {
   correct: boolean;
@@ -102,6 +184,11 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
     [lines],
   );
 
+  const avatarBySpeaker = useMemo(
+    () => speakerAvatarIcons(lines.map((line) => line.speaker)),
+    [lines],
+  );
+
   const dialogueSpeakLines = useMemo((): DialogueSpeakLine[] => {
     return lines
       .filter((line) => line.text.trim())
@@ -132,16 +219,16 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
           />
         ) : null}
       </div>
-      <div className="grid min-w-0 gap-3.5" role="log" aria-label="Диалог">
+      <div className="grid min-w-0 gap-2.5" role="log" aria-label="Диалог">
         {lines.map((line, i) => {
           const speaker = line.speaker.trim();
           const isLeft = speaker === firstSpeaker || (!firstSpeaker && i % 2 === 0);
           const voiceGender = speakerGenders.get(speaker) ?? "female";
           const showRu = openRu === i && Boolean(line.ru);
-          const initial = (speaker[0] || "?").toUpperCase();
+          const Icon = avatarBySpeaker.get(speaker) ?? UserRound;
           const avatar = (
             <div
-              className={`flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+              className={`flex size-9 shrink-0 items-center justify-center rounded-full ${
                 isLeft
                   ? "border border-line/80 bg-paper-2 text-dusk"
                   : "border border-sage/30 bg-sage-soft text-sage"
@@ -149,7 +236,7 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
               aria-hidden
               title={speaker}
             >
-              {initial}
+              <Icon size={16} strokeWidth={2} />
             </div>
           );
 
@@ -163,52 +250,49 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
             >
               {isLeft ? avatar : null}
               <div
-                className={`flex min-w-0 max-w-[min(100%,20rem)] flex-col ${
-                  isLeft ? "items-start" : "items-end"
+                role="button"
+                tabIndex={0}
+                className={`w-full max-w-[min(100%,20rem)] cursor-pointer px-3.5 py-2.5 text-left transition-colors ${
+                  isLeft
+                    ? "rounded-2xl rounded-tl-md border border-line/70 bg-paper-2 text-ink hover:border-line"
+                    : "rounded-2xl rounded-tr-md border border-sage/25 bg-sage-soft text-ink hover:border-sage/40"
                 }`}
+                aria-expanded={line.ru ? showRu : undefined}
+                aria-label={
+                  line.ru
+                    ? showRu
+                      ? "Скрыть перевод"
+                      : "Показать перевод"
+                    : undefined
+                }
+                onClick={() => {
+                  if (!line.ru) return;
+                  setOpenRu((cur) => (cur === i ? null : i));
+                }}
+                onKeyDown={(event) => {
+                  if (!line.ru) return;
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setOpenRu((cur) => (cur === i ? null : i));
+                  }
+                }}
               >
-                <div
-                  className={`mb-1 flex max-w-full items-center gap-1.5 ${
-                    isLeft ? "flex-row" : "flex-row-reverse"
-                  }`}
-                >
+                <div className="mb-1.5 flex items-center justify-between gap-2">
                   <p className="min-w-0 truncate text-[11px] font-semibold tracking-wide text-ink-soft/80">
                     {line.speaker}
                   </p>
-                  <SpeakButton
-                    text={line.text}
-                    label="реплика"
-                    voiceGender={voiceGender}
+                  <div
                     className="shrink-0"
-                  />
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                  >
+                    <SpeakButton text={line.text} label="реплика" voiceGender={voiceGender} />
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  className={`max-w-full cursor-pointer px-3.5 py-2.5 text-left transition-colors ${
-                    isLeft
-                      ? "rounded-2xl rounded-tl-md border border-line/70 bg-paper-2 text-ink hover:border-line"
-                      : "rounded-2xl rounded-tr-md border border-sage/25 bg-sage-soft text-ink hover:border-sage/40"
-                  }`}
-                  aria-expanded={showRu}
-                  aria-label={
-                    line.ru
-                      ? showRu
-                        ? "Скрыть перевод"
-                        : "Показать перевод"
-                      : undefined
-                  }
-                  onClick={() => {
-                    if (!line.ru) return;
-                    setOpenRu((cur) => (cur === i ? null : i));
-                  }}
-                >
-                  <p className="break-words text-lg leading-snug">{line.text}</p>
-                  {showRu ? (
-                    <p className="mt-1.5 break-words text-sm leading-snug text-ink-soft/80">
-                      {line.ru}
-                    </p>
-                  ) : null}
-                </button>
+                <p className="break-words text-lg leading-snug">{line.text}</p>
+                {showRu ? (
+                  <p className="mt-1.5 break-words text-sm leading-snug text-ink-soft/80">{line.ru}</p>
+                ) : null}
               </div>
               {!isLeft ? avatar : null}
             </div>
