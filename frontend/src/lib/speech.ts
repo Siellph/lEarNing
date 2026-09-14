@@ -611,6 +611,28 @@ export function speakEnglish(text: string, options?: { rate?: number; accent?: A
   void whenVoicesReady().then(kick);
 }
 
+/** Irregular verbs: speak V1, V2, V3 with pauses; expand slash alts; no gloss. */
+export function verbFormsSpeakText(card: {
+  primary_text: string;
+  secondary_text?: string;
+  tertiary_text?: string;
+}): string {
+  const fields = [
+    card.primary_text.split("→")[0].trim(),
+    (card.secondary_text || "").trim(),
+    (card.tertiary_text || "").trim(),
+  ];
+  const parts: string[] = [];
+  for (const field of fields) {
+    if (!field) continue;
+    for (const piece of field.split("/")) {
+      const word = piece.trim();
+      if (word) parts.push(word);
+    }
+  }
+  return parts.join(". ");
+}
+
 export function extractEnglish(text: string): string | null {
   const spoken = speakableEnglish(text);
   if (!spoken) return null;

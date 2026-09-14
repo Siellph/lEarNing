@@ -15,7 +15,7 @@ import { ProgressBar } from "../components/ProgressBar";
 import { SpeakButton } from "../components/SpeakButton";
 import { useAuth } from "../context/AuthContext";
 import { percent } from "../lib/percent";
-import { looksEnglish } from "../lib/speech";
+import { looksEnglish, verbFormsSpeakText } from "../lib/speech";
 import { useSearchHighlight } from "../lib/searchHighlight";
 
 type Deck = {
@@ -281,7 +281,15 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
                     ? `выучено · сила ${c.strength}/5`
                     : `${Math.min(c.mastery_count ?? 0, 2)}/2 · сила ${c.strength}/5`}
                 </span>
-                {c.primary_text && <SpeakButton text={c.primary_text.split("→")[0].trim()} />}
+                {c.primary_text && (
+                  <SpeakButton
+                    text={
+                      kind === "verbs"
+                        ? verbFormsSpeakText(c)
+                        : c.primary_text.split("→")[0].trim()
+                    }
+                  />
+                )}
               </div>
             </article>
           ))}

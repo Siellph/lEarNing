@@ -111,6 +111,26 @@ def _options(correct: str, pool: list[StudyCard], attr: str, extra: list[StudyCa
     return choices[: n + 1]
 
 
+def _verb_forms_speak(card: StudyCard) -> str:
+    """Plain TTS for irregular verbs: V1, V2, V3 with pauses; expand slash alts; no gloss."""
+    parts: list[str] = []
+    for field in (
+        card.primary_text.split("→")[0].strip(),
+        (card.secondary_text or "").strip(),
+        (card.tertiary_text or "").strip(),
+    ):
+        if not field:
+            continue
+        parts.extend(p.strip() for p in field.split("/") if p.strip())
+    return ". ".join(parts)
+
+
+def _card_speak(card: StudyCard, deck_kind: str) -> str:
+    if deck_kind == "verbs":
+        return _verb_forms_speak(card)
+    return card.primary_text.split("→")[0].strip()
+
+
 def _build_task(
     card: StudyCard,
     kind: str,
@@ -127,7 +147,7 @@ def _build_task(
                 "kind": kind,
                 "prompt": f"Какое правило верно для «{card.primary_text}»?",
                 "options": _options(card.translation, pool, "translation", deck_cards),
-                "speak": card.primary_text.split("→")[0].strip(),
+                "speak": _card_speak(card, deck_kind),
                 "target": "translation",
                 "example": card.example or None,
             }
@@ -148,7 +168,7 @@ def _build_task(
             "kind": kind,
             "prompt": f"Как переводится «{card.primary_text}»?",
             "options": _options(card.translation, pool, "translation", deck_cards),
-            "speak": card.primary_text.split("→")[0].strip(),
+            "speak": _card_speak(card, deck_kind),
             "target": "translation",
             "example": card.example or None,
         }
