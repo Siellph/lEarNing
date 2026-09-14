@@ -86,6 +86,8 @@ const KIND_API: Record<SkillKind, string> = {
 };
 
 function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }) {
+  const [openRu, setOpenRu] = useState<number | null>(null);
+
   const firstSpeaker = useMemo(() => {
     for (const line of lines) {
       const name = line.speaker.trim();
@@ -125,7 +127,6 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
             text={fullScript}
             dialogueLines={dialogueSpeakLines}
             label="Весь диалог"
-            compact
             showRestart
             className="shrink-0"
           />
@@ -133,21 +134,41 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
       </div>
       <div className="grid min-w-0 gap-3.5" role="log" aria-label="Диалог">
         {lines.map((line, i) => {
-          const isLeft = line.speaker.trim() === firstSpeaker || (!firstSpeaker && i % 2 === 0);
-          const voiceGender = speakerGenders.get(line.speaker.trim()) ?? "female";
+          const speaker = line.speaker.trim();
+          const isLeft = speaker === firstSpeaker || (!firstSpeaker && i % 2 === 0);
+          const voiceGender = speakerGenders.get(speaker) ?? "female";
+          const showRu = openRu === i && Boolean(line.ru);
+          const initial = (speaker[0] || "?").toUpperCase();
+          const avatar = (
+            <div
+              className={`flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                isLeft
+                  ? "border border-line/80 bg-paper-2 text-dusk"
+                  : "border border-sage/30 bg-sage-soft text-sage"
+              }`}
+              aria-hidden
+              title={speaker}
+            >
+              {initial}
+            </div>
+          );
+
           return (
             <div
               key={`${line.speaker}-${i}`}
-              className={`motion-bubble flex min-w-0 ${isLeft ? "justify-start" : "justify-end"}`}
+              className={`motion-bubble flex min-w-0 items-end gap-2 ${
+                isLeft ? "justify-start" : "justify-end"
+              }`}
               style={{ "--motion-i": Math.min(i, 10) } as CSSProperties}
             >
+              {isLeft ? avatar : null}
               <div
-                className={`flex w-full max-w-[min(100%,22rem)] min-w-0 flex-col ${
+                className={`flex min-w-0 max-w-[min(100%,20rem)] flex-col ${
                   isLeft ? "items-start" : "items-end"
                 }`}
               >
                 <div
-                  className={`mb-1 flex max-w-full items-center gap-1 ${
+                  className={`mb-1 flex max-w-full items-center gap-1.5 ${
                     isLeft ? "flex-row" : "flex-row-reverse"
                   }`}
                 >
@@ -158,30 +179,38 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
                     text={line.text}
                     label="реплика"
                     voiceGender={voiceGender}
-                    compact
-                    showRestart
                     className="shrink-0"
                   />
                 </div>
-                <div
-                  className={`max-w-full px-3.5 py-2.5 ${
+                <button
+                  type="button"
+                  className={`max-w-full cursor-pointer px-3.5 py-2.5 text-left transition-colors ${
                     isLeft
-                      ? "rounded-2xl rounded-tl-md border border-line/70 bg-paper-2 text-ink"
-                      : "rounded-2xl rounded-tr-md border border-sage/25 bg-sage-soft text-ink"
+                      ? "rounded-2xl rounded-tl-md border border-line/70 bg-paper-2 text-ink hover:border-line"
+                      : "rounded-2xl rounded-tr-md border border-sage/25 bg-sage-soft text-ink hover:border-sage/40"
                   }`}
+                  aria-expanded={showRu}
+                  aria-label={
+                    line.ru
+                      ? showRu
+                        ? "Скрыть перевод"
+                        : "Показать перевод"
+                      : undefined
+                  }
+                  onClick={() => {
+                    if (!line.ru) return;
+                    setOpenRu((cur) => (cur === i ? null : i));
+                  }}
                 >
                   <p className="break-words text-lg leading-snug">{line.text}</p>
-                </div>
-                {line.ru ? (
-                  <p
-                    className={`mt-1 max-w-full break-words text-sm leading-snug text-ink-soft/70 ${
-                      isLeft ? "text-left" : "text-right"
-                    }`}
-                  >
-                    {line.ru}
-                  </p>
-                ) : null}
+                  {showRu ? (
+                    <p className="mt-1.5 break-words text-sm leading-snug text-ink-soft/80">
+                      {line.ru}
+                    </p>
+                  ) : null}
+                </button>
               </div>
+              {!isLeft ? avatar : null}
             </div>
           );
         })}
@@ -610,17 +639,21 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
       </div>
 
       {mode !== "practice" && mode !== "done" && (
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
           {kind === "listening" && (
             <button
               type="button"
-              className="btn btn-ghost text-sm"
+              className="btn btn-ghost w-full text-sm sm:w-auto"
               onClick={() => setShowTranscript((v) => !v)}
             >
               {showTranscript ? "Скрыть текст" : "Показать текст"}
             </button>
           )}
-          <button className="btn btn-primary ml-auto text-sm" onClick={startPractice}>
+          <button
+            type="button"
+            className="btn btn-primary h-10 w-full px-4 py-0 text-sm shadow-none sm:ml-auto sm:h-8 sm:w-auto"
+            onClick={startPractice}
+          >
             Практика
           </button>
         </div>
