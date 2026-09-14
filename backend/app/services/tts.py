@@ -37,7 +37,7 @@ VOICES: dict[tuple[str, str], str] = {
 # Approximate map vs previous Web Speech rates (~0.65 / 1.00 / 1.15).
 RATE_PERCENTS: dict[str, str] = {
     "slow": "-30%",
-    "normal": "0%",
+    "normal": "+0%",
     "fast": "+20%",
 }
 
