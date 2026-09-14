@@ -16,14 +16,7 @@ type Module = {
   progress: { status: string; lesson_done: boolean; practice_score: number; test_score: number | null };
 };
 
-function stepStatus(kind: "theory" | "practice" | "test", progress: Module["progress"]): string {
-  if (kind === "theory") {
-    if (progress.lesson_done || progress.status === "completed") return "completed";
-    if (progress.status === "in_progress" || progress.practice_score > 0 || progress.test_score != null) {
-      return "in_progress";
-    }
-    return "not_started";
-  }
+function stepStatus(kind: "practice" | "test", progress: Module["progress"]): string {
   if (kind === "practice") {
     if (progress.practice_score >= 70) return "completed";
     if (progress.practice_score > 0) return "in_progress";
@@ -63,7 +56,6 @@ export function ModuleHub() {
           title="Теория"
           text={lesson?.title || "Урок"}
           to={lesson ? `/app/module/${module.slug}/lesson/${lesson.id}` : "#"}
-          status={stepStatus("theory", module.progress)}
         />
         <Step
           n="02"
@@ -120,7 +112,7 @@ function Step({
   title: string;
   text: string;
   to: string;
-  status: string;
+  status?: string;
   meta?: string;
 }) {
   return (
