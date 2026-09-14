@@ -1128,6 +1128,7 @@ article,
   max-width: 100%;
   overflow-wrap: anywhere;
   word-break: normal;
+  text-align: justify;
 }
 
 /* Длинные ссылки / английские конструкции */
