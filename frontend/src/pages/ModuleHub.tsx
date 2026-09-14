@@ -51,6 +51,7 @@ export function ModuleHub() {
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
+        {/* В "Теорию" статус не передаём вообще */}
         <Step
           n="01"
           title="Теория"
@@ -112,15 +113,19 @@ function Step({
   title: string;
   text: string;
   to: string;
-  status?: string;
+  status?: string; // 1. Статус сделан необязательным (status?: string)
   meta?: string;
 }) {
   return (
     <Link to={to} className="card card-lift relative p-5">
-      <div className="absolute right-4 top-4">
-        <StatusBadge status={status} />
-      </div>
-      <div className="pr-24">
+      {/* 2. Рендерим бейдж только если status существует */}
+      {status && (
+        <div className="absolute right-4 top-4">
+          <StatusBadge status={status} />
+        </div>
+      )}
+      {/* 3. Оставляем отступ справа (pr-24) только при наличии бейджа */}
+      <div className={status ? "pr-24" : ""}>
         <span className="font-display text-2xl text-terra">{n}</span>
         <h2 className="mt-3 font-semibold">{title}</h2>
         <p className="mt-1 text-sm text-ink-soft">{text}</p>
