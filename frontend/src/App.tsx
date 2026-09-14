@@ -2,6 +2,7 @@ import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { BrandMark } from "./components/BrandMark";
 import { ConsentBanner } from "./components/ConsentBanner";
 import { Layout } from "./components/Layout";
+import { StopSpeechOnNavigate } from "./components/StopSpeechOnNavigate";
 import { useAuth } from "./context/AuthContext";
 import { ExamPage, ExamsPage, TestPage } from "./pages/AssessmentPages";
 import { Dashboard } from "./pages/Dashboard";
@@ -71,6 +72,7 @@ function Splash() {
 export function App() {
   return (
     <>
+      <StopSpeechOnNavigate />
       <ConsentBanner />
       <Routes>
         <Route path="/about" element={<AboutPage />} />

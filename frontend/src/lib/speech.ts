@@ -385,6 +385,7 @@ function playEdgeBlob(
   });
 }
 
+/** Stop all TTS (edge audio + Web Speech). Used on route change and speak-control unmount. */
 export function stopSpeech() {
   speakGeneration += 1;
   stopEdgeAudio();
@@ -506,6 +507,19 @@ export function toggleSpeakDialogue(lines: DialogueSpeakLine[], options?: SpeakO
     return;
   }
 
+  void speakDialogue(lines, options);
+}
+
+/**
+ * Stop current playback (even if paused mid-way) and speak from t=0.
+ * Unlike toggleSpeak*, never resumes from pause position.
+ */
+export function restartSpeakEnglish(text: string, options?: SpeakOptions) {
+  void speakEnglish(text, options);
+}
+
+/** Restart a dialogue script from the first line (same gender voices). */
+export function restartSpeakDialogue(lines: DialogueSpeakLine[], options?: SpeakOptions) {
   void speakDialogue(lines, options);
 }
 

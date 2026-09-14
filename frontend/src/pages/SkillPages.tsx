@@ -10,7 +10,7 @@ import { CheckCircle2, CircleAlert } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { SpeakButton, VoiceControls } from "../components/SpeakButton";
-import { speakEnglish, mapSpeakersToGender, type DialogueSpeakLine } from "../lib/speech";
+import { speakEnglish, stopSpeech, mapSpeakersToGender, type DialogueSpeakLine } from "../lib/speech";
 import { SEARCH_HIGHLIGHT_PARAM, useSearchHighlight } from "../lib/searchHighlight";
 
 const FEEDBACK_ADVANCE_MS = 1500;
@@ -126,6 +126,7 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
             dialogueLines={dialogueSpeakLines}
             label="Весь диалог"
             compact
+            showRestart
             className="shrink-0"
           />
         ) : null}
@@ -158,6 +159,7 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
                     label="реплика"
                     voiceGender={voiceGender}
                     compact
+                    showRestart
                     className="shrink-0"
                   />
                 </div>
@@ -427,6 +429,7 @@ function SkillTypeQuestion({
 
   useEffect(() => {
     if (isDictation && item.speak) speakEnglish(item.speak);
+    return () => stopSpeech();
   }, [item.uid, isDictation, item.speak]);
 
   const submit = async () => {
@@ -634,7 +637,11 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
                 <p className="text-xs uppercase tracking-wide text-ink-soft">
                   {kind === "listening" ? "Аудио" : "Текст"}
                 </p>
-                <SpeakButton text={item.body} label={kind === "listening" ? "Слушать" : "Прочитать"} />
+                <SpeakButton
+                  text={item.body}
+                  label={kind === "listening" ? "Слушать" : "Прочитать"}
+                  showRestart
+                />
               </div>
               {kind === "listening" && !showTranscript ? (
                 <p className="text-ink-soft">Слушайте без текста или откройте расшифровку кнопкой выше.</p>

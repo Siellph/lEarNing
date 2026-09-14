@@ -1,9 +1,11 @@
-import { Pause, Play, Volume2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Pause, Play, RotateCcw, Volume2 } from "lucide-react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { onConsentChange } from "../lib/consent";
 import {
   toggleSpeakEnglish,
   toggleSpeakDialogue,
+  restartSpeakEnglish,
+  restartSpeakDialogue,
   speakableEnglish,
   primeSpeech,
   type Accent,
@@ -18,6 +20,7 @@ import {
   getSpeakPlaybackState,
   getActiveSpokenText,
   onSpeakPlaybackChange,
+  stopSpeech,
 } from "../lib/speech";
 
 export function SpeakButton({
@@ -28,6 +31,7 @@ export function SpeakButton({
   voiceGender,
   dialogueLines,
   compact = false,
+  showRestart = false,
   className = "",
 }: {
   text: string;
@@ -41,6 +45,8 @@ export function SpeakButton({
   dialogueLines?: DialogueSpeakLine[];
   /** Hide label text on small screens (icon-only; aria-label kept). */
   compact?: boolean;
+  /** Second control: stop and play the same unit from the beginning. */
+  showRestart?: boolean;
   className?: string;
 }) {
   const [ready, setReady] = useState(false);
@@ -72,6 +78,14 @@ export function SpeakButton({
     return onSpeakPlaybackChange(sync);
   }, [spoken]);
 
+  // If this control started playback, silence it when the control leaves the tree
+  // (in-page remounts / quiz step changes). Route changes are handled globally.
+  useEffect(() => {
+    return () => {
+      if (getActiveSpokenText() === spoken) stopSpeech();
+    };
+  }, [spoken]);
+
   if (!spoken) return null;
 
   const isSpeaking = playback === "speaking";
@@ -81,29 +95,65 @@ export function SpeakButton({
   const title = isSpeaking ? "Пауза" : isPaused ? "Продолжить" : label || "Прослушать";
   const Icon = isSpeaking ? Pause : isPaused ? Play : Volume2;
 
-  return (
+  const speakOpts = { ratePreset: ratePreset ?? getRatePreset() };
+  const btnClass = `speak-btn ${compact ? "speak-btn--compact" : ""} ${isSpeaking ? "speak-btn--speaking" : ""} ${isPaused ? "speak-btn--paused" : ""}`;
+
+  const onToggle = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (dialogueLines?.length) {
+      toggleSpeakDialogue(dialogueLines, speakOpts);
+    } else {
+      toggleSpeakEnglish(spoken, { ...speakOpts, voiceGender });
+    }
+  };
+
+  const onRestart = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (dialogueLines?.length) {
+      restartSpeakDialogue(dialogueLines, speakOpts);
+    } else {
+      restartSpeakEnglish(spoken, { ...speakOpts, voiceGender });
+    }
+  };
+
+  const mainButton = (extraClass = "") => (
     <button
       type="button"
-      className={`speak-btn ${compact ? "speak-btn--compact" : ""} ${isSpeaking ? "speak-btn--speaking" : ""} ${isPaused ? "speak-btn--paused" : ""} ${className}`}
+      className={`${btnClass} ${extraClass}`.trim()}
       aria-label={aria}
       aria-pressed={isSpeaking || isPaused}
       title={title}
       disabled={!ready}
       onPointerDown={() => primeSpeech()}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        const opts = { ratePreset: ratePreset ?? getRatePreset() };
-        if (dialogueLines?.length) {
-          toggleSpeakDialogue(dialogueLines, opts);
-        } else {
-          toggleSpeakEnglish(spoken, { ...opts, voiceGender });
-        }
-      }}
+      onClick={onToggle}
     >
       <Icon size={16} />
       {label ? <span className={compact ? "speak-btn__label" : undefined}>{label}</span> : null}
     </button>
+  );
+
+  if (!showRestart) {
+    return mainButton(className);
+  }
+
+  return (
+    <span className={`speak-btn-group ${className}`.trim()}>
+      {mainButton()}
+      <button
+        type="button"
+        className={`speak-btn speak-btn--restart ${compact ? "speak-btn--compact" : ""}`}
+        aria-label={`Сначала: ${spoken}`}
+        title="Сначала"
+        disabled={!ready}
+        onPointerDown={() => primeSpeech()}
+        onClick={onRestart}
+      >
+        <RotateCcw size={16} />
+        <span className={compact ? "speak-btn__label" : undefined}>Сначала</span>
+      </button>
+    </span>
   );
 }
 

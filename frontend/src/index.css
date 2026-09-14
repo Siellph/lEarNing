@@ -444,6 +444,14 @@ input.gap-blank-input:disabled {
   line-height: 1.55;
 }
 
+.speak-btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
 .speak-btn {
   display: inline-flex;
   align-items: center;
