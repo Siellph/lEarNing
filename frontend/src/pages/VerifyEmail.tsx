@@ -40,7 +40,7 @@ export function CheckEmail() {
     <AuthShell title="Проверьте почту" subtitle="Аккаунт создан, но вход откроется после подтверждения email">
       <div className="grid gap-4">
         <p className="text-sm text-ink-soft">
-          Если письма нет во входящих, загляните в спам. В локальной разработке ссылка печатается в логах backend.
+          Если письма нет во входящих, загляните в спам или рассылки.
         </p>
         <label className="grid gap-1 text-sm">
           Email
