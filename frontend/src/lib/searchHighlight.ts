@@ -62,36 +62,40 @@ export function useSearchHighlight(ready = true) {
       if (targetEl && container) {
         applied.current = highlight;
 
+        // 1. Очищаем сохраненную позицию скролла
         clearAppScroll(window.location.pathname);
 
-        const scrollToTarget = () => {
-          // 1. Пробуем сначала отцентрировать через scrollIntoView
-          targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        const performScroll = () => {
+          // 2. Рассчитываем точное положение элемента относительно скролл-контейнера
+          const containerRect = container.getBoundingClientRect();
+          const targetRect = targetEl.getBoundingClientRect();
 
-          // 2. Защитный скролл для элементов на самом дне страницы:
-          // Если элемент ниже текущей видимой области, докручиваем контейнер на максимум
-          window.setTimeout(() => {
-            const containerRect = container.getBoundingClientRect();
-            const targetRect = targetEl.getBoundingClientRect();
+          // Вычисляем, насколько нужно сдвинуть scrollTop контейнера, чтобы элемент встал строго по центру
+          const targetTop =
+            targetRect.top -
+            containerRect.top +
+            container.scrollTop -
+            (containerRect.height / 2 - targetRect.height / 2);
 
-            // Если нижний край элемента все еще прижат к низу экрана или уходит за него
-            if (targetRect.bottom > containerRect.bottom - 40) {
-              container.scrollTo({
-                top: container.scrollHeight,
-                behavior: "smooth",
-              });
-            }
-          }, 150);
+          // 3. Выполняем точный скролл родительского контейнера
+          container.scrollTo({
+            top: Math.max(0, targetTop),
+            behavior: "smooth",
+          });
 
+          // 4. Добавляем подсветку
           targetEl.classList.add(HIGHLIGHT_CLASS);
         };
 
-        window.setTimeout(scrollToTarget, 50);
+        // Задержка 100мс позволяет странице полностью завершить отрисовку и рассчитать честные размеры
+        window.setTimeout(performScroll, 100);
 
+        // Таймер для снятия подсветки
         window.setTimeout(() => {
           targetEl.classList.remove(HIGHLIGHT_CLASS);
         }, HIGHLIGHT_MS);
 
+        // Очищаем URL от ?highlight= только после прокрутки
         window.setTimeout(() => {
           setParams(
             (prev) => {
