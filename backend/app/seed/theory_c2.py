@@ -53,7 +53,6 @@ C2_THEORY = {
                     callout("Перед правкой два вопроса: что уже известно и что должно оказаться в конце фразы?", "key"),
                 ],
             ),
-        ],
             rule(
                 "Topic, focus и контрастивный фокус",
                 "**Topic** — то, о чём строится высказывание; **focus** — компонент, несущий наиболее значимую новую или контрастивную информацию. Topic может быть вынесен влево и связан с местоимением внутри клаузы. Контрастивный focus часто получает финальную позицию и может сопровождаться *not X but Y*. Интонация дополнительно определяет фокус в устной речи.",
@@ -83,6 +82,7 @@ C2_THEORY = {
                     table(["Средство", "Основная функция", "Типичная мотивация"], [["there", "ввести существование", "новый референт"], ["it + that/to", "extraposition", "тяжёлая clause"], ["passive", "переназначить тему", "patient уже дан"], ["cleft", "выделить focus", "контраст"]]),
                 ],
             ),
+        ],
         compare=[
             {"left": "That the foundry withdrew surprised no one.", "right": "It surprised no one that the foundry withdrew.", "note": "Справа end-weight."},
             {"left": "A sandbar is just east of the marker.", "right": "There is a sandbar just east of the marker.", "note": "There типичнее для первого введения."},
@@ -145,7 +145,6 @@ C2_THEORY = {
                     callout("Present Perfect + точная законченная дата прошлого (in 2019) в стандарте ломает связь с now.", "warn"),
                 ],
             ),
-        ],
             rule(
                 "Stative verbs и смена значения",
                 "После глаголов состояния progressive обычно не употребляется, но правило семантическое. *Think* = 'считать' обычно stative, *think about* = 'обдумывать' dynamic; *have* = possession stative, *have lunch* dynamic; *see* может означать perception или arranged meeting. Поэтому список stative verbs нельзя применять как механический запрет.",
@@ -176,6 +175,7 @@ C2_THEORY = {
                     ex("She will leave the door open.", "Present habitual behaviour."),
                 ],
             ),
+        ],
         compare=[
             {"left": "I lived in Cork for a year.", "right": "I have lived in Cork, so the accent doesn't throw me.", "note": "Закрытый отрезок vs опыт как нынешний ресурс."},
             {"left": "She always leaves mugs on the scanner.", "right": "She is always leaving mugs on the scanner.", "note": "Continuous добавляет раздражение."},
@@ -237,7 +237,6 @@ C2_THEORY = {
                     callout("Сначала аудитория, потом форма. Одна метафорическая линия на абзац.", "key"),
                 ],
             ),
-        ],
             rule(
                 "Formal does not mean complex",
                 "Номинализация, пассив и редкая лексика полезны, если они организуют информацию, но чрезмерное усложнение может скрывать агенса и ухудшать читаемость. Хороший академический стиль допускает простую конструкцию, когда она точнее.",
@@ -271,6 +270,7 @@ C2_THEORY = {
                     ex("The argument sailed into a fog and baked the reader.", "Смешение доменов."),
                 ],
             ),
+        ],
         compare=[
             {"left": "We were unable to obtain a spare impeller.", "right": "We couldn't get a spare impeller.", "note": "Одинаковая пропозиция; слева отчёт, справа смена."},
             {"left": "The stills got leaked.", "right": "The stills were leaked.", "note": "Слева get-passive (разговорнее); справа be-passive (нейтральнее)."},
@@ -330,7 +330,6 @@ C2_THEORY = {
                     callout("Moreover в контрасте и however в простом добавлении — сбой логической метки, не «стиль».", "warn"),
                 ],
             ),
-        ],
             rule(
                 "Anaphora, cataphora и ambiguous reference",
                 "**Anaphora** отсылает назад: *The valve failed. It was replaced.* **Cataphora** допускает местоимение перед своим референтом: *When he arrived, John inspected the valve.* В сложной прозе неоднозначная ссылка опаснее повторения: если *it/this/they* имеет два возможных антецедента, существительное обычно предпочтительнее.",
@@ -374,6 +373,7 @@ C2_THEORY = {
                     ex("We could have waited, but we did not.", "Отрицательная форма делает реконструкцию ясной."),
                 ],
             ),
+        ],
         compare=[
             {"left": "The tables were reprinted, however two crossings failed.", "right": "The tables were reprinted; however, two crossings failed.", "note": "Коннектор требует точки / точки с запятой."},
             {"left": "Fog delayed us. This was annoying.", "right": "Fog delayed us. This delay wrecked the drone window.", "note": "This + noun точнее указывает на событие."},
@@ -435,7 +435,6 @@ C2_THEORY = {
                     callout("Один слой дистанции обычно достаточен. Allegedly — про вину; according to — про источник.", "key"),
                 ],
             ),
-        ],
             rule(
                 "Source, certainty и attribution",
                 "**According to X** называет источник; **apparently** и **seem/appear** часто маркируют вывод; **allegedly** дистанцирует автора от спорного утверждения; **certainly/clearly** повышают авторскую уверенность. Эти функции не следует смешивать: источник и степень уверенности — разные параметры.",
@@ -470,6 +469,7 @@ C2_THEORY = {
                     ex("The secretary is said to have altered the minutes.", "Personal reporting passive + perfect infinitive."),
                 ],
             ),
+        ],
         compare=[
             {"left": "She leaked the stills.", "right": "She allegedly leaked the stills.", "note": "Справа автор не берёт факт на себя."},
             {"left": "Reportedly the foundry will close.", "right": "According to the union bulletin, the foundry will close.", "note": "According to именует источник."},
@@ -530,7 +530,6 @@ C2_THEORY = {
                     callout("Двойная маркировка (клефт + дислокация + инверсия) в одном предложении перегружает сигнал.", "warn"),
                 ],
             ),
-        ],
             rule(
                 "Negative and restrictive fronting",
                 "После **never, rarely, seldom, little, only then, under no circumstances** и подобных ограничительных элементов в формальном стиле используется инверсия auxiliary и subject: *Never have I seen...* Если auxiliary нет, появляется *do/did*: *Only then did we realise...*. Обычное обстоятельство в начале предложения такой инверсии не вызывает.",
@@ -565,6 +564,7 @@ C2_THEORY = {
                     ex("They never came back, the wet plates.", "Right-dislocated afterthought."),
                 ],
             ),
+        ],
         compare=[
             {"left": "We sent the letter to legal.", "right": "We sent to legal the entire unredacted correspondence from March.", "note": "Сдвиг оправдан только тяжестью."},
             {"left": "The intern spotted the mismatch.", "right": "The intern, she spotted the mismatch.", "note": "Справа устный топик; в отчёте — шум."},
@@ -628,7 +628,6 @@ C2_THEORY = {
                     callout("Ошибки здесь звучат как сбой мышления, не как акцент: either при трёх вариантах, neither… don't.", "key"),
                 ],
             ),
-        ],
             rule(
                 "Each vs every",
                 "**Each** может употребляться как determiner и как pronoun: *each sample, each of the samples, each was labelled*. **Every** требует singular count noun в обычной конструкции: *every sample*. Для *of + plural* используется *every one of the samples*. Each сильнее подчёркивает индивидуальных членов, every — полный охват класса.",
@@ -674,6 +673,7 @@ C2_THEORY = {
                     ex("What little evidence we had was inconclusive.", "What little + uncountable noun."),
                 ],
             ),
+        ],
         compare=[
             {"left": "Each sample was dated.", "right": "Every sample was dated.", "note": "Each — «по одному»; every — «без исключений»."},
             {"left": "Either of the keys opens the loft.", "right": "Both of the keys are needed for the loft.", "note": "Either — один достаточен; both — нужны два."},
@@ -739,7 +739,6 @@ C2_THEORY = {
                     callout("Учить слово вместе со слотом. Sorry to ≠ sorry that. Raising поднимает подлежащее; it выносит тяжёлый комплемент вправо.", "key"),
                 ],
             ),
-        ],
             rule(
                 "Remember, regret и смысл complementation",
                 "Несколько моделей после одного глагола могут быть грамматически допустимы, но различаться по смыслу. *Remember to lock* относится к действию, которое ещё нужно выполнить; *remember locking* — к воспоминанию о завершённом действии. *Regret to inform* — формальная формула перед сообщением; *regret doing* — сожаление о прошлом действии.",
@@ -799,6 +798,7 @@ C2_THEORY = {
                     ex("It is likely that she will decline.", "Extraposition with likely."),
                 ],
             ),
+        ],
         compare=[
             {"left": "She is likely to decline.", "right": "It is likely that she will decline.", "note": "Raising vs extraposition — одна вероятность."},
             {"left": "I'm sorry to interrupt.", "right": "I'm sorry that we interrupted.", "note": "To — жест сейчас; that — факт-событие."},
