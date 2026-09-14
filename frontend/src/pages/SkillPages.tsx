@@ -326,7 +326,7 @@ function DialogueThread({ body, lines }: { body: string; lines: DialogueLine[] }
               <div
                 role="button"
                 tabIndex={0}
-                className={`w-full max-w-[min(100%,20rem)] cursor-pointer px-3.5 py-2.5 text-left transition-colors ${
+                className={`w-fit max-w-[min(100%,20rem)] cursor-pointer px-3.5 py-2.5 text-left transition-colors ${
                   isLeft
                     ? "rounded-2xl rounded-bl-md border border-line/70 bg-paper-2 text-ink hover:border-line"
                     : "rounded-2xl rounded-br-md border border-sage/25 bg-sage-soft text-ink hover:border-sage/40"
