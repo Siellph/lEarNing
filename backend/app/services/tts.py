@@ -25,8 +25,8 @@ RatePreset = str  # "slow" | "normal" | "fast"
 Gender = str  # "female" | "male"
 
 VOICES: dict[tuple[str, str], str] = {
-    ("us", "female"): "en-US-AriaNeural",
-    ("us", "male"): "en-US-GuyNeural",
+    ("us", "female"): "en-US-MichelleNeural",
+    ("us", "male"): "en-US-EricNeural",
     ("uk", "female"): "en-GB-SoniaNeural",
     ("uk", "male"): "en-GB-RyanNeural",
 }
