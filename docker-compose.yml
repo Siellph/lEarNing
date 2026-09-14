@@ -39,6 +39,12 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       ADMIN_NAME: ${ADMIN_NAME:-}
+      # Persistent edge-tts MP3 cache (host: ./data/tts_cache)
+      TTS_CACHE_DIR: ${TTS_CACHE_DIR:-/data/tts_cache}
+      TTS_CACHE_MAX_BYTES: ${TTS_CACHE_MAX_BYTES:-1073741824}
+    # MP3 cache survives container recreate; prune enforces TTS_CACHE_MAX_BYTES.
+    volumes:
+      - ./data/tts_cache:/data/tts_cache
     depends_on:
       postgres:
         condition: service_healthy

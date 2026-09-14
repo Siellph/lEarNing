@@ -36,7 +36,7 @@ htmlcov/
 # Ruff
 .ruff_cache/
 
-# Docker — локальные файлы PostgreSQL (bind mount ./data/postgres)
+# Docker — локальные данные (postgres, tts_cache, …)
 data/
 postgres_data/
 

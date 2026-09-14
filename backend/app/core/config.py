@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     EMAIL_VERIFICATION_REQUIRED: bool = True
     # Disk cache for edge-tts MP3s; empty = system temp / learning_tts_cache
     TTS_CACHE_DIR: str = ""
+    # Max size of TTS MP3 cache on disk (default 1 GiB)
+    TTS_CACHE_MAX_BYTES: int = 1_073_741_824
 
     @property
     def cors_origins(self) -> list[str]:
