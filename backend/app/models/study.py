@@ -47,7 +47,8 @@ class StudyProgress(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     card_id: Mapped[int] = mapped_column(ForeignKey("study_cards.id", ondelete="CASCADE"))
     strength: Mapped[int] = mapped_column(Integer, default=0)
-    # Bitmask: choice_en_ru=1, choice_ru_en=2. Learned when == 3 (both directions).
+    # Bitmask: en_ru=1, ru_en=2, v2=4, v3=8. Idioms/exceptions use 1|2;
+    # verbs are learned at 15. Strength>=5 still gates idioms/exceptions only.
     mastery: Mapped[int] = mapped_column(Integer, default=0)
     last_reviewed: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(

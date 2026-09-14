@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MutableRefObject,
+} from "react";
+import { CheckCircle2, CircleAlert } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { ProgressBar } from "../components/ProgressBar";
@@ -7,6 +15,14 @@ import { useAuth } from "../context/AuthContext";
 import { percent } from "../lib/percent";
 import { speakEnglish, mapSpeakersToGender, type DialogueSpeakLine } from "../lib/speech";
 import { SEARCH_HIGHLIGHT_PARAM, useSearchHighlight } from "../lib/searchHighlight";
+
+const FEEDBACK_ADVANCE_MS = 1500;
+
+type CheckResult = {
+  correct: boolean;
+  expected?: string | null;
+  explanation?: string;
+};
 
 type SkillKind = "reading" | "listening" | "dialogue";
 
@@ -289,6 +305,245 @@ export function SkillHub({ kind }: { kind: SkillKind }) {
   );
 }
 
+function skillKindLabel(kind: string): string {
+  if (kind === "dictation") return "Диктант";
+  if (kind === "fill_gap") return "Пропуск";
+  return "Понимание";
+}
+
+function SkillKindBadge({ kind }: { kind: string }) {
+  return (
+    <span className="rounded-full bg-paper-2 px-2.5 py-1 text-xs font-semibold text-ink-soft">
+      {skillKindLabel(kind)}
+    </span>
+  );
+}
+
+function SkillCardResultIcon({ correct }: { correct: boolean }) {
+  return correct ? (
+    <span className="quiz-status-ok quiz-status-icon" aria-label="Верно" role="status">
+      <CheckCircle2 size={20} aria-hidden />
+    </span>
+  ) : (
+    <span className="quiz-status-bad quiz-status-icon" aria-label="Неверно" role="status">
+      <CircleAlert size={20} aria-hidden />
+    </span>
+  );
+}
+
+function useSkillAutoAdvance(
+  result: CheckResult | null,
+  item: PracticeItem,
+  resolvedRef: MutableRefObject<boolean>,
+  onResolvedRef: MutableRefObject<(res: CheckResult) => void>,
+) {
+  useEffect(() => {
+    if (!result) return;
+    const timer = window.setTimeout(() => {
+      if (resolvedRef.current) return;
+      resolvedRef.current = true;
+      onResolvedRef.current(result);
+    }, FEEDBACK_ADVANCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [result, item, resolvedRef, onResolvedRef]);
+}
+
+function SkillChoiceQuestion({
+  item,
+  index,
+  progressLabel,
+  onCheck,
+  onResolved,
+}: {
+  item: PracticeItem;
+  index: number;
+  progressLabel: string;
+  onCheck: (item: PracticeItem, answer: string) => Promise<CheckResult>;
+  onResolved: (res: CheckResult) => void;
+}) {
+  const options = useMemo(() => [...(item.options || [])].sort(() => Math.random() - 0.5), [item.uid]);
+  const [value, setValue] = useState("");
+  const [result, setResult] = useState<CheckResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const resolvedRef = useRef(false);
+  const onResolvedRef = useRef(onResolved);
+  onResolvedRef.current = onResolved;
+  const locked = !!result;
+
+  useSkillAutoAdvance(result, item, resolvedRef, onResolvedRef);
+
+  const submit = async (answer: string) => {
+    if (!answer || locked || busy || resolvedRef.current) return;
+    setBusy(true);
+    setValue(answer);
+    try {
+      const res = await onCheck(item, answer);
+      setResult(res);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <article
+      className={`quiz-card motion-enter ${result ? (result.correct ? "quiz-card-ok" : "quiz-card-bad quiz-card-shake") : ""}`}
+      style={{ "--motion-i": Math.min(index, 8) } as CSSProperties}
+    >
+      <header className="quiz-card-head">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="text-sm text-ink-soft">{progressLabel}</span>
+          <SkillKindBadge kind={item.kind} />
+        </div>
+        {result && <SkillCardResultIcon correct={result.correct} />}
+      </header>
+      <div className="grid gap-4 p-5 sm:p-6">
+        <p className="text-lg">{item.prompt}</p>
+        <div className="grid gap-2.5">
+          {options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              disabled={locked || busy}
+              onClick={() => void submit(opt)}
+              className={`quiz-choice ${value === opt ? "is-selected" : ""}`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SkillTypeQuestion({
+  item,
+  index,
+  progressLabel,
+  onCheck,
+  onResolved,
+}: {
+  item: PracticeItem;
+  index: number;
+  progressLabel: string;
+  onCheck: (item: PracticeItem, answer: string) => Promise<CheckResult>;
+  onResolved: (res: CheckResult) => void;
+}) {
+  const [value, setValue] = useState("");
+  const [result, setResult] = useState<CheckResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const resolvedRef = useRef(false);
+  const onResolvedRef = useRef(onResolved);
+  onResolvedRef.current = onResolved;
+  const locked = !!result;
+  const isDictation = item.kind === "dictation";
+
+  useSkillAutoAdvance(result, item, resolvedRef, onResolvedRef);
+
+  useEffect(() => {
+    if (isDictation && item.speak) speakEnglish(item.speak);
+  }, [item.uid, isDictation, item.speak]);
+
+  const submit = async () => {
+    if (!value.trim() || locked || busy || resolvedRef.current) return;
+    inputRef.current?.blur();
+    setBusy(true);
+    try {
+      const res = await onCheck(item, value.trim());
+      setResult(res);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <article
+      className={`quiz-card motion-enter ${result ? (result.correct ? "quiz-card-ok" : "quiz-card-bad quiz-card-shake") : ""}`}
+      style={{ "--motion-i": Math.min(index, 8) } as CSSProperties}
+    >
+      <header className="quiz-card-head">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="text-sm text-ink-soft">{progressLabel}</span>
+          <SkillKindBadge kind={item.kind} />
+        </div>
+        {result && <SkillCardResultIcon correct={result.correct} />}
+      </header>
+      <div className="grid gap-4 p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-lg">{item.prompt}</p>
+          {isDictation && item.speak ? <SpeakButton text={item.speak} label="Ещё раз" /> : null}
+        </div>
+        <input
+          ref={inputRef}
+          className="field"
+          value={value}
+          autoCapitalize="none"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder={isDictation ? "Что услышали…" : "Ответ"}
+          onChange={(event) => setValue(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              void submit();
+            }
+          }}
+          disabled={locked}
+        />
+        {!result && (
+          <button
+            type="button"
+            className="btn btn-primary w-full sm:w-auto sm:justify-self-start"
+            disabled={busy || !value.trim()}
+            onClick={() => void submit()}
+          >
+            {busy ? "Проверяем…" : "Проверить"}
+          </button>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function SkillPracticeCard({
+  item,
+  index,
+  total,
+  onCheck,
+  onResolved,
+}: {
+  item: PracticeItem;
+  index: number;
+  total: number;
+  onCheck: (item: PracticeItem, answer: string) => Promise<CheckResult>;
+  onResolved: (res: CheckResult) => void;
+}) {
+  const progressLabel = `${index + 1} / ${total}`;
+  const isChoice = Array.isArray(item.options) && item.options.length > 0;
+  if (isChoice) {
+    return (
+      <SkillChoiceQuestion
+        item={item}
+        index={index}
+        progressLabel={progressLabel}
+        onCheck={onCheck}
+        onResolved={onResolved}
+      />
+    );
+  }
+  return (
+    <SkillTypeQuestion
+      item={item}
+      index={index}
+      progressLabel={progressLabel}
+      onCheck={onCheck}
+      onResolved={onResolved}
+    />
+  );
+}
+
 export function SkillItemPage({ kind }: { kind: SkillKind }) {
   const { slug } = useParams();
   const { refresh } = useAuth();
@@ -298,12 +553,6 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
   const [showTranscript, setShowTranscript] = useState(kind !== "listening");
   const [items, setItems] = useState<PracticeItem[]>([]);
   const [index, setIndex] = useState(0);
-  const [answer, setAnswer] = useState("");
-  const [feedback, setFeedback] = useState<{
-    correct: boolean;
-    expected?: string | null;
-    explanation?: string;
-  } | null>(null);
 
   const load = () => {
     if (!slug) return;
@@ -315,8 +564,6 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
     setShowTranscript(kind !== "listening");
     setItems([]);
     setIndex(0);
-    setAnswer("");
-    setFeedback(null);
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind, slug]);
@@ -326,39 +573,25 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
     const data = await api<{ items: PracticeItem[] }>(`/skills/${KIND_API[kind]}/${slug}/practice`);
     setItems(data.items);
     setIndex(0);
-    setAnswer("");
-    setFeedback(null);
     setMode("practice");
   };
 
   const current = items[index];
 
-  useEffect(() => {
-    if (mode !== "practice" || !current) return;
-    if (current.kind === "dictation" && current.speak) {
-      speakEnglish(current.speak);
-    }
-  }, [mode, current?.uid, current?.kind, current?.speak]);
-
-  const check = async () => {
-    if (!current) return;
-    const res = await api<{
-      correct: boolean;
-      expected?: string | null;
-      explanation?: string;
-    }>(`/skills/questions/${current.id}/check`, {
+  const checkAnswer = async (practiceItem: PracticeItem, answer: string): Promise<CheckResult> => {
+    const res = await api<CheckResult>(`/skills/questions/${practiceItem.id}/check`, {
       method: "POST",
-      body: JSON.stringify({ answer, kind: current.kind }),
+      body: JSON.stringify({ answer, kind: practiceItem.kind }),
     });
-    setFeedback(res);
     refresh();
+    return res;
   };
 
-  const next = () => {
-    setFeedback(null);
-    setAnswer("");
+  const advance = () => {
     if (index + 1 >= items.length) {
       setMode("study");
+      setItems([]);
+      setIndex(0);
       load();
       return;
     }
@@ -441,69 +674,14 @@ export function SkillItemPage({ kind }: { kind: SkillKind }) {
           </p>
         </div>
       ) : current ? (
-        <article className="card grid gap-4 p-6">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-ink-soft">
-              {index + 1} / {items.length}
-            </p>
-            <span className="rounded-full bg-paper-2 px-2.5 py-1 text-xs font-semibold text-ink-soft">
-              {current.kind === "dictation"
-                ? "Диктант"
-                : current.kind === "fill_gap"
-                  ? "Пропуск"
-                  : "Понимание"}
-            </span>
-          </div>
-          <p className="text-xl">{current.prompt}</p>
-          {current.kind === "dictation" && current.speak && (
-            <div className="flex justify-end">
-              <SpeakButton text={current.speak} label="Ещё раз" />
-            </div>
-          )}
-          {current.options ? (
-            <div className="grid gap-2">
-              {current.options.map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  className={`rounded-xl border px-4 py-3 text-left ${
-                    answer === opt ? "border-terra bg-[#fff1eb]" : "border-line"
-                  }`}
-                  onClick={() => setAnswer(opt)}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <input
-              className="field"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder={current.kind === "dictation" ? "Что услышали…" : "Ответ"}
-              autoComplete="off"
-            />
-          )}
-          <div className="flex flex-wrap gap-3">
-            {!feedback ? (
-              <button className="btn btn-primary" disabled={!answer.trim()} onClick={check}>
-                Проверить
-              </button>
-            ) : (
-              <button className="btn btn-sage" onClick={next}>
-                {index + 1 >= items.length ? "Готово" : "Дальше"}
-              </button>
-            )}
-            {feedback && (
-              <span className={feedback.correct ? "text-sage" : "text-rose"}>
-                {feedback.correct ? "Верно" : `Ответ: ${feedback.expected}`}
-              </span>
-            )}
-          </div>
-          {feedback && !feedback.correct && feedback.explanation && (
-            <p className="text-sm text-ink-soft">{feedback.explanation}</p>
-          )}
-        </article>
+        <SkillPracticeCard
+          key={current.uid}
+          item={current}
+          index={index}
+          total={items.length}
+          onCheck={checkAnswer}
+          onResolved={advance}
+        />
       ) : (
         <p className="text-ink-soft">Нет заданий для практики.</p>
       )}

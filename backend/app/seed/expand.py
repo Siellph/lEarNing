@@ -315,18 +315,67 @@ def expand_study_decks(db) -> int:
 
 
 def expand_skills(db) -> int:
-    """Create missing skill items with questions; never refill questions on existing items."""
+    """Create missing skill items; for existing items append seed questions missing by prompt.
+
+    Never overwrites existing question rows (preserves admin edits). New prompts from seed
+    are inserted with sort_order after the current max for that item.
+    """
     added = 0
-    skipped = 0
     existing = {item.slug: item for item in db.query(SkillItem).all()}
     max_order = max((i.sort_order for i in existing.values()), default=0)
+    appended_items = 0
+
+    def _insert_question(item: SkillItem, qdata: dict, sort_order: int) -> None:
+        nonlocal added
+        db.add(
+            SkillQuestion(
+                item_id=item.id,
+                kind=qdata["kind"],
+                prompt=qdata["prompt"],
+                options=qdata.get("options"),
+                answer=qdata["answer"],
+                accepted=qdata.get("accepted"),
+                speak=qdata.get("speak", ""),
+                explanation=qdata.get("explanation", ""),
+                sort_order=sort_order,
+            )
+        )
+        added += 1
+
     for data in SKILL_ITEMS:
-        if data["slug"] in existing:
-            skipped += 1
+        slug = data["slug"]
+        seed_questions = data.get("questions") or []
+        if slug in existing:
+            item = existing[slug]
+            # Append-only: insert seed questions whose prompt is not already present.
+            have = {
+                row.prompt
+                for row in db.query(SkillQuestion.prompt).filter(SkillQuestion.item_id == item.id)
+            }
+            max_q = (
+                db.query(SkillQuestion.sort_order)
+                .filter(SkillQuestion.item_id == item.id)
+                .order_by(SkillQuestion.sort_order.desc())
+                .limit(1)
+                .scalar()
+            )
+            next_order = int(max_q or 0)
+            item_added = 0
+            for qdata in seed_questions:
+                prompt = qdata.get("prompt") or ""
+                if not prompt or prompt in have:
+                    continue
+                next_order += 1
+                _insert_question(item, qdata, next_order)
+                have.add(prompt)
+                item_added += 1
+            if item_added:
+                appended_items += 1
             continue
+
         max_order += 1
         item = SkillItem(
-            slug=data["slug"],
+            slug=slug,
             title=data["title"],
             description=data.get("description", ""),
             kind=data["kind"],
@@ -339,23 +388,11 @@ def expand_skills(db) -> int:
         db.add(item)
         db.flush()
         existing[item.slug] = item
-        for qi, qdata in enumerate(data.get("questions") or [], start=1):
-            db.add(
-                SkillQuestion(
-                    item_id=item.id,
-                    kind=qdata["kind"],
-                    prompt=qdata["prompt"],
-                    options=qdata.get("options"),
-                    answer=qdata["answer"],
-                    accepted=qdata.get("accepted"),
-                    speak=qdata.get("speak", ""),
-                    explanation=qdata.get("explanation", ""),
-                    sort_order=qi,
-                )
-            )
-            added += 1
-    if skipped:
-        print(f"  skills: skipped question insert for {skipped} existing items")
+        for qi, qdata in enumerate(seed_questions, start=1):
+            _insert_question(item, qdata, qi)
+
+    if appended_items:
+        print(f"  skills: appended new questions to {appended_items} existing items")
     return added
 
 

@@ -1752,7 +1752,11 @@ DIALOGUE_ITEMS: list[dict] = [
 
 
 from app.seed.skills_longform import apply_longform
+from app.seed.skills_extra_questions import apply_extra_questions
 
 apply_longform(READING_ITEMS, LISTENING_ITEMS, DIALOGUE_ITEMS)
+apply_extra_questions(READING_ITEMS)
+apply_extra_questions(LISTENING_ITEMS)
+apply_extra_questions(DIALOGUE_ITEMS)
 
 SKILL_ITEMS: list[dict] = READING_ITEMS + LISTENING_ITEMS + DIALOGUE_ITEMS

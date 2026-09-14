@@ -28,7 +28,7 @@ export function BatchPracticeBar({
   className = "",
 }: BatchPracticeBarProps) {
   const batches = Array.from({ length: batchCount }, (_, i) => i + 1);
-  const practiceLabel = busy ? "…" : practiceActive ? "Ещё раз" : "Практика";
+  const practiceLabel = busy ? "…" : practiceActive ? "Повторить" : "Практика";
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);

@@ -42,6 +42,7 @@ type Card = {
   strength: number;
   mastery?: number;
   mastery_count?: number;
+  mastery_total?: number;
   learned?: boolean;
 };
 
@@ -69,6 +70,7 @@ type PracticeItem = {
   speak?: string | null;
   target?: string;
   example?: string | null;
+  input_script?: "latin" | "cyrillic";
 };
 
 type PracticePack = {
@@ -89,6 +91,7 @@ type CheckResult = {
   strength: number;
   mastery?: number;
   mastery_count?: number;
+  mastery_total?: number;
   learned?: boolean;
   primary_text?: string;
   translation?: string;
@@ -100,7 +103,7 @@ const META: Record<string, { title: string; subtitle: string; eyebrow: string }>
   verbs: {
     eyebrow: "Спряжение",
     title: "Неправильные глаголы",
-    subtitle: "V1 / V2 / V3 с переводом. Учите партиями и проверяйте смысл в обе стороны.",
+    subtitle: "Смысл EN↔RU и формы V2/V3. Партия закрывается после верного прохода, без прокачки силы.",
   },
   idioms: {
     eyebrow: "Речь",
@@ -117,6 +120,11 @@ const META: Record<string, { title: string; subtitle: string; eyebrow: string }>
 const KIND_LABEL: Record<string, string> = {
   choice_en_ru: "Выбор EN→RU",
   choice_ru_en: "Выбор RU→EN",
+  choice_v2: "Форма V2",
+  choice_v3: "Форма V3",
+  choice_forms: "Формы V2·V3",
+  type_v2: "Набор V2",
+  type_v3: "Набор V3",
 };
 
 const EXCEPTION_KIND_LABEL: Record<string, string> = {
@@ -129,6 +137,29 @@ function kindLabel(taskKind: string, deckKind?: string) {
     return EXCEPTION_KIND_LABEL[taskKind] || KIND_LABEL[taskKind] || taskKind;
   }
   return KIND_LABEL[taskKind] || taskKind;
+}
+
+function isTypeTask(kind: string) {
+  return kind === "type_v2" || kind === "type_v3";
+}
+
+function cardProgressLabel(c: Card, kind: string) {
+  const total = c.mastery_total ?? (kind === "verbs" ? 4 : 2);
+  const count = Math.min(c.mastery_count ?? 0, total);
+  if (kind === "verbs") {
+    return c.learned ? "выучено" : `${count}/${total}`;
+  }
+  return c.learned ? `выучено · сила ${c.strength}/5` : `${count}/${total} · сила ${c.strength}/5`;
+}
+
+function cardProgressTitle(kind: string) {
+  if (kind === "verbs") {
+    return "Глагол выучен, когда верно пройдены смысл в обе стороны и формы V2/V3 (один раз).";
+  }
+  if (kind === "exceptions") {
+    return "Карточка выучена при силе 5/5. До этого обе стороны (правило и пример) снова попадают в практику.";
+  }
+  return "Карточка выучена при силе 5/5. До этого обе стороны (EN→RU и RU→EN) снова попадают в практику.";
 }
 
 const FEEDBACK_ADVANCE_MS = 1500;
@@ -180,11 +211,47 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
   const [busy, setBusy] = useState(false);
 
   const load = (nextBatch?: number) => {
-    if (!slug) return;
+    if (!slug) return Promise.resolve();
     const q = nextBatch ? `?batch=${nextBatch}` : "";
-    api<DeckDetail>(`/study/${kind}/${slug}${q}`).then((data) => {
+    return api<DeckDetail>(`/study/${kind}/${slug}${q}`).then((data) => {
       setDeck(data);
       setBatch(data.batch_index);
+    });
+  };
+
+  const applyCardProgress = (cardId: number, res: CheckResult) => {
+    setDeck((prev) => {
+      if (!prev) return prev;
+      const prevCard = prev.cards.find((c) => c.id === cardId);
+      if (!prevCard) return prev;
+      const wasLearned = !!prevCard.learned;
+      const nowLearned = !!res.learned;
+      let batchLearned = prev.batch_learned;
+      let learnedCount = prev.learned_count;
+      if (!wasLearned && nowLearned) {
+        batchLearned += 1;
+        learnedCount += 1;
+      } else if (wasLearned && !nowLearned) {
+        batchLearned = Math.max(0, batchLearned - 1);
+        learnedCount = Math.max(0, learnedCount - 1);
+      }
+      return {
+        ...prev,
+        batch_learned: batchLearned,
+        learned_count: learnedCount,
+        cards: prev.cards.map((c) =>
+          c.id === cardId
+            ? {
+                ...c,
+                strength: res.strength,
+                mastery: res.mastery,
+                mastery_count: res.mastery_count ?? c.mastery_count,
+                mastery_total: res.mastery_total ?? c.mastery_total,
+                learned: nowLearned,
+              }
+            : c,
+        ),
+      };
     });
   };
 
@@ -199,11 +266,16 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
   }, [kind, slug, batchFromUrl, highlightFromUrl]);
   useSearchHighlight(!!deck && mode === "cards" && deck.slug === slug);
 
-  const startPractice = async () => {
+  const startPractice = async (opts?: { redoCardIds?: number[]; replay?: boolean }) => {
     if (!slug) return;
     setBusy(true);
     try {
-      const data = await api<PracticePack>(`/study/${kind}/${slug}/practice${batch ? `?batch=${batch}` : ""}`);
+      const params = new URLSearchParams();
+      if (batch) params.set("batch", String(batch));
+      if (opts?.redoCardIds?.length) params.set("cards", opts.redoCardIds.join(","));
+      if (opts?.replay) params.set("replay", "1");
+      const q = params.toString() ? `?${params}` : "";
+      const data = await api<PracticePack>(`/study/${kind}/${slug}/practice${q}`);
       setPractice(data);
       setMode("practice");
     } finally {
@@ -239,7 +311,7 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
         batchCount={deck.batch_count}
         activeBatch={batch}
         onSelectBatch={goBatch}
-        onPractice={() => void startPractice()}
+        onPractice={() => void startPractice({ replay: deck.batch_learned >= deck.cards.length })}
         practiceActive={mode === "practice"}
         busy={busy}
       />
@@ -271,15 +343,9 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
               <div className="mt-3 flex items-center justify-between">
                 <span
                   className={`rounded-full px-2 py-1 text-xs ${c.learned ? "bg-sage-soft text-sage" : "text-ink-soft"}`}
-                  title={
-                    kind === "exceptions"
-                      ? "Карточка выучена при силе 5/5. До этого обе стороны (правило и пример) снова попадают в практику."
-                      : "Карточка выучена при силе 5/5. До этого обе стороны (EN→RU и RU→EN) снова попадают в практику."
-                  }
+                  title={cardProgressTitle(kind)}
                 >
-                  {c.learned
-                    ? `выучено · сила ${c.strength}/5`
-                    : `${Math.min(c.mastery_count ?? 0, 2)}/2 · сила ${c.strength}/5`}
+                  {cardProgressLabel(c, kind)}
                 </span>
                 {c.primary_text && (
                   <SpeakButton
@@ -307,10 +373,13 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
                   target: item.target,
                 }),
               });
+              applyCardProgress(item.id, res);
               if (res.correct) refresh();
               return res;
             }}
-            onFinished={() => load(deck.batch_index)}
+            onFinished={() => {
+              void load(deck.batch_index);
+            }}
             onNextBatch={
               deck.batch_index < deck.batch_count
                 ? () => {
@@ -318,11 +387,12 @@ export function StudyDeckPage({ kind }: { kind: "verbs" | "idioms" | "exceptions
                   }
                 : undefined
             }
-            onRetry={() => void startPractice()}
+            onRetry={(cardIds) => void startPractice({ redoCardIds: cardIds })}
+            onReplay={() => void startPractice({ replay: true })}
             onBrowse={() => {
               setMode("cards");
               setPractice(null);
-              load(deck.batch_index);
+              void load(deck.batch_index);
             }}
           />
         )
@@ -344,15 +414,18 @@ function StudySession({
   onFinished,
   onNextBatch,
   onRetry,
+  onReplay,
   onBrowse,
 }: {
   pack: PracticePack;
   onCheck: (item: PracticeItem, answer: string) => Promise<CheckResult>;
   onFinished: () => void;
   onNextBatch?: () => void;
-  onRetry: () => void;
+  onRetry: (failedCardIds: number[]) => void;
+  onReplay: () => void;
   onBrowse: () => void;
 }) {
+  const isVerbs = pack.deck.kind === "verbs";
   const [index, setIndex] = useState(0);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -420,19 +493,25 @@ function StudySession({
   if (!total || done) {
     const cleared = cardsMastered >= (pack.batch_card_count || 0);
     const reviewGroups = groupFailedFacets(failed);
+    const hasFailures = reviewGroups.length > 0;
+    const batchProgressLabel = isVerbs
+      ? `Выучено в партии: ${cardsMastered}/${pack.batch_card_count}`
+      : `В партии до силы 5: ${cardsMastered}/${pack.batch_card_count}`;
     return (
       <section className="card grid gap-4 p-6 motion-enter">
         <p className="text-sm uppercase tracking-[0.18em] text-terra">Сессия завершена</p>
         <h2 className="font-display text-3xl">{cleared ? "Партия закрыта" : "Прогресс сохранён"}</h2>
         <p className="text-ink-soft">
-          Верно: {correctCount} из {total || answeredCount}. В партии до силы 5: {cardsMastered}/
-          {pack.batch_card_count}. В колоде {pack.learned_count}/{pack.card_count}.
+          Верно: {correctCount} из {total || answeredCount}. {batchProgressLabel}. В колоде{" "}
+          {pack.learned_count}/{pack.card_count}.
         </p>
-        {reviewGroups.length > 0 ? (
+        {hasFailures ? (
           <div className="grid gap-3">
             <p className="font-semibold">Нужно повторить</p>
             <p className="text-sm text-ink-soft">
-              Ошибка снижает силу и сбрасывает проход — в следующей тренировке снова обе стороны.
+              {isVerbs
+                ? "Ошибка сбрасывает прогресс карточки — «Добить» повторит только проваленные глаголы (смысл и формы)."
+                : "Ошибка снижает силу и сбрасывает проход — «Добить» повторит только карточки с ошибками."}
             </p>
             <ul className="grid gap-2">
               {reviewGroups.map((group) => (
@@ -451,8 +530,12 @@ function StudySession({
           <p className="text-sm text-ink-soft">В этой сессии ошибок не было.</p>
         )}
         <div className="flex flex-wrap gap-2">
-          {!cleared && (
-            <button type="button" className="btn btn-primary" onClick={onRetry}>
+          {hasFailures && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => onRetry(reviewGroups.map((g) => g.cardId))}
+            >
               Добить партию
             </button>
           )}
@@ -461,6 +544,13 @@ function StudySession({
               Следующая партия
             </button>
           )}
+          <button
+            type="button"
+            className={hasFailures || (cleared && onNextBatch) ? "btn btn-ghost" : "btn btn-primary"}
+            onClick={onReplay}
+          >
+            Повторить партию
+          </button>
           <button type="button" className="btn btn-ghost" onClick={onBrowse}>
             К карточкам
           </button>
@@ -478,7 +568,8 @@ function StudySession({
               Партия {pack.batch_index} из {pack.batch_count}
             </p>
             <p className="text-sm text-ink-soft">
-              Осталось: {left} · сила 5: {cardsMastered}/{pack.batch_card_count}
+              Осталось: {left} · {isVerbs ? "выучено" : "сила 5"}: {cardsMastered}/
+              {pack.batch_card_count}
             </p>
           </div>
           <p className="text-sm text-ink-soft">
@@ -488,7 +579,7 @@ function StudySession({
         <ProgressBar value={percent(answeredCount, total)} />
       </div>
       <div className="vocab-session-stage">
-        <ChoiceExercise
+        <StudyExercise
           key={item.uid}
           item={item}
           index={index}
@@ -546,6 +637,33 @@ function useAutoAdvance(
     }, FEEDBACK_ADVANCE_MS);
     return () => window.clearTimeout(timer);
   }, [result, item, resolvedRef, onResolvedRef]);
+}
+
+function filterTypedAnswer(raw: string, script: "cyrillic" | "latin"): string {
+  const allowed =
+    script === "cyrillic"
+      ? /[^а-яА-ЯёЁ\s'\u2019-]/g
+      : /[^a-zA-Z\s'\u2019-]/g;
+  return raw.replace(allowed, "");
+}
+
+function StudyExercise({
+  item,
+  index,
+  deckKind,
+  onCheck,
+  onResolved,
+}: {
+  item: PracticeItem;
+  index: number;
+  deckKind?: string;
+  onCheck: (item: PracticeItem, answer: string) => Promise<CheckResult>;
+  onResolved: (res: CheckResult, item: PracticeItem) => void;
+}) {
+  if (isTypeTask(item.kind)) {
+    return <TypeExercise item={item} index={index} deckKind={deckKind} onCheck={onCheck} onResolved={onResolved} />;
+  }
+  return <ChoiceExercise item={item} index={index} deckKind={deckKind} onCheck={onCheck} onResolved={onResolved} />;
 }
 
 function ChoiceExercise({
@@ -616,6 +734,100 @@ function ChoiceExercise({
             </div>
           ))}
         </div>
+      </div>
+    </article>
+  );
+}
+
+function TypeExercise({
+  item,
+  index,
+  deckKind,
+  onCheck,
+  onResolved,
+}: {
+  item: PracticeItem;
+  index: number;
+  deckKind?: string;
+  onCheck: (item: PracticeItem, answer: string) => Promise<CheckResult>;
+  onResolved: (res: CheckResult, item: PracticeItem) => void;
+}) {
+  const [value, setValue] = useState("");
+  const [result, setResult] = useState<CheckResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const resolvedRef = useRef(false);
+  const onResolvedRef = useRef(onResolved);
+  onResolvedRef.current = onResolved;
+  const script = item.input_script || "latin";
+  const locked = !!result;
+
+  useAutoAdvance(result, item, resolvedRef, onResolvedRef);
+
+  const submit = async () => {
+    if (!value.trim() || locked || busy || resolvedRef.current) return;
+    inputRef.current?.blur();
+    setBusy(true);
+    try {
+      const res = await onCheck(item, value.trim());
+      setResult(res);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <article
+      className={`quiz-card motion-enter ${result ? (result.correct ? "quiz-card-ok" : "quiz-card-bad quiz-card-shake") : ""}`}
+      style={{ "--motion-i": Math.min(index, 8) } as CSSProperties}
+    >
+      <header className="quiz-card-head">
+        <span className="rounded-full bg-paper-2 px-2.5 py-1 text-xs font-semibold text-ink-soft">
+          {kindLabel(item.kind, deckKind) || "Задание"}
+        </span>
+        {result && <CardResultIcon correct={result.correct} />}
+      </header>
+      <div className="grid gap-4 p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-lg">{item.prompt}</p>
+          {item.speak && <SpeakButton text={item.speak} label="форма" />}
+        </div>
+        {item.example && <p className="text-sm text-ink-soft">{item.example}</p>}
+        <div className="vocab-type-slot">
+          <input
+            ref={inputRef}
+            className="field vocab-type-input"
+            value={value}
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck={false}
+            inputMode="text"
+            enterKeyHint="done"
+            placeholder="Введите форму латиницей"
+            onChange={(event) => setValue(filterTypedAnswer(event.target.value, script))}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void submit();
+              }
+            }}
+            disabled={locked}
+          />
+        </div>
+        {!result && (
+          <button
+            type="button"
+            className="btn btn-primary w-full sm:w-auto sm:justify-self-start"
+            disabled={busy || !value.trim()}
+            onClick={() => void submit()}
+          >
+            {busy ? "Проверяем…" : "Проверить"}
+          </button>
+        )}
+        {result && !result.correct && result.expected && (
+          <p className="text-sm text-ink-soft">Верно: {result.expected}</p>
+        )}
       </div>
     </article>
   );
