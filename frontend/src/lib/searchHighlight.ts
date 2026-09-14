@@ -65,46 +65,54 @@ export function useSearchHighlight(ready = true) {
         // 1. Очищаем сохраненный скролл страницы
         clearAppScroll(window.location.pathname);
 
-        const scrollStep = () => {
+        const calculateAndScroll = (behavior: ScrollBehavior = "smooth") => {
           if (cancelled) return;
 
           const containerRect = container.getBoundingClientRect();
           const targetRect = targetEl.getBoundingClientRect();
 
-          // Вычисляем идеал: позиция элемента в центре контейнера
+          // Вычисляем желаемый центр
           const targetTop =
             targetRect.top -
             containerRect.top +
             container.scrollTop -
             (containerRect.height / 2 - targetRect.height / 2);
 
-          // Максимально возможная прокрутка без всяких временных padding-bottom
+          // Пересчитываем реальную максимальную высоту контейнера прямо в момент вызова
           const maxScrollTop = container.scrollHeight - container.clientHeight;
 
-          // Ключевой момент: берем минимум между желаемым центром и потолком скролла (дном страницы).
-          // Если элемент в самом низу — он просто доедет до дна, а если есть запас — станет ближе к центру.
           const finalScrollTop = Math.min(Math.max(0, targetTop), Math.max(0, maxScrollTop));
 
           container.scrollTo({
             top: finalScrollTop,
-            behavior: "smooth",
+            behavior,
           });
-
-          targetEl.classList.add(HIGHLIGHT_CLASS);
         };
 
-        // Двойной вызов гарантирует подстройку, если контент догружался с микрозадержкой
-        requestAnimationFrame(scrollStep);
-        retryTimers.push(window.setTimeout(scrollStep, 150));
+        // 2. Добавляем класс подсветки
+        targetEl.classList.add(HIGHLIGHT_CLASS);
 
-        // 2. Снятие класса подсветки
+        // Первый запуск (плавный)
+        requestAnimationFrame(() => calculateAndScroll("smooth"));
+
+        // Второй запуск через 150мс - когда панель мобильного браузера начала сдвигаться
+        retryTimers.push(
+          window.setTimeout(() => calculateAndScroll("smooth"), 150)
+        );
+
+        // Третий финальный микро-доводчик через 350мс (когда адресная строка полностью свернулась/изменила viewport)
+        retryTimers.push(
+          window.setTimeout(() => calculateAndScroll("smooth"), 350)
+        );
+
+        // 3. Снятие класса подсветки
         retryTimers.push(
           window.setTimeout(() => {
             targetEl.classList.remove(HIGHLIGHT_CLASS);
           }, HIGHLIGHT_MS)
         );
 
-        // 3. Очищаем URL от ?highlight=
+        // 4. Очищаем URL от ?highlight= (увеличили задержку до 800мс, чтобы скролл на мобилке точно завершился)
         retryTimers.push(
           window.setTimeout(() => {
             setParams(
@@ -115,7 +123,7 @@ export function useSearchHighlight(ready = true) {
               },
               { replace: true }
             );
-          }, 600)
+          }, 800)
         );
 
         return;
