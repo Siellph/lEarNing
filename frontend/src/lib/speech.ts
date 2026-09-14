@@ -6,7 +6,7 @@ export type SpeechRate = "slow" | "normal" | "fast";
 
 export const SPEECH_RATES: Record<SpeechRate, number> = {
   slow: 0.65,
-  normal: 0.88,
+  normal: 1.00,
   fast: 1.15,
 };
 
@@ -90,7 +90,7 @@ const ANDROID_MALE_VOICE =
 
 /** Slight pitch split when only one ENG voice is available (esp. Chrome Android). */
 const PITCH_FEMALE_FALLBACK = 1.12;
-const PITCH_MALE_FALLBACK = 0.88;
+const PITCH_MALE_FALLBACK = 1.00;
 
 type VoiceWithGender = SpeechSynthesisVoice & { gender?: string };
 
