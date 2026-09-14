@@ -1,4 +1,4 @@
-"""Enriched C1 grammar theory (Russian explanations, English examples).
+"""Enriched C1 grammar theory: expanded academic-style Russian explanations with English examples.
 
 Tone: impersonal / descriptive Russian. No direct address to the learner.
 """
@@ -11,7 +11,7 @@ C1_THEORY = {
         [
             rule(
                 "So / such и little",
-                "So + adjective + be + subject: So dense was the fog… Such + be + NP (such как предикатив): Such was the backlog… Little did we know — «и не подозревали».",
+                'So + adjective + be + subject: So dense was the fog… Such + be + NP (such как предикатив): Such was the backlog… Little did we know — «и не подозревали».\n\n Важно различать инверсию и обычную усилительную конструкцию: *The fog was so dense that…* нейтральна, а *So dense was the fog that…* стилистически маркирована. *So + adjective + a/an + noun* также возможно: *So difficult a task was it that…*, хотя эта модель книжная. *Such* может вводить как исчисляемую группу (*such a problem*), так и неисчисляемую/множественную (*such problems, such patience*). Начальное *little* вызывает инверсию только при отрицательно-ограничительном значении; количественное *little time remained* инверсии не требует.',
                 [
                     ex("So brittle was the paper that we stopped using clips.", "Бумага была такой хрупкой, что перестали пользоваться скрепками."),
                     ex("Little did the crew suspect the log had two missing hours.", "Команда и не подозревала, что в журнале не хватает двух часов."),
@@ -33,7 +33,7 @@ C1_THEORY = {
             ),
             rule(
                 "Условная инверсия: should, were, had",
-                "Should you need… = If you need… Were the tide higher… = If the tide were higher… Had we known… = If we had known… Отрицание: Had we not left… Were it not for… Should здесь не «следует» — это гипотетическое if.",
+                'Should you need… = If you need… Were the tide higher… = If the tide were higher… Had we known… = If we had known… Отрицание: Had we not left… Were it not for… Should здесь не «следует» — это гипотетическое if.\n\n Инверсия сохраняет обычную условную семантику: *should* обычно относится к потенциальному условию, *were* — к гипотетическому настоящему/будущему, *had* — к нереализованному прошлому. В конструкции *were to + infinitive* сценарий часто представляется как маловероятный или формально рассматриваемый. После *had* требуется форма причастия прошедшего времени: *Had they known*, а не *Had they knew*.',
                 [
                     ex("Should the generator fail, switch to the battery bank.", "Если генератор откажет, переключение на батареи."),
                     ex("Were it not for the sandbar, the channel would be obvious.", "Если бы не песчаная коса, фарватер был бы очевиден."),
@@ -46,7 +46,7 @@ C1_THEORY = {
             ),
             rule(
                 "Not until и директивная инверсия",
-                "Not until the credits ended did anyone speak. Вспомогательный инвертируется в главной части, не внутри until. Under no circumstances / on no account — строгий запрет. Полная инверсия места: Down the quay came the pilot boat.",
+                'Not until the credits ended did anyone speak. Вспомогательный инвертируется в главной части, не внутри until. Under no circumstances / on no account — строгий запрет. Полная инверсия места: Down the quay came the pilot boat.\n\n К той же группе относятся *only after, only when, only then, at no time, nowhere, rarely, seldom, never*. При начальном ограничителе инверсия относится к главной части: *Only after the audit did the error become clear*. Если ограничение относится к подлежащему, инверсии нет: *Only the editor noticed the error*. Это различие определяется областью действия начального элемента.',
                 [
                     ex("Not until the varnish cured did we hang the sign.", "Только после того как лак схватился, повесили вывеску."),
                     ex("Along the parapet stood three unused floodlights.", "Вдоль парапета стояли три неиспользованных прожектора."),
@@ -72,7 +72,7 @@ C1_THEORY = {
         [
             rule(
                 "Дополнение и предикатив влево",
-                "This clause I will not sign. Brilliant the talk was not. Вынос почти всегда контрастен: не то, а вот это. В речи удар падает на фронтированный кусок.",
+                'This clause I will not sign. Brilliant the talk was not. Вынос почти всегда контрастен: не то, а вот это. В речи удар падает на фронтированный кусок.\n\n Фронтирование объекта особенно естественно при контрасте и параллелизме. Оно не требует добавления местоимения: *This proposal I reject* и *This proposal, I reject it* принадлежат разным моделям. Предикативное фронтирование (*Happy she was not*) является более книжным и часто воспринимается как риторическое. В нейтральном академическом тексте такой приём следует использовать только при ясной информационной функции.',
                 [
                     ex("The footnotes I can live with; the missing corpus I cannot.", "Со сносками смириться можно, с отсутствующим корпусом — нет."),
                     ex("Happy with the mix she was not.", "Довольна сведением она не была."),
@@ -93,7 +93,7 @@ C1_THEORY = {
             ),
             rule(
                 "Обстоятельства и инверсия",
-                "In the top drawer lay the unsent postcard. Если глагол — be или непереходный глагол движения/положения, подлежащее часто уходит вправо. С местоимением инверсия обычно блокируется: Away he ran, не Away ran he.",
+                'In the top drawer lay the unsent postcard. Если глагол — be или непереходный глагол движения/положения, подлежащее часто уходит вправо. С местоимением инверсия обычно блокируется: Away he ran, не Away ran he.\n\n Полная инверсия не является обязательной после каждого обстоятельства: *In the drawer was a letter* возможно, но *In the drawer was my passport* и обычное *My passport was in the drawer* различаются прежде всего информационной структурой. Инверсия особенно естественна при введении новой именной группы. С определённым/тематически данным субъектом обычный порядок часто предпочтительнее.',
                 [
                     ex("On the blotting paper sat a ring of rust.", "На промокашке лежало ржавое кольцо."),
                     ex("Out of the fog loomed the north beacon.", "Из тумана выступил северный бакен."),
@@ -105,7 +105,7 @@ C1_THEORY = {
             ),
             rule(
                 "As for / as to",
-                "As for the budget, we are still waiting. As to whether they will renew, nobody will say. Сначала назвали тему, потом дали оценку.",
+                'As for the budget, we are still waiting. As to whether they will renew, nobody will say. Сначала назвали тему, потом дали оценку.\n\n *As for* часто используется при смене темы или сопоставлении двух предметов: *As for the budget… As for staffing…*. *As to* имеет более формальный оттенок и особенно удобно перед вопросительными словами и *whether*: *as to whether, as to why, as to how*. После обеих конструкций не возникает обязательной инверсии.',
                 [
                     ex("As for the raw files, they never left the lab machine.", "Что касается сырых файлов, они не покинули лабораторный компьютер."),
                     ex("As to why the beam sagged, the inquiry is still open.", "Что до того, почему провисла балка, расследование ещё открыто."),
@@ -130,7 +130,7 @@ C1_THEORY = {
         [
             rule(
                 "Глаголы требования и рекомендаций",
-                "They insisted that the clause be struck. Отрицание: that she not sign (без don't). В американском академическом стиле голая база частотнее; в британском — should + база.",
+                "They insisted that the clause be struck. Отрицание: that she not sign (без don't). В американском академическом стиле голая база частотнее; в британском — should + база.\n\n Важно учитывать регистр: американская письменная норма широко использует *mandative subjunctive*, британская — также *should + infinitive*. В конструкциях с *suggest/recommend* объект человека не ставится непосредственно перед *to-infinitive*: вместо *suggest him to leave* используются *suggest that he leave/should leave* или *suggest leaving*. При значении сообщения о факте используется indicative.",
                 [
                     ex("The board demanded that the minutes be circulated the same day.", "Совет потребовал, чтобы протокол разослали в тот же день."),
                     ex("I suggest that she not present the unverified figures.", "Предлагается, чтобы она не представляла непроверенные цифры."),
@@ -150,7 +150,7 @@ C1_THEORY = {
             ),
             rule(
                 "It is + adjective + that",
-                "It is essential / imperative / crucial / desirable that + subjunctive. It is important that тоже может брать subjunctive, но indicative (that he leaves) звучит скорее как констатация, а не предписание.",
+                'It is essential / imperative / crucial / desirable that + subjunctive. It is important that тоже может брать subjunctive, но indicative (that he leaves) звучит скорее как констатация, а не предписание.\n\n Мандативные прилагательные допускают и безличный вариант *It is essential for somebody to do something*. Это не тот же синтаксический шаблон, что *It is essential that somebody do something*, хотя значение может быть близким. Прилагательные вроде *obvious, likely, surprising* сами по себе не делают последующую клаузу subjunctive: форма определяется смыслом клаузы.',
                 [
                     ex("It is vital that the backup remain offline.", "Крайне важно, чтобы резервная копия оставалась офлайн."),
                     ex("It is desirable that every witness be heard in private first.", "Желательно, чтобы каждого свидетеля сначала выслушали наедине."),
@@ -162,7 +162,7 @@ C1_THEORY = {
             ),
             rule(
                 "Were-subjunctive и формулы",
-                "If I were you, Were she to resign…, as it were. Формулы: Be that as it may, Suffice it to say, Far be it from me — застыли и не спрягаются.",
+                'If I were you, Were she to resign…, as it were. Формулы: Be that as it may, Suffice it to say, Far be it from me — застыли и не спрягаются.\n\n *Were* в гипотезе сохраняется не только с *I*: *If she were here, if it were possible*. В условной инверсии *Were it not for…* и *Were she to resign…* значение также гипотетическое. Устойчивые формулы следует воспринимать как фиксированные элементы формального регистра, а не как продуктивные шаблоны для свободной замены слов.',
                 [
                     ex("Were the licence to lapse, the archive would close to visitors.", "Если бы лицензия истекла, архив закрыли бы для посетителей."),
                     ex("Be that as it may, the tide will not wait.", "Как бы то ни было, прилив ждать не будет."),
@@ -187,7 +187,7 @@ C1_THEORY = {
         [
             rule(
                 "It + passive + that",
-                "It is widely assumed that the ferry will skip Tuesday. Подлежащее it — синтаксическая заглушка, не «вещь».",
+                'It is widely assumed that the ferry will skip Tuesday. Подлежащее it — синтаксическая заглушка, не «вещь».\n\n Reporting passive часто встречается с *be expected, believed, assumed, estimated, reported, alleged, known*. Выбор причастия меняет эпистемическую силу: *alleged* маркирует неподтверждённое сообщение, *known* — более сильную степень подтверждённости. Важно не путать *It is said that he left* с *He is said to have left*: содержание близко, но во второй модели человек становится темой предложения.',
                 [
                     ex("It is rumoured that the foundry will close in March.", "Ходят слухи, что литейный цех закроют в марте."),
                     ex("It was estimated that the backlog would last six weeks.", "По оценкам, отставание продлится шесть недель."),
@@ -207,7 +207,7 @@ C1_THEORY = {
             ),
             rule(
                 "Личный пассив + инфинитив",
-                "The foundry is rumoured to be closing. She is thought to have declined the prize. Простой инфинитив — одновременность; to have + V3 — предшествование.",
+                'The foundry is rumoured to be closing. She is thought to have declined the prize. Простой инфинитив — одновременность; to have + V3 — предшествование.\n\n Возможны разные аспекты: *is said to work* — обычное состояние/действие; *is said to be working* — процесс; *is said to have worked* — предшествование; *is said to have been working* — длительный процесс в прошлом. При пассивном событии: *is said to have been arrested*. Таким образом, инфинитив после reporting passive кодирует временную перспективу, а не только «действие после глагола».',
                 [
                     ex("The skipper is said to distrust automatic pilots in fog.", "Говорят, шкипер не доверяет автопилоту в тумане."),
                     ex("Two crates are reported to have gone missing at the hub.", "Сообщают, что на узле пропали две клети."),
@@ -219,7 +219,7 @@ C1_THEORY = {
             ),
             rule(
                 "There-схема",
-                "There is believed to be a second ledger. There are said to have been witnesses. Избегать двойного that: She is said that she…",
+                'There is believed to be a second ledger. There are said to have been witnesses. Избегать двойного that: She is said that she…\n\n Число формы *be* связано с существующей именной группой: *There is thought to be a problem*, *There are thought to be several problems*. В разговорной речи эта конструкция менее частотна, чем нейтральное *People think there is…*, но в формальных сводках она очень компактна. Perfect infinitive позволяет сообщить о существовании в более ранний момент: *There are believed to have been…*.',
                 [
                     ex("There is thought to be a sandbar just east of the marker.", "Считается, что сразу к востоку от знака есть коса."),
                     ex("There are said to have been three unlogged landings.", "Говорят, было три незафиксированные посадки."),
@@ -244,7 +244,7 @@ C1_THEORY = {
         [
             rule(
                 "Seem / appear / tend",
-                "She seems to have missed the briefing. There appears to be a second leak. Tend to — склонность, не единичный случай. Raising: It seems that she missed → She seems to have missed.",
+                'She seems to have missed the briefing. There appears to be a second leak. Tend to — склонность, не единичный случай. Raising: It seems that she missed → She seems to have missed.\n\n *Seem* и *appear* допускают *seem/appear + adjective*, *seem/appear + to-infinitive* и безличное *it seems/appears that*. При необходимости подчеркнуть процесс используются progressive forms, а при предшествовании — perfect infinitive. *Tend to* не означает вероятность конкретного события; он описывает систематическую тенденцию и поэтому естественнее с обобщённым субъектом или множеством случаев.',
                 [
                     ex("The mix appears to have been bounced too hot.", "Похоже, сведение выгрузили со слишком горячим уровнем."),
                     ex("Early drafts tend to over-explain the method.", "Ранние черновики обычно слишком подробно объясняют метод."),
@@ -265,7 +265,7 @@ C1_THEORY = {
             ),
             rule(
                 "Шкала may / might / could",
-                "May well = вполне возможно и правдоподобно. Might conceivably / could arguably — ещё осторожнее. Should в хедже — «по ожиданиям модели», не приказ.",
+                'May well = вполне возможно и правдоподобно. Might conceivably / could arguably — ещё осторожнее. Should в хедже — «по ожиданиям модели», не приказ.\n\n Модальность возможности имеет несколько измерений: вероятность, гипотетичность, потенциальная возможность и осторожность высказывания. Поэтому *could* не обязательно «слабее» *may*, а *might* не всегда является просто прошедшим временем *may*. Для прошлого используются *may/might/could + have + V3*: *The error may have occurred earlier*. *May well* выражает высокую правдоподобность, сохраняя формальную неопределённость.',
                 [
                     ex("The delay may well reflect a customs backlog rather than a shortage.", "Задержка вполне может отражать затор на таможне."),
                     ex("The anomaly could arguably be an artefact of the sensor housing.", "Аномалию, пожалуй, можно счесть артефактом корпуса датчика."),
@@ -277,7 +277,7 @@ C1_THEORY = {
             ),
             rule(
                 "Безличные рамки аргумента",
-                "It could be argued that…, One possible reading is…, The figures would appear to suggest… Would здесь — дистанцирование, не будущее. Данные лучше ставить субъектом, чем I think.",
+                'It could be argued that…, One possible reading is…, The figures would appear to suggest… Would здесь — дистанцирование, не будущее. Данные лучше ставить субъектом, чем I think.\n\n Такие конструкции позволяют маркировать источник или статус высказывания: *it could be argued* — возможная позиция, *it is clear* — сильная оценка, *it would appear* — осторожный вывод. В академическом тексте важно не заменять точные утверждения неопределённостью ради формальности. Хедж должен отражать реальную степень доказанности.',
                 [
                     ex("It might be objected that the sample is coastal-only.", "Могут возразить, что выборка исключительно прибрежная."),
                     ex("The logs would appear to contradict the verbal briefing.", "Журналы, судя по всему, противоречат устному брифингу."),
@@ -302,7 +302,7 @@ C1_THEORY = {
         [
             rule(
                 "От глагола и прилагательного к имени",
-                "Суффиксы: -tion/-sion, -ment, -al, -ance/-ence, -ity, -ness. The committee decided X → The committee's decision to X. Сохранять валентность: decision to / that; refusal of.",
+                "Суффиксы: -tion/-sion, -ment, -al, -ance/-ence, -ity, -ness. The committee decided X → The committee's decision to X. Сохранять валентность: decision to / that; refusal of.\n\n Не всякое производное существительное полностью совпадает с исходным глаголом по значению и управлению: *refusal* обозначает акт/результат отказа, *decision* — решение как результат принятия решения. При номинализации меняется распределение грамматических ролей: объект часто переходит в *of-phrase*, а агенс — в притяжательную группу или *by-phrase*. Это и создаёт дополнительную плотность текста.",
                 [
                     ex("Their withdrawal from the tender surprised no one.", "Их отзыв заявки никого не удивил."),
                     ex("The instability of the emulsion ruined the last batch.", "Нестабильность эмульсии испортила последнюю партию."),
@@ -324,7 +324,7 @@ C1_THEORY = {
             ),
             rule(
                 "Of-фразы и скрытый агенс",
-                "The destruction of the samples (кем?) можно раскрыть: the technicians' destruction… / …by the technicians. Если агенс важен для ответственности, не прятать его. Цепочки of of of — сигнал переписать глаголами.",
+                "The destruction of the samples (кем?) можно раскрыть: the technicians' destruction… / …by the technicians. Если агенс важен для ответственности, не прятать его. Цепочки of of of — сигнал переписать глаголами.\n\n Важно различать объектное и субъектное отношение в *of*-phrase. В *the destruction of the samples* образцы являются объектом действия; в *the samples' destruction of the filter* структура уже другая. Если номинализация скрывает причинителя, читателю приходится восстанавливать агенса из контекста. Поэтому при описании ответственности предпочтительны конструкции с явно названным субъектом.",
                 [
                     ex("The postponement of the launch by the harbour master angered the skippers.", "Отсрочка выхода гаванским капитаном разозлила шкиперов."),
                     ex("Her insistence on a paper trail delayed the payment.", "Настойчивость относительно бумажного следа задержала платёж."),
@@ -336,7 +336,7 @@ C1_THEORY = {
             ),
             rule(
                 "Когда лучше оставить глагол",
-                "Инструкции и живой абзац выигрывают от finite verb. Номинализация уместна, когда процесс уже введён и становится темой следующего предложения.",
+                'Инструкции и живой абзац выигрывают от finite verb. Номинализация уместна, когда процесс уже введён и становится темой следующего предложения.\n\n Полезный критерий — количество смысловых отношений на одно предложение. Если номинализация требует нескольких *of*-phrases и притяжательных групп, finite verbs обычно повышают прозрачность. Если же существительное обозначает уже установленный объект дискурса (*decision, finding, measurement, assumption*), оно помогает строить связность между предложениями.',
                 [
                     ex("We measured the sag twice. This measurement later became Exhibit C.", "Дважды измерили провис. Это измерение позже стало приложением C."),
                     ex("The surveyor inspected the hull.", "Вместо the undertaking of an inspection of the hull by the surveyor."),
@@ -361,7 +361,7 @@ C1_THEORY = {
         [
             rule(
                 "So / neither / nor",
-                "So do I, Neither was the deputy. Порядок: so / neither + вспомогательный + подлежащее. Too / either — без инверсии: I do too.",
+                'So do I, Neither was the deputy. Порядок: so / neither + вспомогательный + подлежащее. Too / either — без инверсии: I do too.\n\n Вспомогательный выбирается по структуре исходного предложения: *So is he*, *So has she*, *So can they*, *Neither did we*. Если исходное предложение содержит только смысловой глагол в Present/Past Simple, используется *do/does/did*. *Nor* особенно естественно после отрицательного утверждения и в формальном стиле: *Nor did the report address the issue*.',
                 [
                     ex("The skipper distrusts the autopilot. — So does the pilot.", "Шкипер не доверяет автопилоту. — И лоцман тоже."),
                     ex("I haven't logged the dive. — Neither have I.", "Погружение не занесено в журнал. — И у меня тоже."),
@@ -383,7 +383,7 @@ C1_THEORY = {
             ),
             rule(
                 "Do so и one / ones",
-                "Do so заменяет всё сказуемое: Those who wish to object may do so in writing. One / ones — исчисляемое существительное. So после believe / expect / say замещает that-клаузу: I expect so.",
+                'Do so заменяет всё сказуемое: Those who wish to object may do so in writing. One / ones — исчисляемое существительное. So после believe / expect / say замещает that-клаузу: I expect so.\n\n *Do so* обычно отсылает к действию, а не к объекту: *She closed the file and did so immediately*. Для *be* и некоторых статичных конструкций оно менее естественно, поэтому выбор заместителя определяется структурой. *One/ones* не заменяют неисчисляемые существительные (*information, advice, equipment*) и не употребляются просто для механического избежания любого повтора.',
                 [
                     ex("If you need to override the lock, do so before dusk.", "Если нужно обойти замок, сделать это до сумерек."),
                     ex("Pass me the cracked jar, not the sealed ones.", "Передать треснувшую банку, не запечатанные."),
@@ -391,7 +391,7 @@ C1_THEORY = {
             ),
             rule(
                 "Сравнительный эллипсис",
-                "She edits faster than he does. She likes the intern more than the editor — двусмысленно. Тогда оставить глагол: …more than the editor does.",
+                'She edits faster than he does. She likes the intern more than the editor — двусмысленно. Тогда оставить глагол: …more than the editor does.\n\n Эллипсис после *than/as* может включать не только *do*, но и другие вспомогательные элементы: *She is taller than I am; They arrived earlier than we had expected*. В формальном письме сохранение вспомогательного глагола часто полезно, если без него возможна конкурирующая структура. После *than* также возможны разные типы сравнительных групп, поэтому смысл следует определять по синтаксической роли.',
                 [
                     ex("The afternoon tide ran higher than the morning tide did.", "Дневной прилив был выше, чем утренний."),
                     ex("A: Will they renew? B: I should think so.", "— Продлят? — Думаю, да."),
@@ -416,7 +416,7 @@ C1_THEORY = {
         [
             rule(
                 "Provided, as long as, unless",
-                "You may board provided your pass is dated today. As long as подчёркивает длящееся условие. Unless = if not, но плохо стыкуется с would в вежливом предложении.",
+                'You may board provided your pass is dated today. As long as подчёркивает длящееся условие. Unless = if not, но плохо стыкуется с would в вежливом предложении.\n\n *Provided/providing* часто вводят условие допуска, *on condition that* подчёркивает формальную оговорку, а *as long as* может иметь значение сохранения условия во времени. *Unless* обычно не используется, если отрицательное условие уже содержит другое отрицание и становится труднообрабатываемым. После условных союзов для будущего обычно используется Present Simple, хотя *will* возможно при значении воли, готовности или отказа.',
                 [
                     ex("We will release the cut provided that legal signs off by noon.", "Монтаж выйдет при условии, что юристы завизируют до полудня."),
                     ex("The drone can fly as long as the wind stays below twelve knots.", "Дрон может лететь, пока ветер ниже двенадцати узлов."),
@@ -438,7 +438,7 @@ C1_THEORY = {
             ),
             rule(
                 "But for и инверсия",
-                "But for the sandbar, we would have gone aground. Had it not been for her note… — формальные двойники. Should / were / had без if — см. также inversion-full.",
+                'But for the sandbar, we would have gone aground. Had it not been for her note… — формальные двойники. Should / were / had без if — см. также inversion-full.\n\n *But for* ограничено именной группой: *But for the delay…*, не *But for the train was late…*. Для прошлого естественно *had it not been for / had it not been…*, для настоящего и будущего — *were it not for / were it not…*. Эти конструкции стилистически формальны и часто заменяют длинное *if it were not for…*.',
                 [
                     ex("But for a jammed pulley, the sail would have come down cleanly.", "Если бы не заклинивший блок, парус лег бы чисто."),
                     ex("Had it not been for the spare gasket, the pump would have thrown oil.", "Если бы не запасная прокладка, насос выбросил бы масло."),
@@ -450,7 +450,7 @@ C1_THEORY = {
             ),
             rule(
                 "Even if, even though, given that",
-                "Even if the fog lifts, we will not cross — условие может быть ложным. Even though the fog has lifted — факт. Given that вводит данность как основание.",
+                'Even if the fog lifts, we will not cross — условие может быть ложным. Even though the fog has lifted — факт. Given that вводит данность как основание.\n\n *Even if* сохраняет условность, *even though* предполагает истинность уступительной клаузы, а *given that* представляет её как принятую исходную предпосылку. Поэтому замена одного союза другим может менять не только стиль, но и логический статус информации. *Even when* обычно относится к повторяющейся реальной ситуации: *Even when the system is stable, errors occur*.',
                 [
                     ex("Even if the client waives the fee, the clause stays.", "Даже если клиент откажется от сбора, пункт останется."),
                     ex("Given that the tide turns at 16:10, we should be off the wall by 15:40.", "Учитывая смену прилива в 16:10, сойти со стенки к 15:40."),
@@ -475,7 +475,7 @@ C1_THEORY = {
         [
             rule(
                 "Премодификация и классификаторы",
-                "Ближе к голове всё конкретнее: those three damaged harbour-wall floodlights. Классификатор обычно в единственном: a tide table. Дефисы помогают: a well-argued objection.",
+                'Ближе к голове всё конкретнее: those three damaged harbour-wall floodlights. Классификатор обычно в единственном: a tide table. Дефисы помогают: a well-argued objection.\n\n Порядок нескольких прилагательных зависит от их семантики: более субъективные/оценочные характеристики обычно предшествуют более объективным классифицирующим. Но длинные цепочки перед существительным не всегда естественны. Составные определения перед существительным часто требуют дефиса, особенно если без него возникает двусмысленность: *a well-known method, a five-year study*.',
                 [
                     ex("The two remaining salt-stained canvas covers were useless.", "Два оставшихся просоленных парусиновых чехла были бесполезны."),
                     ex("A last-minute legal objection froze the release.", "Возражение юристов в последнюю минуту заморозило выпуск."),
@@ -494,7 +494,7 @@ C1_THEORY = {
             ),
             rule(
                 "Постмодификация",
-                "The decision of the harbour master to delay the sailing… Голова — decision. Причастие справа: the samples stored in aisle C. Инфинитив: the need to relabel every jar.",
+                'The decision of the harbour master to delay the sailing… Голова — decision. Причастие справа: the samples stored in aisle C. Инфинитив: the need to relabel every jar.\n\n Относительное придаточное может быть **restrictive** или **non-restrictive**. В первом случае информация необходима для идентификации группы и обычно не выделяется запятыми; во втором она добавляется как комментарий и выделяется запятыми. Причастные обороты компактны, но требуют ясного отношения к голове: *The files stored on the server…* не должно допускать конкурирующего субъекта.',
                 [
                     ex("The refusal of the foundry to honour the last invoice delayed the parts.", "Отказ литейки оплатить последний счёт задержал детали."),
                     ex("Anyone hoping to board after dusk must radio the wall.", "Любой, кто надеется сесть на борт после сумерек, должен вызвать стенку по рации."),
@@ -506,7 +506,7 @@ C1_THEORY = {
             ),
             rule(
                 "Согласование и читаемость",
-                "The quality of the recordings is… — глагол к quality. Если постмодификаторов больше трёх — разбить на два предложения.",
+                'The quality of the recordings is… — глагол к quality. Если постмодификаторов больше трёх — разбить на два предложения.\n\n Помимо *the set of plates was* и *the number of plates was*, полезно помнить *a number of plates were*. В британском английском коллективные существительные (*the committee, the team*) могут допускать как единственное, так и множественное согласование в зависимости от того, воспринимается ли группа как единое целое или как отдельные участники. Сложные группы следует проверять по голове, а не по ближайшему слову.',
                 [
                     ex("The accuracy of the tide tables issued in March is now in doubt.", "Точность мартовских таблиц приливов теперь под вопросом."),
                     ex("The harbour master delayed the evening freight ferry. The sailing had already been announced.", "Два коротких предложения яснее одной перегруженной группы."),
@@ -531,7 +531,7 @@ C1_THEORY = {
         [
             rule(
                 "Предлог + -ing",
-                "Accuse of, suspect of, criticise for, apologise for, congratulate on, insist on, warn against, prevent somebody from. Герундий называет действие как факт-событие.",
+                'Accuse of, suspect of, criticise for, apologise for, congratulate on, insist on, warn against, prevent somebody from. Герундий называет действие как факт-событие.\n\n Герундий после предлога сохраняет свойства глагольной формы: он может иметь дополнение и обстоятельства (*without having checked the data*). Perfect *having + V3* подчёркивает предшествование, passive *being + V3* — пассивное значение, а *having been + V3* сочетает оба признака. Выбор формы зависит от временного и залогового отношения к основному предикату.',
                 [
                     ex("They accused the intern of leaking the stills.", "Интерна обвинили в сливе кадров."),
                     ex("She apologised for having frozen the wrong branch.", "Извинилась за то, что заморозила не ту ветку."),
@@ -555,7 +555,7 @@ C1_THEORY = {
             ),
             rule(
                 "To-infinitive и that-клауза",
-                "Threaten, refuse, promise, offer, claim + to. Remind / warn somebody to. Insist / suggest / recommend / demand + that (+ subjunctive / should). Suggest -ing возможно без адресата.",
+                'Threaten, refuse, promise, offer, claim + to. Remind / warn somebody to. Insist / suggest / recommend / demand + that (+ subjunctive / should). Suggest -ing возможно без адресата.\n\n *Threaten/refuse/promise/offer + to-infinitive* обычно описывают намерение, обещание, отказ или угрозу самого субъекта. *Remind/warn/tell + object + to-infinitive* включают отдельного адресата действия. *Suggest/recommend + -ing* не требуют указания исполнителя; если исполнитель назван, используется *that-clause*: *suggest that he leave*. Именно аргументная структура, а не русский перевод, определяет модель.',
                 [
                     ex("The contractor threatened to halt the pour.", "Подрядчик пригрозил остановить заливку."),
                     ex("He reminded us to log the dive before changing tanks.", "Напомнил занести погружение в журнал до смены баллонов."),
@@ -568,7 +568,7 @@ C1_THEORY = {
             ),
             rule(
                 "Типичные ловушки",
-                "Explain somebody the problem → explain the problem to somebody. Tell somebody that; say that / say to somebody. Blame somebody for; blame something on somebody.",
+                'Explain somebody the problem → explain the problem to somebody. Tell somebody that; say that / say to somebody. Blame somebody for; blame something on somebody.\n\n *Say* и *tell* различаются прежде всего структурой: *say something to somebody*, но *tell somebody something*. *Explain* требует *something to somebody*. *Blame somebody for something* и *blame something on somebody* имеют разные точки фокуса. При *warn* модель *warn somebody against doing* близка к «предостеречь от поведения», а *warn somebody not to do* — к прямому предупреждению не совершать действие.',
                 [
                     ex("She explained the sag to the surveyor.", "Объяснила провис сюрвейеру."),
                     ex("They blamed the failure on the washer.", "Возложили вину за поломку на шайбу."),

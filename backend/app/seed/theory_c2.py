@@ -1,13 +1,14 @@
-"""Enriched C2 grammar theory (Russian explanations, English examples).
+"""Expanded C2 grammar theory (Russian explanations, English examples).
 
-Tone: impersonal / descriptive Russian. No direct address to the learner.
+Theoretical explanations are written in an academic grammar-reference style while remaining readable.
+The original page-building helpers and **...** key-term convention are preserved.
 """
 
 from app.seed.helpers import callout, ex, lesson, pair, rule, table
 
 C2_THEORY = {
     "information-structure": lesson(
-        "На C2 грамматика подчиняется **упаковке информации**. Английский предпочитает ставить данное ближе к началу, а новое, тяжёлое и фокусное — к концу (**end-focus**, **end-weight**).\n\nТема не всегда равна подлежащему: её задают there-конструкцией, it-выносом, пассивом или клефтом. Формально верное предложение «звучит криво», если тяжёлая группа стоит слишком рано.",
+        "На уровне C2 грамматический выбор определяется не только синтаксической правильностью, но и **информационной структурой** высказывания: тем, что уже известно из контекста, что вводится как новое, что находится в фокусе и какой элемент говорящий делает наиболее заметным. Английский сохраняет сравнительно фиксированный порядок слов, поэтому информационная упаковка часто достигается специальными конструкциями — **there-constructions**, **extraposition**, пассивом, **it-clefts**, **wh-clefts** и дислокацией.\n\nДве фундаментальные тенденции — **end-focus** и **end-weight**. Новый, контрастивный или особенно важный материал часто получает финальную позицию, а длинная синтаксическая группа стремится располагаться после более коротких элементов. Это сильные предпочтения, а не абсолютные запреты: контраст, ритм, жанр и уже установленная тема могут оправдать другой порядок. Важно различать **grammatical subject**, **topic** и **focus**: эти понятия могут совпадать, но не обязаны.",
         [
             rule(
                 "Данное → новое",
@@ -53,6 +54,35 @@ C2_THEORY = {
                 ],
             ),
         ],
+            rule(
+                "Topic, focus и контрастивный фокус",
+                "**Topic** — то, о чём строится высказывание; **focus** — компонент, несущий наиболее значимую новую или контрастивную информацию. Topic может быть вынесен влево и связан с местоимением внутри клаузы. Контрастивный focus часто получает финальную позицию и может сопровождаться *not X but Y*. Интонация дополнительно определяет фокус в устной речи.",
+                [
+                    ex("As for the missing washer, the inquiry had already ruled it out.", "As for создаёт внешний topic."),
+                    ex("The inquiry blamed the missing washer, not the steel grade.", "Последний компонент получает contrastive focus."),
+                ],
+            ),
+            rule(
+                "Extraposition и formal it",
+                "В **extraposition** тяжёлая clause переносится вправо, а *it* занимает позицию формального подлежащего. Это отличается от referential *it*: в *It was surprising that the figures changed* it не обозначает отдельный предмет. Extraposition особенно естественна с оценочными прилагательными и reporting predicates, но прямая конструкция тоже возможна.",
+                [
+                    ex("That the figures had changed was surprising.", "Грамматически корректно, но тяжело в начале."),
+                    ex("It was surprising that the figures had changed.", "Extraposition облегчает обработку."),
+                    ex("It was on the desk.", "Referential it, не extraposition."),
+                ],
+            ),
+            rule(
+                "There-construction и agreement",
+                "**There** вводит существование или появление нового референта: *There is a problem*. В более формальной прозе возможны *There remains one issue, There appears to be a discrepancy*. В стандартном письме согласование обычно ориентируется на postposed subject: *There seems to be one error*, но *There seem to be several errors*. Когда существительное уже является темой, обычный SVO часто естественнее.",
+                [
+                    ex("There appears to be a discrepancy in the second ledger.", "Новое существование discrepancy."),
+                    ex("There appear to be three discrepancies.", "Plural subject → appear."),
+                    ex("The discrepancy appears to be minor.", "Уже известная тема → SVO."),
+                ],
+                tables=[
+                    table(["Средство", "Основная функция", "Типичная мотивация"], [["there", "ввести существование", "новый референт"], ["it + that/to", "extraposition", "тяжёлая clause"], ["passive", "переназначить тему", "patient уже дан"], ["cleft", "выделить focus", "контраст"]]),
+                ],
+            ),
         compare=[
             {"left": "That the foundry withdrew surprised no one.", "right": "It surprised no one that the foundry withdrew.", "note": "Справа end-weight."},
             {"left": "A sandbar is just east of the marker.", "right": "There is a sandbar just east of the marker.", "note": "There типичнее для первого введения."},
@@ -60,11 +90,14 @@ C2_THEORY = {
         watch_out=[
             "Абзац с that-клаузы-подлежащего без нужды тяжелит чтение.",
             "Пассив ради пассива сбивает агенса.",
+            "End-focus/end-weight — сильные предпочтения, а не абсолютные запреты.",
+            "Topic, grammatical subject и focus могут быть разными элементами.",
+
         ],
         remember="Данное влево, новое и тяжёлое вправо. There — существование, it — вынос, пассив и клефт — переназначение темы.",
     ),
     "aspect-contrasts": lesson(
-        "На C2 выбор аспекта редко диктуется «правилом учебника» в чистом виде: говорящий комментирует, **как** видит ситуацию — как целостную, развёрнутую, релевантную к точке или как ограниченный отрезок.\n\nProgressive может сделать статив временным. Perfect связывает событие с более поздней точкой. Would и used to расходятся по состоянию vs действию.",
+        "На уровне C2 **tense and aspect** следует рассматривать как систему выбора временной точки отсчёта и перспективы на ситуацию. Временная форма сообщает, где ситуация расположена относительно момента речи или другой точки, а аспект показывает, как она представлена: как факт или целое, как развёрнутый процесс, как состояние, как завершённая ситуация с актуальной связью или как процесс, продолжающийся до определённого момента.\n\n**Simple** обычно представляет ситуацию целостно, как факт, состояние, привычку или последовательный эпизод. **Progressive** выделяет внутреннее протекание, временность или ограниченность периода и иногда добавляет эмоциональную оценку. **Perfect** устанавливает связь между более ранним событием и последующей точкой отсчёта; **perfect progressive** дополнительно подчёркивает длительность, повторяемость или накопленный процесс.\n\nВыбор аспекта зависит и от лексического значения глагола. **Stative verbs** обычно не употребляются в progressive, но многие глаголы меняют аспектуальный класс в другом значении: *think, have, see, feel, taste, smell*. Аналогично **used to**, **would** и **habitual will** частично пересекаются, но кодируют разные типы привычности.",
         [
             rule(
                 "Simple против Progressive",
@@ -113,6 +146,36 @@ C2_THEORY = {
                 ],
             ),
         ],
+            rule(
+                "Stative verbs и смена значения",
+                "После глаголов состояния progressive обычно не употребляется, но правило семантическое. *Think* = 'считать' обычно stative, *think about* = 'обдумывать' dynamic; *have* = possession stative, *have lunch* dynamic; *see* может означать perception или arranged meeting. Поэтому список stative verbs нельзя применять как механический запрет.",
+                [
+                    ex("I think the estimate is wrong.", "Think = иметь мнение."),
+                    ex("I am thinking about the revised estimate.", "Think = обдумывать."),
+                    ex("She has a cottage on the quay.", "Have = владеть."),
+                    ex("She is having lunch with the survey team.", "Have = принимать пищу."),
+                ],
+                callouts=[callout("Корректнее говорить: stative meaning обычно не допускает progressive.", "warn")],
+            ),
+            rule(
+                "Perfect и законченная временная рамка",
+                "Present Perfect устанавливает связь с настоящей точкой отсчёта, поэтому с завершёнными периодами *yesterday, last year, in 2019, two hours ago* обычно выбирается Past Simple. С незавершёнными периодами (*today, this week, so far*) и опытом без закрытой даты Perfect естественен.",
+                [
+                    ex("We have checked the valves twice this morning.", "Период this morning ещё релевантен как текущий."),
+                    ex("We checked the valves twice yesterday.", "Завершённый период."),
+                    ex("Have you ever inspected a dry dock?", "Опыт без конкретной даты."),
+                ],
+                tables=[table(["Контекст", "Обычно", "Почему"], [["yesterday / in 2019", "Past Simple", "период закрыт"], ["today / this week", "Present Perfect", "период открыт"], ["ever / never", "Present Perfect", "опыт без закрытой даты"]])],
+            ),
+            rule(
+                "Used to, would и habitual will",
+                "**Used to** обозначает прошлое состояние или повторяющееся действие. **Would** в привычном прошлом обычно описывает повторяющееся событие в уже установленном контексте, но не чистое состояние. **Habitual will** относится к типичному поведению в настоящем и может выражать раздражение: *She will leave the door open*.",
+                [
+                    ex("The quay used to belong to the foundry.", "Past state."),
+                    ex("Every Friday the siren would mark the pour.", "Repeated past event."),
+                    ex("She will leave the door open.", "Present habitual behaviour."),
+                ],
+            ),
         compare=[
             {"left": "I lived in Cork for a year.", "right": "I have lived in Cork, so the accent doesn't throw me.", "note": "Закрытый отрезок vs опыт как нынешний ресурс."},
             {"left": "She always leaves mugs on the scanner.", "right": "She is always leaving mugs on the scanner.", "note": "Continuous добавляет раздражение."},
@@ -120,11 +183,14 @@ C2_THEORY = {
         watch_out=[
             "Would know / would own в привычном прошлом — ошибка.",
             "Perfect + закрывающая дата.",
+            "Stative verb может допускать progressive при смене значения.",
+            "Present Perfect обычно не выбирается с завершённой конкретной датой прошлого.",
+
         ],
         remember="Аспект — ракурс. Progressive ограничивает или окрашивает. Perfect держит связь с точкой. Would не обслуживает прошлые состояния.",
     ),
     "register-metaphor": lesson(
-        "C2 требует не только «правильной» формы, но и формы, **уместной в ситуации**. Регистр — согласование грамматики, лексики и метафоры с аудиторией.\n\nАкадемический английский полон стёртых метафор; живая авторская метафора должна быть контролируемой.",
+        "На уровне C2 **register** — это соответствие языковой формы аудитории, жанру, цели и социальной ситуации. Формально корректная конструкция может быть неуместной, если она слишком разговорна для отчёта или, наоборот, чрезмерно канцелярска для живой реплики. Академический английский не равен максимально сложному английскому: номинализация, пассив и редкая лексика полезны только тогда, когда они выполняют определённую дискурсивную функцию.\n\nОсобое внимание требуется к средствам, связанным с жанром: **shall** характерно для нормативных документов и ряда формальных предложений, *hereby/thereof/therein* — для юридико-официальной речи, а **get-passive** обычно разговорнее **be-passive**. При этом ни одна из этих форм не является автоматически «правильной» или «неправильной»: значение определяется контекстом.\n\nМетафоры требуют отдельного контроля. Многие выражения (*raise a question, address an issue, fall within the scope*) уже лексикализованы. Свежая авторская метафора должна оставаться семантически совместимой с остальным текстом; случайное смешение нескольких образных доменов создаёт **mixed metaphor** и часто снижает ясность.",
         [
             rule(
                 "Грамматические маркеры регистра",
@@ -172,6 +238,39 @@ C2_THEORY = {
                 ],
             ),
         ],
+            rule(
+                "Formal does not mean complex",
+                "Номинализация, пассив и редкая лексика полезны, если они организуют информацию, но чрезмерное усложнение может скрывать агенса и ухудшать читаемость. Хороший академический стиль допускает простую конструкцию, когда она точнее.",
+                [
+                    ex("The committee rejected the proposal after reviewing the evidence.", "Формально и прозрачно."),
+                    ex("The rejection of the proposal followed a review of the evidence.", "Номинализация уместна, если rejection уже является темой."),
+                ],
+            ),
+            rule(
+                "Passive, get-passive и agent",
+                "**Be-passive** нейтрален и часто используется в отчётах; **get-passive** разговорнее и может подчёркивать изменение состояния или результат: *He got promoted*. Пассив не следует выбирать только потому, что он 'академический': если agent важен, активная конструкция часто яснее.",
+                [
+                    ex("The samples were relabelled after the audit.", "Neutral formal passive."),
+                    ex("He got promoted after the audit.", "Conversational get-passive."),
+                ],
+            ),
+            rule(
+                "Жанровая специализация форм",
+                "**Shall** особенно характерно для правил, договоров и нормативных формулировок; *hereby, thereof, therein* имеют юридико-официальную специализацию. *Whom* сохраняется прежде всего после предлогов и в формальной письменной речи. Такие элементы не следует искусственно добавлять в обычный академический текст.",
+                [
+                    ex("The tenant shall notify the owner within seven days.", "Normative/contractual shall."),
+                    ex("The person to whom I spoke was the auditor.", "Formal whom after a preposition."),
+                    ex("The person who I spoke to was the auditor.", "Neutral modern alternative."),
+                ],
+            ),
+            rule(
+                "Mixed metaphor и lexicalised metaphor",
+                "Лексикализованные метафоры (*raise a question, address an issue, fall within the scope*) обычно уже воспринимаются как обычные коллокации. Свежая метафора создаёт отдельный образный домен; смешение нескольких несовместимых доменов в одном фрагменте создаёт **mixed metaphor**. В художественном тексте это может быть намеренным приёмом, но в академическом обычно снижает точность.",
+                [
+                    ex("The proposal opens the door to further research.", "Устойчивый образ."),
+                    ex("The argument sailed into a fog and baked the reader.", "Смешение доменов."),
+                ],
+            ),
         compare=[
             {"left": "We were unable to obtain a spare impeller.", "right": "We couldn't get a spare impeller.", "note": "Одинаковая пропозиция; слева отчёт, справа смена."},
             {"left": "The stills got leaked.", "right": "The stills were leaked.", "note": "Слева get-passive (разговорнее); справа be-passive (нейтральнее)."},
@@ -179,11 +278,14 @@ C2_THEORY = {
         watch_out=[
             "Hereby + gonna — внутриабзацный слом регистра.",
             "Живая метафора без продолжения выглядит случайной.",
+            "Formal не означает unnecessarily complex.",
+            "Жанрово маркированную форму не следует использовать без жанровой причины.",
+
         ],
         remember="Сначала аудитория, потом форма. Пары obtain/get — не синонимы по тону. Одна метафорическая линия на абзац.",
     ),
     "advanced-cohesion": lesson(
-        "**Связность (cohesion)** — видимые нити между предложениями: местоимения, лексические цепочки, эллипсис, коннекторы. **Coherence** — логика, которую нити обслуживают.\n\nОшибка C2 часто не в союзе, а в разрыве референциальной цепи: this указывает в пустоту, moreover стоит там, где нужен contrast.",
+        "**Cohesion** — система формальных языковых связей между частями текста: местоименная референция, лексические цепочки, эллипсис, замещение, союзы и дискурсивные коннекторы. **Coherence** относится к более широкой логической и концептуальной организации. Хороший C2-текст требует и того и другого: читатель должен понимать не только логическую связь идей, но и то, к каким словам и событиям отсылают короткие анафорические элементы.\n\nОсобенно важен **reference tracking**. *It, this, that, they* могут ссылаться на существительное, группу слов или целую ситуацию. Если потенциальных антецедентов несколько, голое *this* или *it* создаёт неоднозначность; часто точнее использовать **this + noun**. В академическом тексте искусственное избегание повторов также опасно: точный термин нередко лучше случайного синонима.\n\nНужно различать грамматические классы средств связи. **And, but, so** непосредственно соединяют клаузы, тогда как **however, therefore, nevertheless, in contrast** обычно являются самостоятельными дискурсивными элементами. Их нельзя соединять с двумя finite clauses простой запятой по модели coordinating conjunction.",
         [
             rule(
                 "Референция и лексические цепочки",
@@ -229,6 +331,49 @@ C2_THEORY = {
                 ],
             ),
         ],
+            rule(
+                "Anaphora, cataphora и ambiguous reference",
+                "**Anaphora** отсылает назад: *The valve failed. It was replaced.* **Cataphora** допускает местоимение перед своим референтом: *When he arrived, John inspected the valve.* В сложной прозе неоднозначная ссылка опаснее повторения: если *it/this/they* имеет два возможных антецедента, существительное обычно предпочтительнее.",
+                [
+                    ex("The valve failed. It was replaced within an hour.", "Очевидная анафора."),
+                    ex("When he arrived, John inspected the valve.", "Cataphoric reference."),
+                    ex("The valve damaged the housing, and it was replaced.", "Неоднозначно: it может иметь два антецедента."),
+                ],
+            ),
+            rule(
+                "This/that как ссылка на событие",
+                "*This* и *that* могут отсылать к целой предыдущей ситуации, а не только к существительному. Конструкция **this + noun** часто делает интерпретацию явнее: *The survey was cancelled. This cancellation caused delays.* Это особенно полезно, когда предыдущая клауза содержит несколько возможных сущностей.",
+                [
+                    ex("The survey was cancelled. This cancellation caused delays.", "Явно назван тип референта."),
+                    ex("The survey was cancelled. This caused delays.", "Ссылка на целое событие."),
+                ],
+            ),
+            rule(
+                "Lexical cohesion: repetition vs synonymy",
+                "Лексическая цепочка может строиться повтором, близким термином или гиперонимом. В техническом тексте точный повтор часто лучше искусственного синонима: *valve → component* может быть менее точным. Гипероним (*fog → weather*) полезен, когда обобщение действительно нужно.",
+                [
+                    ex("The valve failed. The valve was replaced.", "Повтор термина повышает техническую точность."),
+                    ex("Fog delayed the crossing. The weather also affected the flight.", "Hypernym broadens the lexical chain."),
+                ],
+            ),
+            rule(
+                "Connectors и logical relations",
+                "**Moreover/furthermore** добавляют аргумент; **however/nevertheless** выражают контраст или уступку; **therefore/thus** вводят вывод; **otherwise** указывает альтернативное следствие. Выбор коннектора должен соответствовать логической связи, а не просто разнообразить начало предложения.",
+                [
+                    ex("The evidence was incomplete; however, the committee proceeded.", "Concessive/contrastive connector."),
+                    ex("The evidence was incomplete, but the committee proceeded.", "But — coordinating conjunction."),
+                    ex("The evidence was incomplete; therefore, a second audit was requested.", "Therefore — result."),
+                ],
+                tables=[table(["Средство", "Класс", "Связь"], [["but", "conjunction", "contrast"], ["so", "conjunction", "result"], ["however", "conjunctive adverbial", "contrast"], ["therefore", "conjunctive adverbial", "result"]])],
+            ),
+            rule(
+                "Ellipsis и parallelism",
+                "Эллипсис удаляет материал, который легко восстанавливается: *The first team inspected the valves, and the second the pumps.* Такая компактность полезна, пока структура однозначна. При смене времени или полярности повтор глагольной группы часто повышает ясность.",
+                [
+                    ex("The first team inspected the valves, and the second the pumps.", "Gapping in coordination."),
+                    ex("We could have waited, but we did not.", "Отрицательная форма делает реконструкцию ясной."),
+                ],
+            ),
         compare=[
             {"left": "The tables were reprinted, however two crossings failed.", "right": "The tables were reprinted; however, two crossings failed.", "note": "Коннектор требует точки / точки с запятой."},
             {"left": "Fog delayed us. This was annoying.", "right": "Fog delayed us. This delay wrecked the drone window.", "note": "This + noun точнее указывает на событие."},
@@ -236,11 +381,14 @@ C2_THEORY = {
         watch_out=[
             "Голый this при двух возможных антецедентах.",
             "However как союз без точки/;.",
+            "Не допускать неоднозначного it/this/they.",
+            "Точный повтор технического термина может быть лучше искусственного синонима.",
+
         ],
         remember="Цепочка должна быть восстановима. This + noun безопаснее голого this. However — коннектор; but — союз.",
     ),
     "distancing-evidentiality": lesson(
-        "**Эвиденциальность** — маркировка источника знания. Английский не имеет обязательной эвиденциальной флексии, но C2-проза кодирует дистанцию: reportedly, allegedly, according to, I gather, seem / appear + perfect, пассив репортажа.\n\n**Allegedly** сильнее отделяет от ответственности, чем **reportedly**. **According to** именует источник.",
+        "**Эвиденциальность (evidentiality)** — выражение источника информации и отношения говорящего к её подтверждённости. В английском нет обязательной эвиденциальной морфологии, однако академическая и журналистская речь регулярно кодирует источник и степень дистанции с помощью **according to, reportedly, allegedly, apparently, I gather, I understand, seem/appear** и репортажного пассива.\n\nНа C2 важно различать **source**, **epistemic commitment** и **attribution**. *According to the report* называет источник, но не гарантирует истинность его утверждения. *Reportedly* сообщает о наличии сообщения без обязательного указания источника. *Allegedly* особенно характерно для спорных утверждений и обвинений и явно дистанцирует автора от их истинности. *Apparently* чаще представляет вывод из доступных признаков.\n\n**Seem/appear + perfect infinitive** выражает вывод о предшествующем событии: *She seems to have left*. **She is said to have left** — уже reporting passive, то есть информация приписывается неназванному источнику. Избыточное накопление нескольких маркеров дистанции обычно ухудшает стиль: один точно выбранный уровень часто эффективнее трёх.",
         [
             rule(
                 "Наречия и рамки источника",
@@ -288,6 +436,40 @@ C2_THEORY = {
                 ],
             ),
         ],
+            rule(
+                "Source, certainty и attribution",
+                "**According to X** называет источник; **apparently** и **seem/appear** часто маркируют вывод; **allegedly** дистанцирует автора от спорного утверждения; **certainly/clearly** повышают авторскую уверенность. Эти функции не следует смешивать: источник и степень уверенности — разные параметры.",
+                [
+                    ex("According to the report, the figure is inaccurate.", "Источник назван."),
+                    ex("Apparently, the figure is inaccurate.", "Inference from available evidence."),
+                    ex("The figure is certainly inaccurate.", "Strong authorial commitment."),
+                ],
+            ),
+            rule(
+                "Reportedly, allegedly, apparently",
+                "**Reportedly** сообщает о наличии сообщения; **allegedly** особенно естественно для обвинений и спорных фактов; **apparently** часто означает 'судя по имеющимся признакам'. Замена одного маркера другим может менять юридическую и прагматическую интерпретацию.",
+                [
+                    ex("Reportedly, the plant will close in October.", "Сообщение без названного источника."),
+                    ex("The contractor allegedly falsified the figures.", "Дистанция от обвинения."),
+                    ex("Apparently, the plant has already closed.", "Вывод из признаков."),
+                ],
+            ),
+            rule(
+                "Seem/appear + perfect infinitive",
+                "*She seems to know* описывает текущее состояние или одновременно релевантную ситуацию. *She seems to have left* выражает вывод о событии, предшествующем моменту вывода. Это не обязательно hearsay: говорящий может формировать вывод самостоятельно.",
+                [
+                    ex("She seems to know the answer.", "Current state."),
+                    ex("She seems to have left already.", "Earlier completed event."),
+                ],
+            ),
+            rule(
+                "Reporting passive",
+                "В моделях **It is said that...** и **She is said to...** источник не называется. Если reported event предшествует моменту сообщения, используется perfect infinitive: *She is said to have left*. Такая конструкция типична для журналистской и формальной письменной речи.",
+                [
+                    ex("It is said that the minutes were altered.", "Impersonal reporting passive."),
+                    ex("The secretary is said to have altered the minutes.", "Personal reporting passive + perfect infinitive."),
+                ],
+            ),
         compare=[
             {"left": "She leaked the stills.", "right": "She allegedly leaked the stills.", "note": "Справа автор не берёт факт на себя."},
             {"left": "Reportedly the foundry will close.", "right": "According to the union bulletin, the foundry will close.", "note": "According to именует источник."},
@@ -295,11 +477,14 @@ C2_THEORY = {
         watch_out=[
             "Allegedly о погоде или расписании звучит как обвинение.",
             "I guess снижает академический регистр.",
+            "According to X = источник; это не то же самое, что certainty.",
+            "Allegedly особенно маркирует спорные утверждения и обвинения.",
+
         ],
         remember="Один слой дистанции. Allegedly — про вину. According to — про источник. Seem/appear + perfect — вывод без свидетеля.",
     ),
     "marked-word-order": lesson(
-        "Канон английского — **SVO**. Любое отклонение маркировано: фокус, afterthought, тяжесть или сценичность.\n\nC2 владеет клефтами, левой/правой дислокацией, **heavy NP shift** и повествовательной инверсией. Приём без мотива читается как ошибка, не как стиль.",
+        "Нейтральный английский характеризуется относительно фиксированным порядком **SVO**, поэтому заметное отклонение от него обычно имеет дискурсивную или стилистическую мотивацию. На уровне C2 маркированный порядок используется для управления фокусом, темой, тяжестью группы, ритмом повествования и сценическим представлением.\n\nК основным средствам относятся **it-clefts**, **wh-clefts**, левая и правая дислокация, **heavy NP shift** и несколько типов инверсии. Эти конструкции нельзя считать свободными вариантами одной и той же структуры: каждая имеет собственные синтаксические ограничения. Например, cleft выделяет информационный фокус, left dislocation создаёт внешний topic с местоименным повтором, а heavy NP shift мотивирован длиной и сложностью группы.\n\nОсобенно важно различать **subject–auxiliary inversion** и **subject–verb inversion**. После отрицательных или ограничительных элементов (*never, rarely, only then, under no circumstances*) используется вспомогательный глагол; в locative/narrative inversion возможна модель *place + lexical verb + subject*. Начальное обстоятельство само по себе инверсию не вызывает.",
         [
             rule(
                 "Клефт и псевдоклефт",
@@ -346,6 +531,40 @@ C2_THEORY = {
                 ],
             ),
         ],
+            rule(
+                "Negative and restrictive fronting",
+                "После **never, rarely, seldom, little, only then, under no circumstances** и подобных ограничительных элементов в формальном стиле используется инверсия auxiliary и subject: *Never have I seen...* Если auxiliary нет, появляется *do/did*: *Only then did we realise...*. Обычное обстоятельство в начале предложения такой инверсии не вызывает.",
+                [
+                    ex("Never have I seen such a discrepancy.", "Negative fronting + inversion."),
+                    ex("Only then did the discrepancy become apparent.", "Do-support for inversion."),
+                    ex("After the meeting, we left early.", "No inversion after ordinary adverbial."),
+                ],
+            ),
+            rule(
+                "Locative / narrative inversion",
+                "В описательной и повествовательной прозе пространственная рамка может предшествовать глаголу и новому subject: *On the wall hung a map*. Такая инверсия помогает сначала представить сцену, а затем ввести объект. Она не является обычным разговорным вопросительным порядком и зависит от типа глагола и информационной структуры.",
+                [
+                    ex("On the wall hung a map of the old harbour.", "Place + lexical verb + new subject."),
+                    ex("Down the quay came the pilot boat.", "Narrative movement."),
+                ],
+            ),
+            rule(
+                "Cleft constructions и информационный фокус",
+                "**It-cleft** выделяет X: *It was X that Y*. **Wh-cleft** организует высказывание через wh-clause: *What caused the leak was X*. Reverse wh-cleft (*X was what caused the leak*) возможен, но более маркирован. Cleft следует использовать для реального управления фокусом, а не как формальный признак продвинутого уровня.",
+                [
+                    ex("It was the missing washer that caused the leak.", "Focus on washer."),
+                    ex("What caused the leak was the missing washer.", "Wh-cleft."),
+                    ex("The missing washer was what caused the leak.", "Reverse wh-cleft; more marked."),
+                ],
+            ),
+            rule(
+                "Left/right dislocation и afterthought",
+                "**Left dislocation** выносит topic влево и сохраняет его местоимением: *That clause, I would not sign it*. **Right dislocation** помещает уточнение после завершённой структуры: *They never came back, the wet plates*. Эти модели особенно характерны для разговорной речи и стилизованного повествования.",
+                [
+                    ex("That clause, I would not sign it.", "Left-dislocated topic + resumptive pronoun."),
+                    ex("They never came back, the wet plates.", "Right-dislocated afterthought."),
+                ],
+            ),
         compare=[
             {"left": "We sent the letter to legal.", "right": "We sent to legal the entire unredacted correspondence from March.", "note": "Сдвиг оправдан только тяжестью."},
             {"left": "The intern spotted the mismatch.", "right": "The intern, she spotted the mismatch.", "note": "Справа устный топик; в отчёте — шум."},
@@ -353,11 +572,14 @@ C2_THEORY = {
         watch_out=[
             "Heavy shift местоимения — ошибка, не стиль.",
             "Маркировать только по делу.",
+            "Начальное обстоятельство само по себе не вызывает инверсию.",
+            "Heavy NP shift не является свободным перемещением любого дополнения.",
+
         ],
         remember="SVO — нейтраль. Клефт — фокус. Дислокация — устный топик. Heavy shift — только тяжёлая группа.",
     ),
     "determiners-precision": lesson(
-        "На C2 определители — **кванторы с логикой**, а не «артикли посложнее». **Each** смотрит на членов по одному, **every** — на класс как полное покрытие, **all** — на совокупность.\n\n**Either / neither** — двучленное множество. **Both** — ровно два. **The very** — идентичность; **quite the** — оценка типа.",
+        "На уровне C2 **determiners** кодируют не только определённость, но и структуру множества, распределение внимания и логический охват высказывания. Поэтому **each, every, all, both, either, neither, any** нельзя рассматривать как простые синонимы количества.\n\n**Each** концептуализирует членов множества по отдельности; **every** представляет множество как класс с полным покрытием; **all** обозначает совокупность. **Both** относится ровно к двум элементам. В основном значении **either** и **neither** также предполагают два релевантных варианта. Важно различать determiner slot и местоименную конструкцию: *every sample*, но *every one of the samples*; *each sample* и *each of the samples*.\n\nСогласование должно соответствовать грамматическому центру: *Each of the samples was...*, *Every sample was...*, *All the samples were...*. Разговорные варианты встречаются, но академический и экзаменационный стандарт предпочитает последовательное нормативное согласование.",
         [
             rule(
                 "Each, every, all, any",
@@ -407,6 +629,51 @@ C2_THEORY = {
                 ],
             ),
         ],
+            rule(
+                "Each vs every",
+                "**Each** может употребляться как determiner и как pronoun: *each sample, each of the samples, each was labelled*. **Every** требует singular count noun в обычной конструкции: *every sample*. Для *of + plural* используется *every one of the samples*. Each сильнее подчёркивает индивидуальных членов, every — полный охват класса.",
+                [
+                    ex("Each of the samples was labelled separately.", "Individual distribution."),
+                    ex("Every sample was labelled before shipment.", "Full class coverage."),
+                    ex("Every one of the samples was labelled.", "Every one + of + plural."),
+                ],
+            ),
+            rule(
+                "All, whole и both",
+                "**All** обозначает совокупность: *all the samples*. **Whole** рассматривает один объект или период целиком: *the whole report, the whole day*. **Both** относится ровно к двум: *both samples, both of the samples*. С singular count noun whole обычно требует determiner: *the whole report*.",
+                [
+                    ex("All the samples were contaminated.", "Совокупность."),
+                    ex("The whole sample was contaminated.", "Один объект целиком."),
+                    ex("Both samples were contaminated.", "Ровно два."),
+                ],
+            ),
+            rule(
+                "Either / neither и отрицание",
+                "В основном значении **either** и **neither** относятся к двум вариантам. *Either option is acceptable* = любой один из двух; *Neither option is acceptable* = ни один. В отрицательной конструкции *I don't want either option* также означает, что ни один из рассматриваемых вариантов не нужен. После *neither* дополнительное *not* в стандартной конструкции не требуется.",
+                [
+                    ex("Either route will get us there.", "One of the two routes is sufficient."),
+                    ex("Neither route is safe at night.", "Neither of the two is safe."),
+                    ex("I don't want either route.", "Negative polarity."),
+                ],
+            ),
+            rule(
+                "Any: polarity и free choice",
+                "В вопросах и отрицаниях **any** обычно означает неопределённое количество: *Do you have any evidence? I don't have any evidence.* В утвердительном предложении *Any member may object* any может выражать **free choice** — 'любой, безразлично какой'. Эти значения требуют различать polarity и свободный выбор.",
+                [
+                    ex("Do you have any evidence?", "Interrogative polarity."),
+                    ex("I don't have any evidence.", "Negative polarity."),
+                    ex("Any member may object.", "Free-choice any."),
+                ],
+            ),
+            rule(
+                "Such, so, the very и what little",
+                "**Such** определяет noun phrase: *such a delay, such delays*. **So** обычно модифицирует adjective/adverb: *so long, so quickly*. **The very + noun** усиливает идентификацию. **What little + uncountable noun** означает 'то небольшое количество, которое имелось'.",
+                [
+                    ex("It was such a delay that the ferry missed the tide.", "Such + a + singular count noun."),
+                    ex("The evidence was so weak that the claim was withdrawn.", "So + adjective."),
+                    ex("What little evidence we had was inconclusive.", "What little + uncountable noun."),
+                ],
+            ),
         compare=[
             {"left": "Each sample was dated.", "right": "Every sample was dated.", "note": "Each — «по одному»; every — «без исключений»."},
             {"left": "Either of the keys opens the loft.", "right": "Both of the keys are needed for the loft.", "note": "Either — один достаточен; both — нужны два."},
@@ -414,11 +681,14 @@ C2_THEORY = {
         watch_out=[
             "Neither … don't — двойное отрицание.",
             "Every of the samples — ошибка.",
+            "Every of the samples — ошибка; every one of the samples — нормативно.",
+            "Neither уже отрицательно; дополнительный not обычно не нужен.",
+
         ],
         remember="Each — поштучно (each of). Every — покрытие класса. Either/neither — ровно два. The very — идентичность; quite the — оценка типа.",
     ),
     "advanced-complementation": lesson(
-        "**Комплементация** — обязательные продолжения слова: proud that / of -ing / to; decide to / that / wh-; the fact that / the decision to.\n\nНа C2 путают не времена, а **слоты**. Raising-глаголы поднимают подлежащее из нижней клаузы. Extraposition оставляет it и выносит that / to вправо.",
+        "**Complementation** описывает синтаксические модели, которые слово допускает после себя. На уровне C2 важно запоминать не только значение лексемы, но и её **valency / complementation pattern**: какие дополнения она принимает, в какой форме и в каком порядке. Семантически близкие слова могут выбирать разные модели: *explain something to somebody*, но *tell somebody something*; *suggest doing / suggest that...*, но не стандартное *suggest somebody to do...*.\n\nОсобое значение имеют различия между **that-clauses**, infinitival clauses и gerund-participial clauses, а также между **raising** и **control**. В raising-конструкции субъект матричной клаузы семантически принадлежит нижней предикации: *She seems to know*. В control-конструкции контролирующий участник является аргументом матричного глагола: *They persuaded her to leave*.\n\n**Extraposition** решает другую задачу: тяжёлая clause переносится вправо, а позиция подлежащего заполняется формальным *it*: *It was a mistake to leave early*. Поэтому продвинутый анализ должен учитывать не только форму, но и valency, семантические роли и информационную нагрузку.",
         [
             rule(
                 "Прилагательные: that, to, -ing, of",
@@ -470,6 +740,65 @@ C2_THEORY = {
                 ],
             ),
         ],
+            rule(
+                "Remember, regret и смысл complementation",
+                "Несколько моделей после одного глагола могут быть грамматически допустимы, но различаться по смыслу. *Remember to lock* относится к действию, которое ещё нужно выполнить; *remember locking* — к воспоминанию о завершённом действии. *Regret to inform* — формальная формула перед сообщением; *regret doing* — сожаление о прошлом действии.",
+                [
+                    ex("Remember to lock the gate.", "Action still to be performed."),
+                    ex("I remember locking the gate.", "Memory of completed action."),
+                    ex("We regret to inform you that the bid was unsuccessful.", "Formal reporting formula."),
+                    ex("We regret rejecting the bid.", "Regret about a past action."),
+                ],
+            ),
+            rule(
+                "Suggest, recommend, prevent, accuse",
+                "Некоторые глаголы имеют строго определённые модели. **Suggest** и **recommend** допускают *-ing* и *that-clause*; стандартное *suggest somebody to do* не используется. **Prevent somebody from -ing** и **accuse somebody of -ing** требуют соответствующих предлогов.",
+                [
+                    ex("They suggested delaying the launch.", "Suggest + -ing."),
+                    ex("They suggested that the launch should be delayed.", "Suggest + that-clause."),
+                    ex("The rule prevented them from entering.", "Prevent + object + from -ing."),
+                    ex("The report accused him of altering the figures.", "Accuse + object + of -ing."),
+                ],
+            ),
+            rule(
+                "Explain, tell и promise",
+                "**Explain** обычно строится как *explain something to somebody*, тогда как **tell** допускает *tell somebody something*. **Promise** обычно является subject-control verb: *She promised to return*, где she — и обещающий, и подразумеваемый субъект return. Управление нельзя механически переносить из русского языка.",
+                [
+                    ex("They explained the problem to me.", "Explain + object + to + recipient."),
+                    ex("They told me the problem.", "Tell + recipient + object."),
+                    ex("She promised to return before noon.", "Subject control."),
+                ],
+            ),
+            rule(
+                "Raising vs control: диагностика",
+                "В **raising** матричный предикат не даёт поднятому NP собственной semantic role: *She seems to know*. Поэтому возможен вариант с expletive *it*: *It seems that she knows*. В **control** субъект или объект матричного глагола является его аргументом и контролирует подразумеваемый субъект infinitive: *They persuaded her to leave*.",
+                [
+                    ex("She seems to know the answer.", "Raising."),
+                    ex("It seems that she knows the answer.", "Raising counterpart with expletive it."),
+                    ex("They persuaded her to leave.", "Object control."),
+                ],
+                tables=[table(["Конструкция", "Матрица", "Диагностический признак"], [["raising", "seem/appear", "it possible: It seems that…"], ["object control", "persuade/tell", "object controls infinitive subject"], ["subject control", "promise/try", "subject controls infinitive subject"]])],
+            ),
+            rule(
+                "Noun complementation",
+                "Существительные также имеют собственные модели: **fact + that**, **decision + to-infinitive**, **ability + to-infinitive**, **difficulty (in) + -ing**, **chance of + -ing / chance that...**. Ошибка *the fact to withdraw* возникает из переноса модели *decision to...* на другое существительное.",
+                [
+                    ex("The fact that they withdrew surprised no one.", "Fact + that-clause."),
+                    ex("Their ability to adapt saved the project.", "Ability + to-infinitive."),
+                    ex("We had difficulty in obtaining a spare part.", "Difficulty + in + -ing."),
+                    ex("There is a chance of finding another route.", "Chance + of + -ing."),
+                ],
+            ),
+            rule(
+                "Extraposition after adjectives and nouns",
+                "После оценочных adjectives и некоторых nouns тяжёлая clause может выноситься вправо: *It was unfortunate that the launch was delayed; It was a mistake to leave early*. Прямая структура возможна, но часто тяжелее. Extraposition также следует отличать от raising: *It is likely that she will decline* и *She is likely to decline* семантически близки, но синтаксически различны.",
+                [
+                    ex("It was unfortunate that the launch was delayed.", "Extraposed that-clause."),
+                    ex("It was a mistake to leave early.", "Extraposed to-infinitive."),
+                    ex("She is likely to decline.", "Raising adjective."),
+                    ex("It is likely that she will decline.", "Extraposition with likely."),
+                ],
+            ),
         compare=[
             {"left": "She is likely to decline.", "right": "It is likely that she will decline.", "note": "Raising vs extraposition — одна вероятность."},
             {"left": "I'm sorry to interrupt.", "right": "I'm sorry that we interrupted.", "note": "To — жест сейчас; that — факт-событие."},
@@ -477,6 +806,9 @@ C2_THEORY = {
         watch_out=[
             "The fact to withdraw — слот не тот.",
             "Explain me / suggest her to — чужой контроль.",
+            "Учить слово вместе с его valency и complement pattern.",
+            "Raising и control различаются семантическими ролями, а не только переводом.",
+
         ],
         remember="Слово + слот. Raising поднимает подлежащее. It выносит тяжёлый комплемент. Sorry to ≠ sorry that.",
     ),
