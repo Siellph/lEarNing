@@ -1119,7 +1119,6 @@ article,
 .lesson-callout,
 .lesson-pair {
   min-width: 0;
-  max-width: 100%;
 }
 
 /* Текст не должен создавать горизонтальный скролл */
