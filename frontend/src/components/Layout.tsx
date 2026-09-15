@@ -153,10 +153,11 @@ export function Layout() {
             <div className="ml-auto flex items-center gap-2 text-sm text-ink-soft sm:gap-3">
               <GlobalSearch />
               <VoiceSettingsMenu />
-              <span className="inline-flex items-center justify-center rounded-full bg-card px-3 py-1">
+              <span className="inline-flex shrink-0 items-center justify-center rounded-full bg-card px-3 py-1 text-center">
                 {user?.xp ?? 0} XP
               </span>
-              <span className="inline-flex items-center justify-center rounded-full bg-card px-3 py-1">
+
+              <span className="inline-flex shrink-0 items-center justify-center rounded-full bg-card px-3 py-1 text-center">
                 🔥 {user?.streak ?? 0}
               </span>
             </div>
