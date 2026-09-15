@@ -154,11 +154,11 @@ export function Layout() {
               <GlobalSearch />
               <VoiceSettingsMenu />
 
-              <span className="inline-flex items-center rounded-full bg-card px-3 py-1 whitespace-nowrap">
+              <span className="inline-flex items-center rounded-full bg-card px-3 py-1 leading-none">
                 {user?.xp ?? 0} XP
               </span>
 
-              <span className="inline-flex items-center rounded-full bg-card px-3 py-1 whitespace-nowrap">
+              <span className="inline-flex items-center rounded-full bg-card px-3 py-1 leading-none">
                 🔥 {user?.streak ?? 0}
               </span>
             </div>
