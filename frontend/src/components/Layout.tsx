@@ -150,16 +150,19 @@ export function Layout() {
               </button>
               <BrandMark size="sm" className="sm:hidden" />
             </div>
-            <div className="ml-auto flex items-center gap-2 text-sm text-ink-soft sm:gap-3">
+            <div className="ml-auto flex min-w-0 items-center gap-2 text-sm text-ink-soft sm:gap-3">
               <GlobalSearch />
               <VoiceSettingsMenu />
-              <span className="inline-flex shrink-0 items-center justify-center rounded-full bg-card px-3 py-1 text-center">
-                {user?.xp ?? 0} XP
-              </span>
 
-              <span className="inline-flex shrink-0 items-center justify-center rounded-full bg-card px-3 py-1 text-center">
-                🔥 {user?.streak ?? 0}
-              </span>
+              <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+                <span className="inline-flex items-center justify-center rounded-full bg-card px-3 py-1">
+                  {user?.xp ?? 0} XP
+                </span>
+
+                <span className="inline-flex items-center justify-center rounded-full bg-card px-3 py-1">
+                  🔥 {user?.streak ?? 0}
+                </span>
+              </div>
             </div>
           </header>
           <main
